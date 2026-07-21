@@ -1,0 +1,18 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+
+# Fotos originais (74 MB) e o repo de referência de rules: ficam locais,
+# o build só usa src/assets. Receitas de recorte estão no handoff.md.
+imagens/
+awesome-cursorrules/
+
+# Screenshots do Playwright MCP
+.playwright-mcp/
+/*.png

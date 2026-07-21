@@ -1,0 +1,11 @@
+node_modules
+dist
+.git
+.env
+imagens
+specs
+awesome-cursorrules
+.playwright-mcp
+*.png
+!public/**
+!src/**

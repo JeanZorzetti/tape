@@ -1,0 +1,66 @@
+---
+import { Image } from "astro:assets";
+import logo from "../../assets/marca/logo-tapepro.png";
+import { NOME_MARCA, TAGLINE, WHATSAPP_DISPLAY, EMAIL_CONTATO } from "../../lib/constants";
+import { whatsappLink } from "../../lib/whatsapp";
+import { PRODUTOS } from "../../lib/produtos";
+
+const ano = new Date().getFullYear();
+const links = [
+  { href: "/produtos", label: "Produtos" },
+  { href: "/segmentos", label: "Segmentos" },
+  { href: "/blog", label: "Blog" },
+  { href: "/perguntas-frequentes", label: "Perguntas frequentes" },
+  { href: "/#portfolio", label: "Portfólio" },
+  { href: "/sobre", label: "Sobre" },
+  { href: "/orcamento", label: "Orçamento" },
+];
+---
+
+<footer class="bg-navy text-white/85">
+  <div class="mx-auto grid max-w-6xl gap-10 px-4 py-14 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+    <div>
+      <Image src={logo} alt="TapePro" width={150} height={108} class="h-10 w-auto rounded-md bg-paper p-1.5" />
+      <p class="mt-4 max-w-xs font-body text-sm leading-relaxed text-white/70">
+        {TAGLINE}. Sua marca impressa em cada rolo, do transparente ao kraft — do pedido pequeno ao volume industrial.
+      </p>
+    </div>
+
+    <nav aria-label="Rodapé">
+      <h2 class="font-mono text-xs uppercase tracking-[0.2em] text-orange">Navegar</h2>
+      <ul class="mt-4 space-y-2 font-body text-sm">
+        {links.map((l) => <li><a href={l.href} class="text-white/75 hover:text-white">{l.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <nav aria-label="Fitas">
+      <h2 class="font-mono text-xs uppercase tracking-[0.2em] text-orange">Fitas</h2>
+      <ul class="mt-4 space-y-2 font-body text-sm">
+        {
+          PRODUTOS.map((p) => (
+            <li>
+              <a href={`/produtos/${p.slug}`} class="text-white/75 hover:text-white">
+                {p.nome}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <div>
+      <h2 class="font-mono text-xs uppercase tracking-[0.2em] text-orange">Contato</h2>
+      <ul class="mt-4 space-y-2 font-body text-sm text-white/75">
+        <li><a href={whatsappLink(undefined, "Rodapé")} target="_blank" rel="noopener" class="hover:text-white">WhatsApp {WHATSAPP_DISPLAY}</a></li>
+        <li><a href={`mailto:${EMAIL_CONTATO}`} class="hover:text-white">{EMAIL_CONTATO}</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="border-t border-white/10">
+    <div class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 font-body text-xs text-white/55 md:flex-row md:items-center md:justify-between">
+      <p>© {ano} {NOME_MARCA}. Representante comercial oficial.</p>
+      <p>Fitas adesivas personalizadas · atendimento nacional</p>
+    </div>
+  </div>
+</footer>

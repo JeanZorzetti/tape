@@ -1,0 +1,55 @@
+---
+import { Image } from "astro:assets";
+import logo from "../../assets/marca/logo-tapepro.png";
+import WhatsAppCta from "../quote/WhatsAppCta.astro";
+
+const links = [
+  { href: "/produtos", label: "Produtos" },
+  { href: "/segmentos", label: "Segmentos" },
+  { href: "/blog", label: "Blog" },
+  { href: "/sobre", label: "Sobre" },
+  { href: "/orcamento", label: "Orçamento" },
+];
+---
+
+<header class="sticky top-0 z-40 border-b border-kraft/40 bg-paper/90 backdrop-blur">
+  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
+    <a href="/" aria-label="TapePro — página inicial" class="flex items-center">
+      <Image src={logo} alt="TapePro — Fitas Adesivas Personalizadas" width={150} height={108} class="h-10 w-auto" />
+    </a>
+
+    <nav class="hidden items-center gap-6 lg:flex" aria-label="Principal">
+      {
+        links.map((l) => (
+          <a href={l.href} class="font-body text-sm font-medium text-ink/80 transition hover:text-navy">
+            {l.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="hidden lg:block">
+      <WhatsAppCta label="Pedir orçamento" paginaOrigem="Topo" compact />
+    </div>
+
+    <details class="relative lg:hidden">
+      <summary class="flex cursor-pointer list-none items-center rounded p-2 text-navy" aria-label="Abrir menu">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"></path>
+        </svg>
+      </summary>
+      <div class="absolute right-0 mt-3 w-56 rounded-xl border border-kraft/40 bg-paper p-4 shadow-xl">
+        <nav class="flex flex-col gap-3" aria-label="Principal (mobile)">
+          {
+            links.map((l) => (
+              <a href={l.href} class="font-body text-sm font-medium text-ink/80 hover:text-navy">
+                {l.label}
+              </a>
+            ))
+          }
+          <WhatsAppCta label="Pedir orçamento" paginaOrigem="Menu mobile" compact />
+        </nav>
+      </div>
+    </details>
+  </div>
+</header>

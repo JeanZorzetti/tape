@@ -1,0 +1,61 @@
+---
+// Assinatura da marca: uma faixa que imita um pedaço de fita de embalagem impressa,
+// com o texto repetido rolando (como as fitas personalizadas reais dos clientes).
+interface Props {
+  texto?: string;
+  tone?: "orange" | "navy" | "kraft";
+  class?: string;
+}
+const {
+  texto = "TAPEPRO — FITAS PERSONALIZADAS — SUA MARCA EM CADA CAIXA —",
+  tone = "orange",
+  class: cls = "",
+} = Astro.props;
+
+const repeated = (texto + " ").repeat(6);
+// Tinta navy sobre o laranja (4.53:1) — é como a fita real é impressa e é o
+// mesmo par da faixa de CTA. Branco sobre laranja dava 2.71:1 e reprovava no AA.
+const tones = {
+  orange: "bg-orange text-navy",
+  navy: "bg-navy text-white",
+  kraft: "bg-kraft text-navy",
+};
+---
+
+<div class:list={["tape-strip", tones[tone], cls]} aria-hidden="true">
+  <div class="tape-strip__track font-mono text-xs font-medium uppercase tracking-[0.28em]">
+    <span>{repeated}</span><span>{repeated}</span>
+  </div>
+</div>
+
+<style>
+  .tape-strip {
+    position: relative;
+    overflow: hidden;
+    padding-block: 0.6rem;
+  }
+  .tape-strip::before,
+  .tape-strip::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    border-top: 2px dashed currentColor;
+    opacity: 0.4;
+  }
+  .tape-strip::before { top: 5px; }
+  .tape-strip::after { bottom: 5px; }
+  .tape-strip__track {
+    display: flex;
+    width: max-content;
+    white-space: nowrap;
+    animation: tape-scroll 38s linear infinite;
+  }
+  @keyframes tape-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tape-strip__track { animation: none; }
+  }
+</style>

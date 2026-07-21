@@ -1,0 +1,56 @@
+---
+import "../styles/global.css";
+import Seo from "../components/seo/Seo.astro";
+import JsonLd from "../components/seo/JsonLd.astro";
+import Header from "../components/layout/Header.astro";
+import Footer from "../components/layout/Footer.astro";
+import { NOME_MARCA, SITE_URL, TAGLINE, WHATSAPP_NUMERO } from "../lib/constants";
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  noindex?: boolean;
+}
+const { title, description, image, noindex } = Astro.props;
+
+const organization = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: NOME_MARCA,
+  url: SITE_URL,
+  slogan: TAGLINE,
+  description:
+    "Fitas adesivas personalizadas com a marca do cliente — representante comercial oficial TapePro. Pedido mínimo a partir de 20 rolos.",
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "sales",
+    telephone: "+" + WHATSAPP_NUMERO,
+    areaServed: "BR",
+    availableLanguage: "pt-BR",
+  },
+};
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <Seo title={title} description={description} image={image} noindex={noindex} />
+    <JsonLd data={organization} />
+  </head>
+  <body class="flex min-h-screen flex-col">
+    <a
+      href="#conteudo"
+      class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-navy focus:px-4 focus:py-2 focus:text-white"
+      >Pular para o conteúdo</a
+    >
+    <Header />
+    <main id="conteudo" class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

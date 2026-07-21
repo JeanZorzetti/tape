@@ -1,0 +1,186 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { sessaoAtual } from "../../lib/auth";
+import { adicionarNota, atualizarLead, buscarLead, isStatus, STATUS_LEAD, statusLabel } from "../../lib/crm";
+import { tipoFitaLabel } from "../../lib/quoteForm";
+import { whatsappParaNumero } from "../../lib/whatsapp";
+import { CLS_STATUS, dataBR, estaAtrasado, hojeISO, isoDe } from "../../lib/adminUi";
+
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+
+const id = Number(Astro.params.id);
+if (!Number.isInteger(id) || id < 1) return Astro.redirect("/admin");
+
+if (Astro.request.method === "POST") {
+  const form = await Astro.request.formData();
+  const acao = String(form.get("acao") ?? "");
+
+  if (acao === "salvar") {
+    const status = String(form.get("status") ?? "");
+    const proximo = String(form.get("proximoContato") ?? "").trim();
+    if (isStatus(status)) await atualizarLead(id, status, proximo || null);
+  } else if (acao === "nota") {
+    const texto = String(form.get("texto") ?? "").trim().slice(0, 2000);
+    if (texto) await adicionarNota(id, texto);
+  }
+  // PRG: recarrega em GET para o F5 não repetir a ação.
+  return Astro.redirect(`/admin/${id}`);
+}
+
+const dados = await buscarLead(id);
+if (!dados) return Astro.redirect("/admin");
+const { lead, notas } = dados;
+
+const hoje = hojeISO();
+const atrasado = estaAtrasado(lead.proximo_contato, lead.status, hoje);
+const saudacao = `Olá ${lead.nome}, aqui é da TapePro sobre o seu orçamento de ${tipoFitaLabel(lead.tipo_fita)}.`;
+
+const ficha = [
+  { label: "Contato", valor: lead.nome },
+  { label: "E-mail", valor: lead.email, href: `mailto:${lead.email}` },
+  { label: "Telefone", valor: lead.telefone, href: whatsappParaNumero(lead.telefone, saudacao) },
+  { label: "CNPJ", valor: lead.cnpj ?? "—" },
+  { label: "Tipo de fita", valor: tipoFitaLabel(lead.tipo_fita) },
+  { label: "Quantidade", valor: lead.quantidade },
+  { label: "Recebido em", valor: dataBR(lead.criado_em) },
+  { label: "Origem", valor: lead.origem ?? "—" },
+];
+
+const inputCls =
+  "w-full rounded-lg border border-kraft/60 bg-white px-3 py-2 font-body text-sm text-ink focus:border-navy focus:outline-none";
+---
+
+<AdminLayout title={lead.empresa}>
+  <a href="/admin" class="font-body text-sm text-steel hover:text-navy">← Todos os leads</a>
+
+  <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-extrabold text-navy">{lead.empresa}</h1>
+      <p class="mt-1 font-body text-sm text-steel">
+        {tipoFitaLabel(lead.tipo_fita)} · {lead.quantidade}
+      </p>
+    </div>
+    <div class="flex items-center gap-3">
+      <span class:list={["rounded-full px-3 py-1.5 font-body text-xs font-medium", CLS_STATUS[lead.status]]}>
+        {statusLabel(lead.status)}
+      </span>
+      <a
+        href={whatsappParaNumero(lead.telefone, saudacao)}
+        target="_blank"
+        rel="noopener"
+        class="rounded-full bg-orange px-4 py-2 font-body text-sm font-semibold text-navy hover:bg-orange-400"
+      >
+        Chamar no WhatsApp
+      </a>
+    </div>
+  </div>
+
+  {
+    atrasado && (
+      <p class="mt-6 rounded-lg border border-[#b42318]/30 bg-[#b42318]/5 px-4 py-3 font-body text-sm text-[#b42318]">
+        Follow-up vencido — estava marcado para {dataBR(lead.proximo_contato, "UTC")}.
+      </p>
+    )
+  }
+
+  <div class="mt-8 grid gap-10 md:grid-cols-12">
+    <section class="md:col-span-5">
+      <h2 class="font-display text-base font-bold text-navy">Ficha</h2>
+      <dl class="mt-4 divide-y divide-kraft/50 border-y border-kraft/50">
+        {
+          ficha.map((f) => (
+            <div class="flex items-baseline justify-between gap-4 py-3">
+              <dt class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">{f.label}</dt>
+              <dd class="text-right font-body text-sm text-ink/85">
+                {f.href ? (
+                  <a href={f.href} target="_blank" rel="noopener" class="text-navy underline-offset-2 hover:underline">
+                    {f.valor}
+                  </a>
+                ) : (
+                  f.valor
+                )}
+              </dd>
+            </div>
+          ))
+        }
+      </dl>
+
+      {
+        lead.mensagem && (
+          <>
+            <h2 class="mt-8 font-display text-base font-bold text-navy">Mensagem do cliente</h2>
+            <p class="mt-3 whitespace-pre-line rounded-lg bg-kraft-100 p-4 font-body text-sm leading-relaxed text-ink/80">
+              {lead.mensagem}
+            </p>
+          </>
+        )
+      }
+
+      <form method="POST" class="mt-8 rounded-xl border border-kraft/60 bg-white p-5">
+        <input type="hidden" name="acao" value="salvar" />
+        <h2 class="font-display text-base font-bold text-navy">Situação</h2>
+        <div class="mt-4 grid gap-4">
+          <div>
+            <label for="status" class="mb-1.5 block font-body text-sm font-medium text-navy">Status</label>
+            <select id="status" name="status" class={inputCls}>
+              {STATUS_LEAD.map((s) => <option value={s.value} selected={s.value === lead.status}>{s.label}</option>)}
+            </select>
+          </div>
+          <div>
+            <label for="proximoContato" class="mb-1.5 block font-body text-sm font-medium text-navy">
+              Próximo contato
+            </label>
+            <input
+              id="proximoContato"
+              name="proximoContato"
+              type="date"
+              value={isoDe(lead.proximo_contato)}
+              class={inputCls}
+            />
+          </div>
+          <button class="rounded-full bg-navy px-5 py-2.5 font-body text-sm font-semibold text-white hover:bg-navy-800">
+            Salvar
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <section class="md:col-span-7">
+      <h2 class="font-display text-base font-bold text-navy">Anotações</h2>
+
+      <form method="POST" class="mt-4">
+        <input type="hidden" name="acao" value="nota" />
+        <label for="texto" class="sr-only">Nova anotação</label>
+        <textarea
+          id="texto"
+          name="texto"
+          rows="3"
+          required
+          placeholder="O que foi conversado, o que ficou combinado…"
+          class={inputCls}></textarea>
+        <button class="mt-3 rounded-full bg-orange px-5 py-2.5 font-body text-sm font-semibold text-navy hover:bg-orange-400">
+          Adicionar anotação
+        </button>
+      </form>
+
+      {
+        notas.length === 0 ? (
+          <p class="mt-8 font-body text-sm text-steel">Nenhuma anotação ainda.</p>
+        ) : (
+          <ol class="mt-8 space-y-5">
+            {notas.map((n) => (
+              <li class="border-l-2 border-kraft pl-4">
+                <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">
+                  {n.criado_em.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
+                </p>
+                <p class="mt-1.5 whitespace-pre-line font-body text-sm leading-relaxed text-ink/85">{n.texto}</p>
+              </li>
+            ))}
+          </ol>
+        )
+      }
+    </section>
+  </div>
+</AdminLayout>

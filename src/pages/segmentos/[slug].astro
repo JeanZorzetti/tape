@@ -1,0 +1,181 @@
+---
+import { Image } from "astro:assets";
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import JsonLd from "../../components/seo/JsonLd.astro";
+import WhatsAppCta from "../../components/quote/WhatsAppCta.astro";
+import TapeStrip from "../../components/ui/TapeStrip.astro";
+import { getProduto } from "../../lib/produtos";
+import { SITE_URL, PEDIDO_MINIMO_ROLOS } from "../../lib/constants";
+
+export async function getStaticPaths() {
+  const segmentos = await getCollection("segmentos");
+  return segmentos.map((segmento) => ({ params: { slug: segmento.id }, props: { segmento } }));
+}
+
+const { segmento } = Astro.props;
+const { data } = segmento;
+const { Content } = await render(segmento);
+
+const url = `${SITE_URL}/segmentos/${segmento.id}`;
+const produtos = data.produtosRelacionados.map(getProduto).filter((p) => p !== undefined);
+
+const posts = (await getCollection("blog", ({ data: p }) => !p.rascunho))
+  .filter((p) => p.data.segmentosRelacionados.includes(segmento.id))
+  .sort((a, b) => b.data.publicadoEm.getTime() - a.data.publicadoEm.getTime())
+  .slice(0, 3);
+
+const breadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "Segmentos", item: `${SITE_URL}/segmentos` },
+    { "@type": "ListItem", position: 3, name: data.titulo, item: url },
+  ],
+};
+---
+
+<BaseLayout
+  title={data.seo?.title ?? `${data.h1} | TapePro`}
+  description={data.seo?.description ?? data.resumo}
+>
+  <JsonLd data={breadcrumb} />
+
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-14 md:py-16">
+      <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/55">
+        <a href="/" class="hover:text-orange">Início</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <a href="/segmentos" class="hover:text-orange">Segmentos</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <span class="text-white/80">{data.titulo}</span>
+      </nav>
+
+      <p class="mt-8 font-mono text-xs uppercase tracking-[0.3em] text-orange">{data.eyebrow}</p>
+      <h1 class="mt-4 max-w-3xl font-display text-[clamp(2rem,5.5vw,3.75rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
+        {data.h1}
+      </h1>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-white/85">{data.resumo}</p>
+      <div class="mt-8">
+        <WhatsAppCta label="Pedir orçamento" contexto={data.contexto} paginaOrigem={data.titulo} />
+      </div>
+    </div>
+    <TapeStrip tone="orange" class="relative z-10" />
+  </section>
+
+  <figure class="mx-auto max-w-6xl px-4 pt-12 md:pt-16">
+    <Image
+      src={data.imagem}
+      alt={data.imagemAlt}
+      widths={[720, 1200]}
+      sizes="(min-width: 1152px) 1088px, 100vw"
+      loading="eager"
+      class="aspect-[3/2] w-full rounded-2xl object-cover md:aspect-[21/9]"
+    />
+  </figure>
+
+  <!-- DORES DO SEGMENTO -->
+  <section class="mx-auto max-w-6xl px-4 py-16 md:py-20">
+    <div class="grid gap-10 md:grid-cols-12 md:gap-14">
+      <div class="md:col-span-4">
+        <h2 class="text-2xl text-navy md:text-3xl">O que costuma dar errado</h2>
+        <p class="mt-4 font-body leading-relaxed text-ink/70">
+          Os quatro problemas que aparecem com mais frequência nos orçamentos deste setor.
+        </p>
+      </div>
+      <div class="md:col-span-8">
+        <ol class="divide-y divide-navy/10 border-y border-navy/10">
+          {
+            data.dores.map((dor, i) => (
+              <li class="flex gap-6 py-7">
+                <span class="font-mono text-sm tabular-nums text-orange-800" aria-hidden="true">
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <div>
+                  <h3 class="font-display text-lg font-bold text-navy">{dor.titulo}</h3>
+                  <p class="mt-2 max-w-2xl font-body leading-relaxed text-ink/75">{dor.texto}</p>
+                </div>
+              </li>
+            ))
+          }
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <!-- CORPO EDITORIAL -->
+  <section class="bg-kraft-100">
+    <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
+      <div class="prosa max-w-2xl">
+        <Content />
+      </div>
+    </div>
+  </section>
+
+  <!-- FITAS INDICADAS -->
+  <section class="mx-auto max-w-6xl px-4 py-16 md:py-20">
+    <h2 class="text-2xl text-navy md:text-3xl">As fitas indicadas para este cenário</h2>
+    <div class="mt-8 grid gap-6 sm:grid-cols-2">
+      {
+        produtos.map((p) => (
+          <a
+            href={`/produtos/${p.slug}`}
+            class="flex items-start gap-5 rounded-2xl border border-kraft/50 bg-white p-5 transition hover:border-orange"
+          >
+            <div class="flex h-20 w-20 flex-none items-center justify-center rounded-xl border border-kraft/40 bg-white p-2">
+              <Image src={p.imagem} alt="" loading="lazy" class="h-auto w-full object-contain" />
+            </div>
+            <div>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">{p.eyebrow}</p>
+              <h3 class="mt-1 font-display text-lg font-bold text-navy">{p.nome}</h3>
+              <p class="mt-1 font-body text-sm text-ink/70">{p.chamada}</p>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  {
+    posts.length > 0 && (
+      <section class="mx-auto max-w-6xl px-4 pb-16 md:pb-20">
+        <h2 class="text-2xl text-navy md:text-3xl">Para se aprofundar</h2>
+        <ul class="mt-8 divide-y divide-navy/10 border-y border-navy/10">
+          {posts.map((post) => (
+            <li class="py-5">
+              <a href={`/blog/${post.id}`} class="group flex flex-wrap items-baseline gap-x-4 gap-y-1">
+                <span class="font-display text-lg font-bold text-navy group-hover:text-orange-800">{post.data.titulo}</span>
+                <span class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-steel">
+                  {post.data.tempoLeituraMin} min
+                </span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
+  <section class="bg-orange text-navy">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-3xl md:text-4xl">Peça o orçamento para a sua operação.</h2>
+        <p class="mt-3 font-body text-navy">
+          Resposta rápida no WhatsApp · a partir de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <WhatsAppCta
+          label="Falar no WhatsApp"
+          contexto={data.contexto}
+          paginaOrigem={`${data.titulo} — CTA final`}
+          variant="light"
+        />
+        <a href="/orcamento" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+          Ou preencher o formulário →
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

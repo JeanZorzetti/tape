@@ -1,0 +1,310 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import JsonLd from "../../components/seo/JsonLd.astro";
+import WhatsAppCta from "../../components/quote/WhatsAppCta.astro";
+import TapeStrip from "../../components/ui/TapeStrip.astro";
+import { PRODUTOS } from "../../lib/produtos";
+import { SITE_URL, NOME_MARCA, PEDIDO_MINIMO_ROLOS } from "../../lib/constants";
+import { postsPublicados } from "../../lib/conteudo";
+import cliche from "../../assets/produtos/cliche-flexografico.png";
+
+export function getStaticPaths() {
+  return PRODUTOS.map((produto) => ({ params: { slug: produto.slug }, props: { produto } }));
+}
+
+const { produto } = Astro.props;
+const url = `${SITE_URL}/produtos/${produto.slug}`;
+const outros = PRODUTOS.filter((p) => p.slug !== produto.slug);
+
+// Contrapartida dos links conteúdo → produto: nenhuma página fica órfã.
+const segmentos = (await getCollection("segmentos"))
+  .filter((s) => s.data.produtosRelacionados.includes(produto.slug))
+  .sort((a, b) => a.data.ordem - b.data.ordem);
+
+const posts = (await postsPublicados())
+  .filter((p) => p.data.produtosRelacionados.includes(produto.slug))
+  .slice(0, 3);
+
+// Sem `offers`: a decisão comercial é não publicar preço, e Offer sem price é schema inválido.
+const productSchema = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: produto.nome,
+  description: produto.seoDescription,
+  image: new URL(produto.imagem.src, SITE_URL).href,
+  url,
+  category: "Fitas adesivas",
+  brand: { "@type": "Brand", name: NOME_MARCA },
+  additionalProperty: produto.specs.map((s) => ({
+    "@type": "PropertyValue",
+    name: s.label,
+    value: s.valor,
+  })),
+};
+
+const breadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "Produtos", item: `${SITE_URL}/produtos` },
+    { "@type": "ListItem", position: 3, name: produto.nome, item: url },
+  ],
+};
+
+// O clichê é custo de produção da impressão — vive dentro da fita personalizada, não é um 4º produto.
+const perguntasCliche = [
+  {
+    q: "O que é o clichê flexográfico?",
+    r: "É a matriz de borracha com a sua arte gravada — o carimbo que imprime a marca no rolo. Sem ela não existe fita personalizada: cada arte precisa da sua.",
+  },
+  {
+    q: "Pago o clichê em todo pedido?",
+    r: "Não. É um custo único por arte. A matriz fica guardada e as reposições seguintes saem só com o valor da fita, desde que a arte não mude.",
+  },
+  {
+    q: "Mudei o logo. Preciso de outro clichê?",
+    r: "Sim. Qualquer alteração na arte — cor, texto, proporção — exige uma matriz nova, porque a gravação é física.",
+  },
+  {
+    q: "Em quantas cores posso imprimir?",
+    r: "Até 2 cores. Cada cor é uma passagem de impressão e entra na composição do clichê.",
+  },
+  {
+    q: "Como envio a minha arte?",
+    r: "De preferência em vetor (PDF, AI, EPS ou CDR). Se você só tem o logo em imagem, mande no maior tamanho que tiver que a gente avalia e orienta.",
+  },
+];
+---
+
+<BaseLayout title={produto.seoTitle} description={produto.seoDescription}>
+  <JsonLd data={productSchema} />
+  <JsonLd data={breadcrumb} />
+
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-14 md:py-16">
+      <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/55">
+        <a href="/" class="hover:text-orange">Início</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <a href="/produtos" class="hover:text-orange">Produtos</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <span class="text-white/80">{produto.nome}</span>
+      </nav>
+
+      <p class="mt-8 font-mono text-xs uppercase tracking-[0.3em] text-orange">{produto.eyebrow}</p>
+      <h1 class="mt-4 max-w-3xl font-display text-[clamp(2rem,5.5vw,3.75rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
+        {produto.h1}
+      </h1>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-white/85">{produto.resumo}</p>
+      <div class="mt-8">
+        <WhatsAppCta label="Pedir orçamento desta fita" contexto={produto.contexto} paginaOrigem={produto.nome} />
+      </div>
+    </div>
+    <TapeStrip tone="orange" class="relative z-10" />
+  </section>
+
+  <!-- FOTO + FICHA TÉCNICA -->
+  <section class="mx-auto grid max-w-6xl gap-12 px-4 py-16 md:grid-cols-12 md:py-20">
+    <div class="md:col-span-5">
+      <div class="flex items-center justify-center rounded-2xl border border-kraft/50 bg-white p-10 md:sticky md:top-28">
+        <Image src={produto.imagem} alt={produto.alt} loading="eager" class="h-auto w-full max-w-[260px] object-contain" />
+      </div>
+    </div>
+
+    <div class="md:col-span-7">
+      <h2 class="text-2xl text-navy md:text-3xl">Ficha técnica</h2>
+      <dl class="mt-8 divide-y divide-navy/10 border-y border-navy/10">
+        {
+          produto.specs.map((s) => (
+            <div class="flex items-baseline justify-between gap-6 py-4">
+              <dt class="font-mono text-xs uppercase tracking-[0.18em] text-steel">{s.label}</dt>
+              <dd class="font-display text-xl font-bold tabular-nums text-navy">{s.valor}</dd>
+            </div>
+          ))
+        }
+      </dl>
+
+      <h2 class="mt-14 text-2xl text-navy md:text-3xl">Onde essa fita é usada</h2>
+      <ul class="mt-6 space-y-3">
+        {
+          produto.aplicacoes.map((a) => (
+            <li class="flex gap-3 font-body leading-relaxed text-ink/75">
+              <span class="mt-2 h-1.5 w-1.5 flex-none rounded-full bg-orange" aria-hidden="true" />
+              {a}
+            </li>
+          ))
+        }
+      </ul>
+
+      <h2 class="mt-14 text-2xl text-navy md:text-3xl">Por que escolher</h2>
+      <div class="mt-6 space-y-7">
+        {
+          produto.beneficios.map((b) => (
+            <div class="border-l-2 border-kraft pl-5">
+              <h3 class="font-display text-base font-bold text-navy">{b.titulo}</h3>
+              <p class="mt-1.5 font-body text-sm leading-relaxed text-ink/75">{b.texto}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  {
+    produto.personalizavel && (
+      <section class="bg-kraft-100">
+        <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
+          <div class="grid gap-10 md:grid-cols-12 md:gap-12">
+            <div class="md:col-span-7">
+              <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Custo de produção · uma vez só</p>
+              <h2 class="mt-3 text-2xl text-navy md:text-3xl">O clichê flexográfico</h2>
+              <p class="mt-5 max-w-xl font-body leading-relaxed text-ink/75">
+                Antes do primeiro rolo impresso existe a matriz: uma placa de borracha com a sua arte gravada em relevo,
+                que entra na impressora e carimba a marca ao longo da fita. Ela é feita uma vez, cobrada uma vez e fica
+                guardada para os próximos pedidos — o que muda de pedido para pedido é só a quantidade de fita.
+              </p>
+            </div>
+            <div class="md:col-span-5">
+              <div class="flex items-center justify-center rounded-2xl bg-white p-8">
+                <Image
+                  src={cliche}
+                  alt="Clichê flexográfico: matriz de borracha usada para imprimir a marca na fita"
+                  loading="lazy"
+                  class="h-auto w-full max-w-[240px] object-contain"
+                />
+              </div>
+            </div>
+          </div>
+
+          <h3 class="mt-14 font-display text-xl font-bold text-navy">Perguntas frequentes sobre personalização</h3>
+          <div class="mt-6 max-w-3xl divide-y divide-navy/10 border-y border-navy/10">
+            {perguntasCliche.map((f) => (
+              <details class="group py-4">
+                <summary class="flex cursor-pointer list-none items-center justify-between gap-6 font-body font-semibold text-navy">
+                  {f.q}
+                  <span
+                    class="font-mono text-lg leading-none text-orange-800 transition group-open:rotate-45"
+                    aria-hidden="true"
+                  >
+                    +
+                  </span>
+                </summary>
+                <p class="mt-3 max-w-2xl font-body text-sm leading-relaxed text-ink/75">{f.r}</p>
+              </details>
+            ))}
+          </div>
+
+          <p class="mt-8 font-body text-sm text-ink/70">
+            <a
+              href="/perguntas-frequentes"
+              class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+            >
+              Ver todas as perguntas frequentes
+            </a>
+            {" — prazo, mínimos, entrega e como preparar a arte. Ou entenda a matriz por dentro em "}
+            <a
+              href="/blog/o-que-e-cliche-flexografico"
+              class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+            >
+              o que é clichê flexográfico
+            </a>
+            .
+          </p>
+        </div>
+      </section>
+    )
+  }
+
+  <!-- ONDE ESSA FITA APARECE -->
+  {
+    (segmentos.length > 0 || posts.length > 0) && (
+      <section class="mx-auto grid max-w-6xl gap-12 px-4 py-16 md:grid-cols-2 md:gap-16">
+        {segmentos.length > 0 && (
+          <div>
+            <h2 class="text-2xl text-navy md:text-3xl">Quem costuma usar</h2>
+            <ul class="mt-6 divide-y divide-navy/10 border-y border-navy/10">
+              {segmentos.map((s) => (
+                <li class="py-4">
+                  <a href={`/segmentos/${s.id}`} class="group block">
+                    <span class="font-display text-base font-bold text-navy group-hover:text-orange-800">
+                      {s.data.titulo}
+                    </span>
+                    <span class="mt-1 block font-body text-sm text-ink/70">{s.data.chamada}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {posts.length > 0 && (
+          <div>
+            <h2 class="text-2xl text-navy md:text-3xl">Antes de decidir</h2>
+            <ul class="mt-6 divide-y divide-navy/10 border-y border-navy/10">
+              {posts.map((p) => (
+                <li class="py-4">
+                  <a href={`/blog/${p.id}`} class="group block">
+                    <span class="font-display text-base font-bold text-navy group-hover:text-orange-800">
+                      {p.data.titulo}
+                    </span>
+                    <span class="mt-1 block font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">
+                      {p.data.tempoLeituraMin} min de leitura
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+    )
+  }
+
+  <!-- OUTRAS FITAS -->
+  <section class="mx-auto max-w-6xl px-4 py-16">
+    <h2 class="text-2xl text-navy md:text-3xl">As outras fitas do catálogo</h2>
+    <div class="mt-8 grid gap-6 sm:grid-cols-2">
+      {
+        outros.map((o) => (
+          <a
+            href={`/produtos/${o.slug}`}
+            class="flex items-center gap-5 rounded-2xl border border-kraft/50 bg-white p-5 transition hover:border-orange"
+          >
+            <div class="flex h-20 w-20 flex-none items-center justify-center rounded-xl border border-kraft/40 bg-white p-2">
+              <Image src={o.imagem} alt="" loading="lazy" class="h-auto w-full object-contain" />
+            </div>
+            <div>
+              <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">{o.eyebrow}</p>
+              <h3 class="mt-1 font-display text-lg font-bold text-navy">{o.nome}</h3>
+              <p class="mt-1 font-body text-sm text-ink/70">{o.chamada}</p>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <section class="bg-orange text-navy">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-3xl md:text-4xl">Peça o orçamento desta fita.</h2>
+        <p class="mt-3 font-body text-navy">
+          Resposta rápida no WhatsApp · a partir de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <WhatsAppCta
+          label="Falar no WhatsApp"
+          contexto={produto.contexto}
+          paginaOrigem={`${produto.nome} — CTA final`}
+          variant="light"
+        />
+        <a href="/orcamento" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+          Ou preencher o formulário →
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

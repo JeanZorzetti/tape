@@ -1,0 +1,112 @@
+---
+import { Image } from "astro:assets";
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import JsonLd from "../../components/seo/JsonLd.astro";
+import WhatsAppCta from "../../components/quote/WhatsAppCta.astro";
+import { PRODUTOS } from "../../lib/produtos";
+import { SITE_URL, PEDIDO_MINIMO_ROLOS } from "../../lib/constants";
+
+const ORIGEM = "Produtos";
+
+const breadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "Produtos", item: `${SITE_URL}/produtos` },
+  ],
+};
+
+const lista = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: "Fitas adesivas TapePro",
+  itemListElement: PRODUTOS.map((p, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: p.nome,
+    url: `${SITE_URL}/produtos/${p.slug}`,
+  })),
+};
+---
+
+<BaseLayout
+  title="Fitas Adesivas Personalizadas e Comuns — Catálogo TapePro"
+  description="As 3 fitas da TapePro: transparente personalizada (48mm × 100m, até 2 cores), gomada kraft com fios de nylon (70mm × 150m) e transparente comum."
+>
+  <JsonLd data={breadcrumb} />
+  <JsonLd data={lista} />
+
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-16 md:py-20">
+      <p class="font-mono text-xs uppercase tracking-[0.3em] text-orange">Catálogo · B2B</p>
+      <h1 class="mt-5 max-w-3xl font-display text-[clamp(2.25rem,6vw,4rem)] font-extrabold leading-[0.95] tracking-[-0.03em]">
+        Três fitas. Nenhuma sobrando.
+      </h1>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-white/85">
+        Trabalhamos apenas com as fitas abaixo — transparentes, com ou sem personalização, e gomada reforçada com fios de
+        nylon, para caixas mais pesadas. Produção sob medida, a partir de {PEDIDO_MINIMO_ROLOS} rolos.
+      </p>
+    </div>
+  </section>
+
+  <div class="mx-auto max-w-6xl px-4">
+    {
+      PRODUTOS.map((p, i) => (
+        <article class="grid gap-8 border-b border-kraft/50 py-14 md:grid-cols-12 md:gap-12 md:py-16">
+          <div class="md:col-span-4">
+            <div class="flex items-center justify-center rounded-2xl border border-kraft/50 bg-white p-8">
+              <Image
+                src={p.imagem}
+                alt={p.alt}
+                loading={i === 0 ? "eager" : "lazy"}
+                class="h-auto w-full max-w-[220px] object-contain"
+              />
+            </div>
+          </div>
+
+          <div class="md:col-span-8">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.22em] text-steel">{p.eyebrow}</p>
+            <h2 class="mt-3 text-2xl text-navy md:text-3xl">
+              <a href={`/produtos/${p.slug}`} class="hover:text-orange-800">
+                {p.nome}
+              </a>
+            </h2>
+            <p class="mt-4 max-w-xl font-body leading-relaxed text-ink/75">{p.resumo}</p>
+
+            <dl class="mt-7 flex flex-wrap gap-x-10 gap-y-4">
+              {p.specs.slice(0, 4).map((s) => (
+                <div>
+                  <dt class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">{s.label}</dt>
+                  <dd class="mt-1 font-display text-lg font-bold tabular-nums text-navy">{s.valor}</dd>
+                </div>
+              ))}
+            </dl>
+
+            <div class="mt-8 flex flex-wrap items-center gap-5">
+              <WhatsAppCta label="Pedir orçamento" contexto={p.contexto} paginaOrigem={ORIGEM} compact />
+              <a
+                href={`/produtos/${p.slug}`}
+                class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline"
+              >
+                Ver especificações →
+              </a>
+            </div>
+          </div>
+        </article>
+      ))
+    }
+  </div>
+
+  <section class="bg-orange text-navy">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-3xl md:text-4xl">Não sabe qual fita pedir?</h2>
+        <p class="mt-3 max-w-lg font-body text-navy">
+          Conte o peso da caixa, o volume mensal e o que precisa aparecer no lacre — a gente indica e orça.
+        </p>
+      </div>
+      <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} — CTA final`} variant="light" />
+    </div>
+  </section>
+</BaseLayout>

@@ -1,0 +1,134 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { sessaoAtual } from "../../lib/auth";
+import { contarAtrasados, contarPorStatus, listarLeads, STATUS_LEAD, statusLabel } from "../../lib/crm";
+import { tipoFitaLabel } from "../../lib/quoteForm";
+import { dataBR, hojeISO, isoDe, estaAtrasado, CLS_STATUS } from "../../lib/adminUi";
+
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+
+const status = Astro.url.searchParams.get("status") ?? "";
+const busca = Astro.url.searchParams.get("q") ?? "";
+
+let leads: Awaited<ReturnType<typeof listarLeads>> = [];
+let porStatus: Record<string, number> = {};
+let atrasados = 0;
+let erro = "";
+
+try {
+  [leads, porStatus, atrasados] = await Promise.all([
+    listarLeads({ status, busca }),
+    contarPorStatus(),
+    contarAtrasados(),
+  ]);
+} catch (e) {
+  console.error("[admin] falha ao carregar leads", e);
+  erro = "Não consegui ler o banco. Confira a DATABASE_URL.";
+}
+
+const hoje = hojeISO();
+const total = Object.values(porStatus).reduce((a, b) => a + b, 0);
+const inputCls =
+  "rounded-lg border border-kraft/60 bg-white px-3 py-2 font-body text-sm text-ink focus:border-navy focus:outline-none";
+---
+
+<AdminLayout title="Leads">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-extrabold text-navy">Leads</h1>
+      <p class="mt-1 font-body text-sm text-steel">
+        {total} no total{atrasados > 0 && <span class="font-semibold text-[#b42318]"> · {atrasados} com follow-up vencido</span>}
+      </p>
+    </div>
+
+    <form method="GET" class="flex flex-wrap items-center gap-2">
+      <label for="q" class="sr-only">Buscar</label>
+      <input id="q" type="search" name="q" value={busca} placeholder="nome, empresa ou e-mail" class={inputCls} />
+      <label for="status" class="sr-only">Status</label>
+      <select id="status" name="status" class={inputCls}>
+        <option value="">Todos os status</option>
+        {STATUS_LEAD.map((s) => <option value={s.value} selected={s.value === status}>{s.label}</option>)}
+      </select>
+      <button class="rounded-lg bg-navy px-4 py-2 font-body text-sm font-semibold text-white hover:bg-navy-800">
+        Filtrar
+      </button>
+    </form>
+  </div>
+
+  {erro && <p role="alert" class="mt-6 rounded-lg border border-[#b42318]/30 bg-[#b42318]/5 px-4 py-3 font-body text-sm text-[#b42318]">{erro}</p>}
+
+  <ul class="mt-6 flex flex-wrap gap-2">
+    {
+      STATUS_LEAD.map((s) => (
+        <li>
+          <a
+            href={`/admin?status=${s.value}`}
+            class:list={[
+              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-body text-xs font-medium",
+              status === s.value ? "border-navy bg-navy text-white" : "border-kraft/60 bg-white text-ink/75 hover:border-navy",
+            ]}
+          >
+            {s.label}
+            <span class="font-mono tabular-nums opacity-70">{porStatus[s.value] ?? 0}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  {
+    leads.length === 0 && !erro ? (
+      <p class="mt-10 rounded-xl border border-dashed border-kraft py-12 text-center font-body text-sm text-steel">
+        Nenhum lead {status || busca ? "com esse filtro" : "ainda"}.
+      </p>
+    ) : (
+      <div class="mt-6 overflow-x-auto">
+        <table class="w-full min-w-[46rem] border-collapse text-left">
+          <thead>
+            <tr class="border-b border-kraft/60 font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">
+              <th scope="col" class="py-3 pr-4 font-medium">Recebido</th>
+              <th scope="col" class="py-3 pr-4 font-medium">Empresa / contato</th>
+              <th scope="col" class="py-3 pr-4 font-medium">Interesse</th>
+              <th scope="col" class="py-3 pr-4 font-medium">Status</th>
+              <th scope="col" class="py-3 font-medium">Próximo contato</th>
+            </tr>
+          </thead>
+          <tbody>
+            {leads.map((l) => (
+              <tr class="border-b border-kraft/40 align-top hover:bg-kraft-100/50">
+                <td class="py-4 pr-4 font-mono text-xs tabular-nums text-steel">{dataBR(l.criado_em)}</td>
+                <td class="py-4 pr-4">
+                  <a href={`/admin/${l.id}`} class="font-display text-sm font-bold text-navy hover:text-orange-800">
+                    {l.empresa}
+                  </a>
+                  <p class="font-body text-xs text-ink/70">{l.nome}</p>
+                </td>
+                <td class="py-4 pr-4 font-body text-sm text-ink/75">
+                  {tipoFitaLabel(l.tipo_fita)}
+                  <p class="font-mono text-xs tabular-nums text-steel">{l.quantidade}</p>
+                </td>
+                <td class="py-4 pr-4">
+                  <span class:list={["inline-block rounded-full px-2.5 py-1 font-body text-xs font-medium", CLS_STATUS[l.status]]}>
+                    {statusLabel(l.status)}
+                  </span>
+                </td>
+                <td class="py-4 font-mono text-xs tabular-nums">
+                  {l.proximo_contato ? (
+                    <span class={estaAtrasado(l.proximo_contato, l.status, hoje) ? "font-semibold text-[#b42318]" : "text-steel"}>
+                      {dataBR(l.proximo_contato, "UTC")}
+                      {estaAtrasado(l.proximo_contato, l.status, hoje) && " · vencido"}
+                    </span>
+                  ) : (
+                    <span class="text-steel/60">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    )
+  }
+</AdminLayout>

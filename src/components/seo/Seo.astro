@@ -1,0 +1,31 @@
+---
+import { SITE_URL, NOME_MARCA } from "../../lib/constants";
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+  /** Fora do índice (ex.: /404). O /admin resolve o dele no AdminLayout, que não usa este componente. */
+  noindex?: boolean;
+}
+const { title, description, image, noindex = false } = Astro.props;
+const base = Astro.site ?? new URL(SITE_URL);
+const canonical = new URL(Astro.url.pathname, base).href;
+const ogImage = new URL(image ?? "/og-default.png", base).href;
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+{noindex && <meta name="robots" content="noindex, follow" />}
+<link rel="canonical" href={canonical} />
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:site_name" content={NOME_MARCA} />
+<meta property="og:locale" content="pt_BR" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />

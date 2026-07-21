@@ -1,0 +1,261 @@
+---
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import WhatsAppCta from "../components/quote/WhatsAppCta.astro";
+import TapeStrip from "../components/ui/TapeStrip.astro";
+import { PEDIDO_MINIMO_ROLOS, EMPRESAS_ATENDIDAS } from "../lib/constants";
+import { PRODUTOS } from "../lib/produtos";
+import { postsPublicados } from "../lib/conteudo";
+
+import deposito from "../assets/marca/deposito-tapepro.jpg";
+import natures from "../assets/portfolio/natures.png";
+import halyee from "../assets/portfolio/halyee.png";
+import lyon from "../assets/portfolio/lyon.png";
+import finaart from "../assets/portfolio/finaart.png";
+import comando from "../assets/portfolio/comando.png";
+import yanmei from "../assets/portfolio/yanmei.png";
+import quemed from "../assets/portfolio/quemed.png";
+
+const ORIGEM = "Home";
+
+const diferenciais = [
+  { num: `${PEDIDO_MINIMO_ROLOS}`, unidade: "rolos", texto: "Pedido mínimo — os concorrentes costumam exigir 100+." },
+  { num: `+${(EMPRESAS_ATENDIDAS).toLocaleString("pt-BR")}`, unidade: "empresas", texto: "Já estampam suas caixas com a TapePro." },
+  { num: "2", unidade: "cores", texto: "De impressão inclusas na sua arte." },
+  { num: "100%", unidade: "nacional", texto: "Atendimento e entrega para todo o Brasil." },
+];
+
+const portfolio = [
+  { img: natures, nome: "Nature's Prime", tipo: "Transparente" },
+  { img: halyee, nome: "Halyee", tipo: "Transparente" },
+  { img: lyon, nome: "Lyon Peças", tipo: "Transparente" },
+  { img: finaart, nome: "Finaart", tipo: "Transparente" },
+  { img: comando, nome: "Comando Auto Peças", tipo: "Transparente" },
+  { img: yanmei, nome: "Yanmei", tipo: "Gomada kraft" },
+  { img: quemed, nome: "Quemed", tipo: "Gomada kraft" },
+];
+
+const selos = ["Cuidado — Frágil", "Volume conferido", "Selo de garantia de violação"];
+
+const segmentos = (await getCollection("segmentos")).sort((a, b) => a.data.ordem - b.data.ordem);
+const posts = (await postsPublicados()).slice(0, 3);
+---
+
+<BaseLayout
+  title="TapePro — Fitas Adesivas Personalizadas com a Sua Marca"
+  description="Fitas adesivas personalizadas para empresas: transparente e kraft com a sua marca impressa. A partir de 20 rolos, até 2 cores, atendimento nacional."
+>
+  <!-- HERO — cinematográfico -->
+  <section class="relative isolate overflow-hidden bg-navy text-white">
+    <Image
+      src={deposito}
+      alt="Galpão logístico com prateleiras de fitas TapePro e uma caixa sendo lacrada com a fita personalizada"
+      loading="eager"
+      fetchpriority="high"
+      width={1920}
+      widths={[768, 1280, 1920]}
+      sizes="100vw"
+      class="absolute inset-0 -z-10 h-full w-full object-cover object-[68%_center]"
+    />
+    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-[#080b20] via-[#080b20]/72 to-transparent" aria-hidden="true"></div>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-t from-[#080b20] via-[#080b20]/20 to-transparent" aria-hidden="true"></div>
+    <div class="absolute inset-0 -z-10 bg-[#080b20]/25" aria-hidden="true"></div>
+
+    <div class="mx-auto flex min-h-[86vh] max-w-6xl flex-col justify-end px-4 pb-16 pt-28 md:min-h-[90vh] md:pb-24">
+      <div class="max-w-3xl">
+        <p class="font-mono text-xs uppercase tracking-[0.3em] text-orange">Fitas adesivas personalizadas · B2B</p>
+        <h1 class="mt-5 font-display text-[clamp(2.75rem,7.5vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.03em] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)]">
+          Sua marca sela<br class="hidden sm:block" /> cada caixa que sai.
+        </h1>
+        <p class="mt-6 max-w-xl font-body text-lg leading-relaxed text-white/85">
+          A TapePro imprime a identidade da sua empresa em fita transparente ou kraft — lacre, proteja e divulgue a cada
+          envio. A partir de {PEDIDO_MINIMO_ROLOS} rolos, com até 2 cores.
+        </p>
+        <div class="mt-9 flex flex-wrap items-center gap-4">
+          <WhatsAppCta label="Pedir orçamento no WhatsApp" paginaOrigem={ORIGEM} />
+          <a href="#portfolio" class="font-body text-sm font-semibold text-white/90 underline-offset-4 hover:underline">
+            Ver portfólio →
+          </a>
+        </div>
+        <p class="mt-8 font-mono text-xs uppercase tracking-widest text-white/55">
+          +{EMPRESAS_ATENDIDAS.toLocaleString("pt-BR")} empresas já estampam suas caixas com a gente
+        </p>
+      </div>
+    </div>
+    <TapeStrip tone="orange" class="relative z-10" />
+  </section>
+
+  <!-- PRODUTOS -->
+  <section id="produtos" class="mx-auto max-w-6xl px-4 py-20">
+    <div class="max-w-2xl">
+      <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">O que a gente faz</p>
+      <h2 class="mt-3 text-3xl md:text-4xl">Três fitas, uma missão: sua marca protegendo o pacote.</h2>
+    </div>
+    <div class="mt-12 grid gap-6 md:grid-cols-3">
+      {
+        PRODUTOS.map((p) => (
+          <article class="flex flex-col rounded-2xl border border-kraft/50 bg-white p-7 transition hover:border-orange">
+            <p class="font-mono text-[0.7rem] uppercase tracking-[0.15em] text-steel">
+              {p.specs[0].valor} × {p.specs[1].valor} · {p.eyebrow}
+            </p>
+            <h3 class="mt-3 text-xl text-navy">
+              <a href={`/produtos/${p.slug}`} class="hover:text-orange-800">
+                {p.nome}
+              </a>
+            </h3>
+            <p class="mt-3 flex-1 font-body text-sm leading-relaxed text-ink/75">{p.resumo}</p>
+            <div class="mt-6 flex flex-wrap items-center gap-4">
+              <WhatsAppCta label="Pedir orçamento" contexto={p.contexto} paginaOrigem={ORIGEM} variant="light" compact />
+              <a
+                href={`/produtos/${p.slug}`}
+                class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline"
+              >
+                Ver ficha →
+              </a>
+            </div>
+          </article>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- DIFERENCIAIS -->
+  <section id="diferenciais" class="bg-kraft-100">
+    <div class="mx-auto max-w-6xl px-4 py-20">
+      <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+        {
+          diferenciais.map((d) => (
+            <div class="border-t-2 border-navy/15 pt-5">
+              <p class="font-display text-4xl font-extrabold text-navy md:text-5xl">
+                {d.num} <span class="font-mono text-sm font-medium uppercase tracking-widest text-orange-800">{d.unidade}</span>
+              </p>
+              <p class="mt-3 font-body text-sm leading-relaxed text-ink/70">{d.texto}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- PORTFÓLIO -->
+  <section id="portfolio" class="mx-auto max-w-6xl px-4 py-20">
+    <div class="max-w-2xl">
+      <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Portfólio</p>
+      <h2 class="mt-3 text-3xl md:text-4xl">Marcas que já viajam em cada encomenda.</h2>
+      <p class="mt-4 font-body text-ink/70">Trabalhos reais impressos pela TapePro — do jeans ao autopeças, da farmácia ao alimentício.</p>
+    </div>
+    <ul class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
+      {
+        portfolio.map((c) => (
+          <li class="group rounded-2xl border border-kraft/40 bg-kraft-100 p-4">
+            <div class="flex min-h-28 items-center justify-center overflow-hidden rounded-lg bg-white p-3">
+              <Image
+                src={c.img}
+                alt={`Fita personalizada TapePro para ${c.nome}`}
+                loading="lazy"
+                widths={[240, 480]}
+                sizes="(min-width: 1024px) 220px, (min-width: 640px) 30vw, 45vw"
+                class="h-auto w-full object-contain transition group-hover:scale-[1.03]"
+              />
+            </div>
+            <div class="mt-3 flex items-center justify-between">
+              <span class="font-body text-sm font-semibold text-navy">{c.nome}</span>
+              <span class="font-mono text-[0.6rem] uppercase tracking-widest text-steel">{c.tipo}</span>
+            </div>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <!-- SEGURANÇA / VALOR -->
+  <section class="bg-navy text-white">
+    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-16 md:grid-cols-2 md:items-center">
+      <div>
+        <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange">Fita que protege e comunica</p>
+        <h2 class="mt-3 text-3xl md:text-4xl">Mais que marca: segurança impressa.</h2>
+        <p class="mt-5 max-w-lg font-body leading-relaxed text-white/80">
+          Além do seu logo, imprimimos avisos que reduzem extravio e contestação — e mostram ao cliente que o pacote chegou
+          intacto.
+        </p>
+      </div>
+      <ul class="flex flex-wrap gap-3 md:justify-end">
+        {selos.map((s) => <li class="rounded-full border border-white/25 px-4 py-2 font-mono text-xs uppercase tracking-widest text-white/85">{s}</li>)}
+      </ul>
+    </div>
+  </section>
+
+  <!-- SEGMENTOS -->
+  <section id="segmentos" class="mx-auto max-w-6xl px-4 py-20">
+    <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Aplicações</p>
+    <h2 class="mt-3 max-w-2xl text-3xl md:text-4xl">A mesma fita resolve problemas diferentes.</h2>
+    <div class="mt-10 grid gap-px overflow-hidden rounded-2xl border border-kraft/50 bg-kraft/40 sm:grid-cols-2 lg:grid-cols-4">
+      {
+        segmentos.map((s) => (
+          <a href={`/segmentos/${s.id}`} class="group flex flex-col bg-paper p-6 transition hover:bg-white">
+            <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">{s.data.eyebrow}</p>
+            <h3 class="mt-3 font-display text-lg font-bold text-navy group-hover:text-orange-800">{s.data.titulo}</h3>
+            <p class="mt-2 flex-1 font-body text-sm leading-relaxed text-ink/70">{s.data.chamada}</p>
+            <span class="mt-5 font-body text-sm font-semibold text-navy group-hover:text-orange-800" aria-hidden="true">→</span>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+
+  <!-- BLOG -->
+  <section class="bg-kraft-100">
+    <div class="mx-auto max-w-6xl px-4 py-20">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Conteúdo técnico</p>
+          <h2 class="mt-3 max-w-2xl text-3xl md:text-4xl">O que ninguém explica sobre fita.</h2>
+        </div>
+        <a href="/blog" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+          Ver todos os artigos →
+        </a>
+      </div>
+
+      <div class="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-3">
+        {
+          posts.map((p) => (
+            <article>
+              <a href={`/blog/${p.id}`} class="group block">
+                <Image
+                  src={p.data.imagem}
+                  alt={p.data.imagemAlt}
+                  widths={[400, 800]}
+                  sizes="(min-width: 640px) 340px, 100vw"
+                  loading="lazy"
+                  class="aspect-[3/2] w-full rounded-xl object-cover"
+                />
+                <h3 class="mt-4 font-display text-base font-bold leading-snug text-navy group-hover:text-orange-800">
+                  {p.data.titulo}
+                </h3>
+                <p class="mt-2 font-body text-sm leading-relaxed text-ink/70">{p.data.descricao}</p>
+              </a>
+            </article>
+          ))
+        }
+      </div>
+
+      <p class="mt-12 font-body text-ink/70">
+        Dúvidas de pedido, prazo, clichê e cores estão em
+        <a href="/perguntas-frequentes" class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800">
+          perguntas frequentes</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- CTA FINAL -->
+  <section id="contato" class="bg-orange text-navy">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-3xl md:text-4xl">Peça seu orçamento hoje.</h2>
+        <p class="mt-3 font-body text-navy">Resposta rápida no WhatsApp · pedido mínimo de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.</p>
+      </div>
+      <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} — CTA final`} variant="light" />
+    </div>
+  </section>
+</BaseLayout>

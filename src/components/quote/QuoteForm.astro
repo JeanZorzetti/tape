@@ -1,0 +1,148 @@
+---
+import { TIPOS_FITA } from "../../lib/quoteForm";
+
+interface Props {
+  paginaOrigem?: string;
+}
+const { paginaOrigem = "Orçamento" } = Astro.props;
+
+const labelCls = "mb-1.5 block font-body text-sm font-medium text-navy";
+const inputCls =
+  "w-full rounded-lg border border-kraft/60 bg-white px-3.5 py-2.5 font-body text-ink placeholder:text-steel/60 focus:border-navy focus:outline-none";
+const reqMark = '<span class="text-orange-800" aria-hidden="true">*</span>';
+---
+
+<form id="quote-form" novalidate class="grid gap-5" aria-describedby="quote-status">
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <label for="qf-nome" class={labelCls}>Nome <Fragment set:html={reqMark} /></label>
+      <input id="qf-nome" name="nome" type="text" required autocomplete="name" class={inputCls} />
+    </div>
+    <div>
+      <label for="qf-empresa" class={labelCls}>Empresa <Fragment set:html={reqMark} /></label>
+      <input id="qf-empresa" name="empresa" type="text" required autocomplete="organization" class={inputCls} />
+    </div>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <label for="qf-email" class={labelCls}>E-mail <Fragment set:html={reqMark} /></label>
+      <input id="qf-email" name="email" type="email" required autocomplete="email" placeholder="voce@empresa.com.br" class={inputCls} />
+    </div>
+    <div>
+      <label for="qf-telefone" class={labelCls}>Telefone / WhatsApp <Fragment set:html={reqMark} /></label>
+      <input id="qf-telefone" name="telefone" type="tel" required inputmode="tel" autocomplete="tel" placeholder="(62) 90000-0000" class={inputCls} />
+    </div>
+  </div>
+
+  <div class="grid gap-5 sm:grid-cols-2">
+    <div>
+      <label for="qf-cnpj" class={labelCls}>CNPJ <span class="font-normal text-steel">(opcional)</span></label>
+      <input id="qf-cnpj" name="cnpj" type="text" inputmode="numeric" placeholder="00.000.000/0000-00" class={inputCls} />
+    </div>
+    <div>
+      <label for="qf-quantidade" class={labelCls}>Quantidade estimada <Fragment set:html={reqMark} /></label>
+      <input id="qf-quantidade" name="quantidadeEstimada" type="text" required placeholder="ex.: 100 rolos" class={inputCls} />
+    </div>
+  </div>
+
+  <div>
+    <label for="qf-tipo" class={labelCls}>Tipo de fita <Fragment set:html={reqMark} /></label>
+    <select id="qf-tipo" name="tipoFita" required class={inputCls}>
+      <option value="" disabled selected>Selecione…</option>
+      {TIPOS_FITA.map((t) => <option value={t.value}>{t.label}</option>)}
+    </select>
+  </div>
+
+  <div>
+    <label for="qf-mensagem" class={labelCls}>Mensagem <span class="font-normal text-steel">(opcional)</span></label>
+    <textarea id="qf-mensagem" name="mensagem" rows="4" placeholder="Conte sobre a arte, cores, prazo…" class={inputCls}></textarea>
+  </div>
+
+  <!-- honeypot anti-spam: humanos não veem, bots preenchem -->
+  <input type="text" name="botcheck" tabindex="-1" autocomplete="off" aria-hidden="true" class="hidden" />
+  <input type="hidden" name="paginaOrigem" value={paginaOrigem} />
+
+  <div class="flex flex-col gap-3">
+    <button
+      type="submit"
+      class="inline-flex items-center justify-center gap-2 rounded-full bg-orange px-6 py-3.5 font-body text-base font-semibold text-navy shadow-sm transition hover:bg-orange-400 focus-visible:outline disabled:opacity-60"
+    >
+      Enviar pedido de orçamento
+    </button>
+    <p id="quote-status" role="status" aria-live="polite" class="min-h-5 font-body text-sm"></p>
+  </div>
+</form>
+
+<script>
+  import { whatsappFromLead } from "../../lib/quoteForm";
+
+  const form = document.getElementById("quote-form") as HTMLFormElement | null;
+  if (form) {
+    const statusEl = document.getElementById("quote-status") as HTMLParagraphElement;
+    const submitBtn = form.querySelector<HTMLButtonElement>("button[type=submit]")!;
+
+    const el = (name: string) => form.elements.namedItem(name) as HTMLInputElement;
+    const val = (name: string) => el(name)?.value.trim() ?? "";
+    const resumo = () => ({
+      nome: val("nome"),
+      empresa: val("empresa"),
+      tipoFita: val("tipoFita"),
+      quantidadeEstimada: val("quantidadeEstimada"),
+      mensagem: val("mensagem"),
+    });
+
+    const setStatus = (html: string, tone: "info" | "ok" | "err") => {
+      statusEl.innerHTML = html;
+      statusEl.dataset.tone = tone;
+    };
+
+    // registra a URL real de origem além do rótulo
+    el("paginaOrigem").value = `${el("paginaOrigem").value} — ${location.href}`;
+
+    // CNPJ: se preenchido, exige 14 dígitos (limpa o erro ao editar)
+    const cnpj = el("cnpj");
+    cnpj.addEventListener("input", () => cnpj.setCustomValidity(""));
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const honey = el("botcheck");
+      if (honey && honey.value) return; // bot: descarta silenciosamente
+
+      const digits = cnpj.value.replace(/\D/g, "");
+      cnpj.setCustomValidity(cnpj.value && digits.length !== 14 ? "CNPJ deve ter 14 dígitos." : "");
+      if (!form.reportValidity()) return;
+
+      submitBtn.disabled = true;
+      setStatus("Enviando…", "info");
+      try {
+        const res = await fetch("/api/lead", { method: "POST", body: new FormData(form) });
+        const json = await res.json();
+        if (!json.ok) throw new Error(json.erro || "falha");
+        setStatus("Recebemos seu pedido de orçamento — retornamos em breve.", "ok");
+        form.reset();
+      } catch {
+        const wa = whatsappFromLead(resumo());
+        setStatus(
+          `Não consegui enviar agora. <a href="${wa}" target="_blank" rel="noopener" class="font-semibold underline">Fale no WhatsApp</a> ou tente novamente.`,
+          "err",
+        );
+      } finally {
+        submitBtn.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  #quote-status[data-tone="ok"] {
+    color: #1b7f4b;
+  }
+  #quote-status[data-tone="err"] {
+    color: #b42318;
+  }
+  #quote-status[data-tone="info"] {
+    color: var(--color-steel);
+  }
+</style>

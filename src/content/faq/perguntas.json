@@ -1,0 +1,128 @@
+[
+  {
+    "id": "pedido-minimo",
+    "grupo": "pedido",
+    "ordem": 1,
+    "pergunta": "Qual é o pedido mínimo?",
+    "resposta": "20 rolos para a fita transparente personalizada e 15 rolos para a fita gomada. Em fita de 48 mm × 100 m, 20 rolos costumam dar alguns milhares de caixas — na maioria das operações, meses de consumo. O preço por rolo cai em faixas conforme a quantidade sobe."
+  },
+  {
+    "id": "prazo-de-producao",
+    "grupo": "pedido",
+    "ordem": 2,
+    "pergunta": "Qual o prazo de produção?",
+    "resposta": "Fita personalizada é feita sob encomenda, e o prazo começa a contar depois da aprovação da arte. O primeiro pedido leva mais tempo porque inclui a gravação do clichê; as reposições, com a matriz já pronta, saem mais rápido. Confirmamos o prazo exato no orçamento, junto com o valor."
+  },
+  {
+    "id": "precisa-de-cnpj",
+    "grupo": "pedido",
+    "ordem": 3,
+    "pergunta": "Preciso de CNPJ para comprar?",
+    "resposta": "O fornecimento é B2B e a maior parte dos pedidos é faturada para CNPJ. Se você não tem CNPJ mas o volume faz sentido, fale com a gente pelo WhatsApp que a gente avalia o caso."
+  },
+  {
+    "id": "quantos-rolos-preciso",
+    "grupo": "pedido",
+    "ordem": 4,
+    "pergunta": "Como sei quantos rolos preciso?",
+    "resposta": "Multiplique as caixas por mês pelos metros gastos em cada uma (cerca de 1,5 m numa caixa média), divida por 100 m, que é o rolo de BOPP, e some de 10% a 15% de perda. Se preferir, mande quantas caixas você fecha por mês e o tamanho médio que a gente faz a conta junto."
+  },
+  {
+    "id": "tem-preco-no-site",
+    "grupo": "pedido",
+    "ordem": 5,
+    "pergunta": "Por que não tem preço no site?",
+    "resposta": "Porque cada pedido é produzido sob encomenda: o valor depende da quantidade, do material, do número de cores e de existir ou não um clichê anterior. Um preço fixo de prateleira seria errado para quase todo mundo. Mandando esses quatro dados, o orçamento fechado volta rápido."
+  },
+  {
+    "id": "posso-pedir-amostra",
+    "grupo": "pedido",
+    "ordem": 6,
+    "pergunta": "Consigo ver uma amostra antes de fechar?",
+    "resposta": "Fale com a gente pelo WhatsApp. Como a fita impressa só existe depois do clichê, o que costuma resolver a dúvida antes do pedido é ver amostras de trabalhos já produzidos e a simulação da sua arte aplicada no rolo."
+  },
+  {
+    "id": "quais-fitas-existem",
+    "grupo": "produto",
+    "ordem": 1,
+    "pergunta": "Quais fitas vocês fornecem?",
+    "resposta": "Trabalhamos apenas com as três: transparente personalizada (48 mm × 100 m, até 2 cores), transparente comum sem impressão (48 mm × 100 m) e gomada reforçada com fios de nylon (70 mm × 150 m), garantindo mais resistência e segurança para caixas mais pesadas."
+  },
+  {
+    "id": "qual-fita-caixa-pesada",
+    "grupo": "produto",
+    "ordem": 2,
+    "pergunta": "Qual fita usar em caixa pesada?",
+    "resposta": "Acima de uns 15 a 20 kg, ou em caixa que vai empilhada em palete, a indicação é a fita gomada com fios de nylon. Ela é ativada com água e penetra na fibra do papelão, virando parte da caixa — não existe interface de cola para escorregar sob tensão, que é como a fita plástica falha nesse peso."
+  },
+  {
+    "id": "diferenca-gomada-bopp",
+    "grupo": "produto",
+    "ordem": 3,
+    "pergunta": "Qual a diferença entre fita gomada e fita BOPP?",
+    "resposta": "São dois mecanismos de colagem diferentes, não duas qualidades da mesma coisa. A BOPP é um filme plástico que cola por pressão, na superfície do papelão: rápida, barata e ideal para o giro diário. A gomada é papel kraft com goma ativada por água, que cola dentro da fibra: aguenta peso, é reciclável junto com a caixa e só abre rasgando."
+  },
+  {
+    "id": "fita-personalizada-e-mais-fraca",
+    "grupo": "produto",
+    "ordem": 4,
+    "pergunta": "A fita personalizada cola menos que a comum?",
+    "resposta": "Não. É a mesma base BOPP e a mesma adesão — a única diferença é a impressão. Largura e comprimento também são iguais, então ela entra na operação sem nenhuma adaptação de seladora ou de processo."
+  },
+  {
+    "id": "fita-descolando",
+    "grupo": "produto",
+    "ordem": 5,
+    "pergunta": "Minha fita atual está descolando. É problema da fita?",
+    "resposta": "Na maioria das vezes, não. As causas mais comuns são papelão de alta reciclagem soltando fibra, pressão insuficiente na aplicação, superfície com pó ou frio, e caixa maior que o conteúdo. Vale checar isso antes de trocar de fornecedor: se a fita solta com papel colado nela, o elo fraco é a caixa, não a cola."
+  },
+  {
+    "id": "quantas-cores",
+    "grupo": "personalizacao",
+    "ordem": 1,
+    "pergunta": "Em quantas cores posso imprimir a minha marca?",
+    "resposta": "Até 2 cores. Cada cor é uma passagem de impressão e uma matriz separada, e entra na composição do clichê. Na prática, duas cores cobrem a maioria das marcas — e uma versão de cor única costuma ler melhor na fita, porque o lacre é visto em movimento."
+  },
+  {
+    "id": "o-que-e-cliche",
+    "grupo": "personalizacao",
+    "ordem": 2,
+    "pergunta": "O que é o clichê flexográfico?",
+    "resposta": "É a matriz com a sua arte gravada em alto-relevo — o carimbo que imprime a marca ao longo do rolo. Sem ela não existe fita personalizada: cada arte precisa da sua. É uma peça física, fabricada antes do primeiro metro de fita ser impresso."
+  },
+  {
+    "id": "cliche-todo-pedido",
+    "grupo": "personalizacao",
+    "ordem": 3,
+    "pergunta": "Pago o clichê em todo pedido?",
+    "resposta": "Não. É um custo único por arte. A matriz fica guardada e as reposições seguintes saem só com o valor da fita, desde que a arte não mude. É o único item do orçamento que não se repete."
+  },
+  {
+    "id": "mudei-o-logo",
+    "grupo": "personalizacao",
+    "ordem": 4,
+    "pergunta": "Mudei o logo. Preciso de outro clichê?",
+    "resposta": "Sim. Qualquer alteração na arte — cor, texto, proporção, um aviso a mais — exige uma matriz nova, porque a gravação é física e não pode ser editada. Por isso vale fechar a arte antes de gravar o primeiro clichê."
+  },
+  {
+    "id": "como-enviar-arte",
+    "grupo": "personalizacao",
+    "ordem": 5,
+    "pergunta": "Como envio a minha arte?",
+    "resposta": "De preferência em vetor (PDF, AI, EPS ou CDR), com os textos convertidos em curvas. Evite degradê, sombra e traço muito fino: impressão em fita é de traço, e efeitos de meio-tom se perdem. Se você só tem o logo em imagem, mande no maior tamanho que tiver que a gente avalia e orienta."
+  },
+  {
+    "id": "o-que-imprimir",
+    "grupo": "personalizacao",
+    "ordem": 6,
+    "pergunta": "O que vale a pena imprimir na fita além do logo?",
+    "resposta": "Os avisos que mais aparecem nos pedidos são \"ESTA FITA É SUA GARANTIA\", \"VOLUME CONFERIDO\" e \"CUIDADO, FRÁGIL\". O primeiro é o mais eficaz porque instrui o recebedor a conferir o lacre na hora da entrega — o único momento em que a responsabilidade por uma avaria ainda pode ser atribuída."
+  },
+  {
+    "id": "atende-todo-brasil",
+    "grupo": "entrega",
+    "ordem": 1,
+    "pergunta": "Vocês atendem todo o Brasil?",
+    "resposta": "Sim. O atendimento é nacional e o pedido é despachado por transportadora para qualquer estado. O frete entra no orçamento junto com o valor da fita, calculado pelo CEP de entrega e pela quantidade."
+  }
+]
