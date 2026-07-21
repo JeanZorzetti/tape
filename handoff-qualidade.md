@@ -6,6 +6,8 @@
 
 **Ordem sugerida: 2 → 3 → 1.** A compressão é config de 5 minutos com ganho imediato; o favicon é visível em todo link compartilhado; os testes são o maior investimento e o que mais rende se o site continuar evoluindo.
 
+**Atualização 2026-07-21:** item 3 concluído. Restam o 2 (config de infra, fora do código) e o 1 (testes).
+
 ---
 
 ## 1. Testes — não existe nenhum (T024, T025, T026, T030, T037, T043)
@@ -68,13 +70,18 @@ O segundo item de performance é `render-blocking-resources` (~307 ms): o CSS de
 
 ---
 
-## 3. Favicon e OG definitivos
+## 3. Favicon e OG definitivos — CONCLUÍDO em 2026-07-21
 
-Ambos são provisórios e **eu que desenhei** — não são a marca:
-- `public/favicon.svg` — quadrado navy com um anel laranja. Genérico, aparece na aba do browser.
-- `public/og-default.png` (126 KB) — aparece em **todo link compartilhado no WhatsApp**, que é o canal principal deste negócio. Vale mais do que parece.
+**`public/favicon.svg`** — deixou de ser o anel laranja genérico. Agora é o rolo visto de frente: anel laranja (`#f47c20`) + miolo kraft (`#c8a97a`) sobre o quadrado navy. As duas cores de material dizem "fita adesiva"; um anel sozinho dizia "alvo".
 
-O logo real está em `src/assets/marca/logo-tapepro.png` (1627×1167). Receitas de `sharp` no fim do [`handoff.md`](handoff.md). Para o OG: 1200×630, com o wordmark e a fita laranja — não repetir o hero, que fica ilegível em miniatura.
+> Tentativa descartada, para não se repetir: copiar o "O" do PRO do logo (anel + tira diagonal saindo tangente). Em 16–32 px a tira gruda no anel e o ícone **lê como um "Q"**. Verificado renderizando em 16/32/64 px ampliado com `kernel: 'nearest'` — vale repetir esse teste antes de mexer no favicon de novo.
+
+**`public/og-default.png`** — reconstruído, 93 KB (era 126 KB, um logo centralizado sobre papel). Agora: painel de marca à esquerda (logo real + duas linhas de spec) e foto real do produto à direita, separados por um filete laranja. Assimétrico de propósito.
+
+Gerado por **`scripts/gerar-og.mjs`** (`node scripts/gerar-og.mjs`) — mexer lá, não no PNG.
+- A foto é `src/assets/conteudo/rolos-tapepro-prateleira.jpg` — rolos kraft com TAPE PRO impresso em laranja, profundidade de campo curta. É o melhor ativo: mostra qualidade de impressão e ainda lê em miniatura. Não repete o hero da home (`deposito-tapepro.jpg`).
+- **Gotcha de peso:** `png({ palette: true })` sem `colors` gera **250 KB**. Com `colors: 128` cai para **93 KB** sem banding visível (a foto é quase toda kraft/laranja/cinza). Entre 128 e 160 o arquivo pula de 98 KB para 219 KB — não existe meio-termo, é o limiar do quantizador.
+- **Fontes:** o `sharp`/librsvg no Windows só enxerga fontes do sistema — Archivo e IBM Plex são `@fontsource` em `node_modules` e **não** carregam. As linhas de spec usam `Segoe UI, Arial`. Não vale instalar fonte no sistema por causa disso; o wordmark da marca já vem do PNG real.
 
 ---
 
