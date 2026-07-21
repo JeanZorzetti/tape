@@ -80,8 +80,13 @@ Preencher ao executar — é o que prova que os passos 2 a 4 aconteceram.
 | Arquivo publicado | [`public/BingSiteAuth.xml`](../public/BingSiteAuth.xml) — commit de 2026-07-21 |
 | Método escolhido | Arquivo XML (plano B), não a importação do GSC |
 | Motivo do plano B | O usuário pegou o token de verificação manual direto no painel. Entre os três métodos manuais, o arquivo evita somar bytes ao `<head>` de todas as páginas. |
-| Data da verificação | _pendente — só dá para clicar em `Verificar` depois do deploy_ |
-| URLs descobertas no sitemap | _pendente — passo 4_ |
+| Data da verificação | **2026-07-21 — verificada** |
+| URLs descobertas no sitemap | _aguardando o processamento do Bing; o `sitemap-0.xml` publica **21 URLs**, com `lastmod` nos 7 posts_ |
+
+⚠️ **O botão `Verificar` do bloco "Marca Meta HTML" nunca vai passar** — a home
+não tem a meta tag de propósito. Clicar nele devolve um `Erro: ocorreu um erro
+inesperado` genérico, que não diz qual é o problema. Use o `Verificar` do bloco
+do **arquivo XML**, logo acima dele no painel.
 
 > O token é **público por natureza** (o Bing precisa lê-lo sem autenticação),
 > como a chave do IndexNow. Não é credencial e pode ficar versionado.
