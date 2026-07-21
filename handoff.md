@@ -255,6 +255,7 @@ npm install
 npm run dev                          # dev (confira a porta no log!)
 npm run build                        # gera dist/client + dist/server
 npm run verificar                    # confere o dist contra os contratos de SEO
+npm test                             # 25 testes (as suítes de integração pedem build + DATABASE_URL)
 node dist/server/entry.mjs           # server real (precisa das env vars)
 ```
 

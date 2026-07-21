@@ -1,4 +1,4 @@
-import { WHATSAPP_NUMERO } from "./constants";
+import { WHATSAPP_NUMERO } from "./constants.ts";
 
 // Opções de tipo de fita — fonte única (select do form + rótulos das mensagens).
 export const TIPOS_FITA = [

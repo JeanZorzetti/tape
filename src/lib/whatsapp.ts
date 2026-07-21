@@ -1,4 +1,6 @@
-import { WHATSAPP_NUMERO } from "./constants";
+// Extensão explícita: deixa `node --test` importar este módulo direto, sem
+// bundler. O resolvedor ESM do Node não completa extensões (ver tests/).
+import { WHATSAPP_NUMERO } from "./constants.ts";
 
 /**
  * Monta o link do WhatsApp com mensagem pré-preenchida.

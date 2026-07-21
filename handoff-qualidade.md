@@ -6,57 +6,53 @@
 
 **Ordem sugerida: 2 → 3 → 1.** A compressão é config de 5 minutos com ganho imediato; o favicon é visível em todo link compartilhado; os testes são o maior investimento e o que mais rende se o site continuar evoluindo.
 
-**Atualização 2026-07-21:** item 3 concluído. Restam o 2 (config de infra, fora do código) e o 1 (testes).
+**Atualização 2026-07-21:** itens 3 e 1 concluídos (o 1 em parte — ver abaixo). Resta o **item 2**, que é config de infra e não sai daqui.
 
 ---
 
-## 1. Testes — não existe nenhum (T024, T025, T026, T030, T037, T043)
+## 1. Testes — EXISTEM (25), com buracos conhecidos
 
-**Este é o item que importa.** Todo o comportamento do site foi verificado **à mão, uma vez**, e não tem rede de segurança. Quem mexer daqui a três meses não tem como saber se quebrou o funil de orçamento sem refazer tudo na mão.
-
-O que já existe e **não** precisa ser reescrito: `scripts/verificar-seo.mjs` (`npm run verificar`) cobre h1 único, JSON-LD parseável, canonical, description ≤160, alt, placeholder, órfãs, links quebrados, imagens (existe em disco, `width`/`height`, teto de 200 KB) e a regra de `FAQPage` em página única. **Ele é a especificação executável do que o SEO precisa** — leia antes de escrever qualquer teste de SEO, e não duplique o que ele já faz.
-
-### Instalar
+Feito em 2026-07-21. **25 testes, zero dependências novas** — runner nativo (`node --test`), `node:assert`, `fetch`. Playwright e Vitest não foram instalados e não precisam ser: os helpers são funções puras e o resto se testa por HTTP contra o servidor real.
 
 ```bash
-npm i -D @playwright/test
-npx playwright install chromium
+npm test                       # 18 testes; pula a suíte que precisa de banco
+DATABASE_URL=... npm test      # 25 testes
 ```
 
-Um único runner resolve tudo: Playwright roda os testes de browser **e** os unitários (`expect` sem página). Não instalar Vitest só para dois helpers puros.
+O Node 22.18+ remove os tipos sozinho, então os `.ts` de `src/lib` são importados direto. **Preço disso:** o resolvedor ESM do Node não completa extensão, então `src/lib/whatsapp.ts` e `src/lib/quoteForm.ts` importam `"./constants.ts"` com extensão explícita. Se alguém "limpar" essas duas linhas, os testes de helper quebram.
 
-### O que testar, em ordem de valor
+`scripts/verificar-seo.mjs` (`npm run verificar`) continua sendo a especificação executável do SEO e **não** foi duplicado.
 
-**a) Funil de orçamento (T030) — o que dá dinheiro.** É o caminho crítico e o único fluxo com estado real.
-- `POST /api/lead` com dados válidos → `{"ok":true,"id":N}` e o lead aparece em `/admin`.
-- Obrigatórios faltando → recusa. **CNPJ**: se preenchido, exige exatamente 14 dígitos ([lead.ts:38](src/pages/api/lead.ts#L38)) — mande 13 e confirme a recusa.
-- **Honeypot**: campo `botcheck` preenchido → responde `{"ok":true}` e **não grava** ([lead.ts:19](src/pages/api/lead.ts#L19)). O teste tem que checar o banco, não a resposta — a resposta mente de propósito.
-- Fallback: se o POST falha, o form abre WhatsApp com os dados preenchidos.
+### O que está coberto
 
-**b) Helpers puros (T026) — barato e sem infra.** `src/lib/whatsapp.ts` e `src/lib/quoteForm.ts` são funções puras, testáveis sem browser nem banco:
-- `whatsappParaNumero("62983443919")` → prefixa `55`; `"5562..."` → não duplica.
-- `whatsappLink(contexto, paginaOrigem)` → mensagem com a origem entre parênteses, texto URL-encoded.
-- `tipoFitaLabel("valor_inexistente")` → cai no fallback `"fitas personalizadas"`.
-- `whatsappFromLead({})` → não quebra com campos vazios (tem `(sem nome)`/`a definir`).
+| Arquivo | Cobre |
+|---|---|
+| `tests/helpers.test.mjs` (11) | `whatsappParaNumero` (DDI, máscara), `whatsappLink` (origem, fallback), `tipoFitaLabel`, `whatsappFromLead` com lead vazio |
+| `tests/api-lead.test.mjs` (7) | lead válido gravado, obrigatórios, e-mail, CNPJ 13/14/vazio, honeypot, truncamento, Origin cross-site |
+| `tests/admin-auth.test.mjs` (7) | cookie válido entra; sem cookie, assinatura forjada, id trocado, validade esticada, vencido e malformado vão pro login |
+| `tests/servidor.mjs` | sobe `dist/server/entry.mjs` em porta efêmera (não é teste) |
 
-**c) Auth do admin.** `src/lib/auth.ts`: cookie assinado com HMAC — adulterar o cookie tem que ser rejeitado. Throttle de 8 tentativas / 15 min é **em memória** ([auth.ts:17-18](src/lib/auth.ts#L17-L18)): reinício do processo zera, e com mais de uma réplica cada uma conta a sua. Se o teste for flaky, é isso.
+Os três casos que mais importam foram **verificados por mutação** — desligando a lógica no código e confirmando que o teste fica vermelho: DDI do WhatsApp (1 falha), honeypot (1), verificação de HMAC (3). Se mexer neles, repita isso; teste que não falha quando deveria é pior que nenhum.
 
-**d) SEO/produtos/conteúdo (T024/T037/T043).** Só o que o `verificar` **não** vê: se os links internos são *relevantes*, não só presentes. Baixo valor em teste automatizado — considere pular e manter como revisão editorial.
+### Buracos deixados de propósito
 
-**e) Lighthouse em CI (T025).** Só vale se houver CI. Hoje não há. Provavelmente YAGNI: o `verificar` já barra as regressões de imagem que derrubam o score.
+- **Fallback do form para WhatsApp quando o POST falha** — é JS de browser, é o único que justificaria Playwright. Único caminho do funil sem cobertura.
+- **Throttle de login** (8 tentativas / 15 min, [auth.ts:17-18](src/lib/auth.ts#L17-L18)): é **em memória**, some no restart e cada réplica conta a sua. Testar exigiria 8 POSTs e travaria o estado do processo para os testes seguintes. Baixo valor.
+- **Primeiro login cria a conta** — só enquanto `usuarios` estiver vazia, então o teste só passa uma vez por banco. Precisaria de `truncate` no setup; não valeu.
+- **d) SEO/conteúdo (T024/T037/T043)** e **e) Lighthouse em CI (T025)** — mantidos como estavam: revisão editorial e YAGNI (não há CI).
 
 ### Gotchas que vão custar tempo (todos já custaram)
 
+- **NÃO fixe a porta do teste.** Custou uma hora nesta sessão. Havia um `dist/server/entry.mjs` esquecido de outra sessão ocupando a 4455; o nosso servidor morria com EADDRINUSE e a suíte conversava com o processo do estranho. Os testes de validação passavam (é o mesmo código) e **todo INSERT dava 500**, porque o zombie não tinha `DATABASE_URL`. `tests/servidor.mjs` agora pede porta efêmera ao SO e aborta se o processo filho morrer.
+- **Repasse o stderr do servidor** (`tests/servidor.mjs` faz isso). Sem ele, um 500 aparece como `500 !== 200` e você fica adivinhando.
 - **CSRF:** o Astro recusa POST sem `Origin` compatível. Com `curl`, mande `-H "Origin: http://127.0.0.1:<porta>"` ou leva **403**. Ver `security.allowedDomains` no `astro.config.mjs`.
 - **Postgres para `/admin` e `/api`:** o site estático builda sem banco, mas esses testes precisam dele. Descartável em Docker:
   ```bash
   docker run -d --name tapepro-pg -e POSTGRES_PASSWORD=teste -e POSTGRES_DB=tapepro -p 55432:5432 postgres:16-alpine
   # DATABASE_URL=postgres://postgres:teste@localhost:55432/tapepro
   ```
-  O schema se cria sozinho na primeira consulta (`create table if not exists`).
-- **Primeiro login cria a conta** — só enquanto a tabela `usuarios` estiver vazia. O teste de "primeiro acesso" precisa de banco limpo; rodar duas vezes seguidas falha a segunda.
-- **Teste contra o build, não o `astro dev`.** `npm run build && node dist/server/entry.mjs`. O `/404` só devolve status 404 de verdade no servidor Node — no dev funciona diferente.
-- **Portas 4321/4399 ocupadas** por outro projeto nesta máquina. Fixe a porta do teste (`PORT=4455`) em vez de presumir.
+  O schema se cria sozinho na primeira consulta (`create table if not exists`) — a primeira rodada num banco novo é a que cria as tabelas.
+- **Teste contra o build, não o `astro dev`.** As suítes de integração rodam `dist/server/entry.mjs`, então **`npm run build` antes** ou você testa código velho. O `/404` só devolve 404 de verdade no servidor Node.
 
 ---
 
