@@ -18,6 +18,18 @@ venda, cuidado recorrente da carteira depois da compra, visão de conversão por
 e classificação de leads por nicho. O ator é sempre o **representante comercial**
 (usuário único do `/admin`), operando um funil B2B por orçamento (sem carrinho).
 
+## Clarifications
+
+### Session 2026-07-21
+
+- Q: A cadência de tentativas é automática, manual ou híbrida? → A: Híbrida — o sistema sugere a próxima data pela cadência-padrão e o representante confirma/ajusta.
+- Q: Como o pós-venda mede a recorrência da carteira? → A: Registrando pedidos completos (data + valor/volume).
+- Q: O funil usa snapshot dos status atuais ou coorte histórica? → A: Coorte histórica, com registro de cada transição de etapa.
+- Q: Qual evento marca um lead como cliente (1ª compra) e dispara o cuidado de carteira? → A: Registrar o 1º pedido — esse ato fecha o lead (status "Fechado") e inicia a cadência de carteira.
+- Q: O que cada pedido/compra registra? → A: Data (obrigatória) + valor em R$ + volume (nº de rolos), estes dois opcionais.
+- Q: Quais os intervalos padrão da cadência de 1ª venda e quantas tentativas até esgotar? → A: D+0, +1, +3, +7, +14, +21 — 6 toques; após o 6º, sinaliza esgotado.
+- Q: Intervalo padrão de recontato da carteira após a última compra? → A: 30 dias.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Fluxo de cadência até a primeira venda (Priority: P1)
@@ -164,23 +176,28 @@ apenas os leads correspondentes; ver a distribuição de leads por nicho.
   respondeu, remarcar), preservadas no histórico do lead.
 - **FR-002**: O sistema MUST manter, para todo lead ativo (não Fechado nem Perdido), um
   **próximo contato agendado**, atualizado a cada tentativa registrada.
-- **FR-003**: O sistema MUST **sugerir** a data da próxima tentativa segundo uma **cadência
-  padrão** de intervalos (ex.: D+0, D+2, D+5, D+9, D+14) e permitir que o representante
-  **confirme ou ajuste** essa data (modelo híbrido — a data sugerida é sempre editável).
+- **FR-003**: O sistema MUST **sugerir** a data da próxima tentativa segundo a **cadência
+  padrão de 6 toques** — **D+0, D+1, D+3, D+7, D+14, D+21** (dias corridos a partir da
+  entrada em cadência) — e permitir que o representante **confirme ou ajuste** essa data
+  (modelo híbrido — a data sugerida é sempre editável).
 - **FR-004**: O sistema MUST sinalizar leads com próximo contato **vencido** (hoje ou
   antes) e ainda ativos, como o CRM atual já faz.
-- **FR-005**: O sistema MUST sinalizar quando um lead **esgotou** as tentativas previstas e
-  sugerir marcar "Perdido", sem alterar o status automaticamente.
-- **FR-006**: O representante MUST conseguir marcar o lead como "Fechado", removendo-o da
-  fila de cadência de primeira venda.
+- **FR-005**: O sistema MUST sinalizar quando um lead **esgotou** a cadência (após o **6º
+  toque** sem resposta) e sugerir marcar "Perdido", sem alterar o status automaticamente.
+- **FR-006**: O representante MUST conseguir marcar o lead como "Fechado". O caminho
+  primário de fechamento é **registrar o 1º pedido** (FR-008), que fecha o lead
+  automaticamente; em ambos os casos o lead sai da fila de cadência de primeira venda.
 
 **Follow-up pós-venda / carteira (US2)**
 
-- **FR-007**: O sistema MUST distinguir **clientes** (leads que já efetuaram a primeira
-  compra) dos leads ainda em primeira venda.
-- **FR-008**: O sistema MUST registrar cada **pedido/compra** de um cliente (data e
-  valor/volume), formando o histórico de compras que mede a recorrência; e agendar um
-  **recontato de carteira recorrente** com intervalo configurável a partir da última compra.
+- **FR-007**: O sistema MUST distinguir **clientes** dos leads em primeira venda; um lead é
+  **cliente** quando tem **pelo menos um pedido registrado**. Registrar o **1º pedido**
+  fecha o lead (status "Fechado") e inicia a cadência de carteira.
+- **FR-008**: O sistema MUST registrar cada **pedido/compra** de um cliente com **data
+  (obrigatória)**, **valor em R$ (opcional)** e **volume em nº de rolos (opcional)**,
+  formando o histórico de compras que mede a recorrência; e agendar o **recontato de
+  carteira** a partir da **última compra**, com intervalo **padrão de 30 dias**
+  (configurável). Valores de pedido vivem só no `/admin`, nunca expostos no site público.
 - **FR-009**: O sistema MUST listar os clientes com recontato de carteira **vencido**,
   mostrando há quanto tempo estão sem contato/compra.
 - **FR-010**: O sistema MUST reagendar o próximo recontato quando o representante registra
@@ -227,13 +244,13 @@ apenas os leads correspondentes; ver a distribuição de leads por nicho.
 ### Key Entities *(include if feature involves data)*
 
 - **Lead**: contato comercial existente (nome, empresa, contato, status no pipeline,
-  próximo contato). Ganha um **nicho** e a distinção **lead vs. cliente**.
+  próximo contato). Ganha um **nicho**; é **cliente** quando tem ≥1 pedido registrado.
 - **Tentativa de contato**: registro de um toque de cadência num lead — data, canal,
   resultado. É o histórico que dirige o próximo passo.
-- **Cadência**: a sequência de intervalos que define quando é a próxima tentativa (primeira
-  venda) ou o próximo recontato (carteira).
-- **Compra/Pedido**: registro de uma venda ao cliente — data e valor/volume — base da
-  recorrência e do histórico de compras da carteira.
+- **Cadência**: primeira venda = **6 toques** (D+0, +1, +3, +7, +14, +21); carteira =
+  recontato recorrente a cada **30 dias** (padrão) a partir da última compra.
+- **Compra/Pedido**: registro de uma venda ao cliente — **data** (obrigatória), **valor em
+  R$** e **volume em rolos** (opcionais) — base da recorrência e do histórico da carteira.
 - **Transição de etapa**: registro histórico de cada mudança de status de um lead (de qual
   etapa, para qual, quando) — base das taxas de conversão por coorte.
 - **Nicho**: classificação do lead por segmento de mercado (indústria, distribuidor,
