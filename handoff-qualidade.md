@@ -1,7 +1,7 @@
 # Handoff — Qualidade e acabamento pós-lançamento
 
 > Documento de passagem entre sessões. Leia junto com [`handoff.md`](handoff.md).
-> Criado em **2026-07-21**, depois do site entrar no ar. Status: **não iniciado**.
+> Criado em **2026-07-21**, depois do site entrar no ar. Status: **tudo concluído** no mesmo dia.
 > Nada aqui bloqueia a operação — o site está publicado e validado. É dívida assumida, escrita para não virar "later means never".
 
 **Ordem sugerida: 2 → 3 → 1.** A compressão é config de 5 minutos com ganho imediato; o favicon é visível em todo link compartilhado; os testes são o maior investimento e o que mais rende se o site continuar evoluindo.
@@ -82,8 +82,6 @@ Como foi feito (não está no repositório — é config do painel):
 > Sucesso = `Content-Encoding: br` + `Vary: Accept-Encoding`. Não espere `Content-Length`: resposta comprimida vai em chunks.
 
 Resta, se um dia quiser mais: `render-blocking-resources` (~307 ms). O CSS é quase todo fonte self-hosted (Archivo 500/700/800 + IBM Plex Sans 400/500/600 + Mono 400/500 = **8 pesos**). O caminho é cortar pesos que ninguém usa — conferir no `global.css` quais realmente aparecem no design antes de remover. Com o CSS já em 8,8 KB comprimido, o retorno agora é bem menor.
-
-O segundo item de performance é `render-blocking-resources` (~307 ms): o CSS de 57 KB é quase todo fonte self-hosted (Archivo 500/700/800 + IBM Plex Sans 400/500/600 + Mono 400/500 = **8 pesos**). Se quiser mais, o caminho é cortar pesos que ninguém usa — conferir no `global.css` quais realmente aparecem no design antes de remover.
 
 ---
 
