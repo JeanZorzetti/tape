@@ -53,9 +53,40 @@ o build gera (`npm run build && npm run verificar` imprime o total de páginas).
 
 ## 5. Conferir o recebimento das submissões IndexNow
 
-`Configurar meu site` → `IndexNow`.
+Três caminhos, da resposta mais rápida à mais informativa. **Comece pelos dois
+primeiros** — eles respondem em segundos e não dependem do painel.
 
-O painel lista as URLs recebidas, a data e o estado de cada uma. Como ler:
+### 5a. A resposta HTTP (imediata)
+
+```bash
+NODE_ENV=production npm run indexnow    # apaga dist/.indexnow-enviado antes, se quiser repetir
+```
+
+`200` é aceito **com a chave já validada**; `202` é aceito com a chave ainda em
+validação — normal logo depois de publicar a chave pela primeira vez. Os
+códigos de erro estão na tabela do [contrato §5](../specs/002-indexacao-descoberta/contracts/artefatos-descoberta.md).
+
+### 5b. O log do container (uma linha por deploy)
+
+No Easypanel, ~15s após a subida: `[indexnow] 21 URLs -> 200 OK`. É o lugar de
+olhar na rotina.
+
+### 5c. O painel — `Reports & Data` → `IndexNow`
+
+O único que mostra o que o Bing **fez** com as URLs, não só se recebeu:
+
+- últimas **1000 URLs submetidas**, com status de indexação, data da primeira
+  indexação e se a submissão foi tardia;
+- **origem** da submissão (Cloudflare, WordPress, manual, API — a nossa é API);
+- amostra quase em tempo real das submissões recentes, feita para validar
+  integração;
+- aba **"Important URLs Missing"**: links recebendo cliques que não apareceram
+  no IndexNow recentemente.
+
+⏱️ **Os dados levam até ~24h para consolidar.** A amostra recente aparece antes,
+mas o status de indexação não é instantâneo — não tire conclusões no mesmo dia.
+
+Como ler o que aparece:
 
 | O que aparece | Significado |
 |---------------|-------------|
