@@ -3,8 +3,7 @@ export const NOME_MARCA = "TapePro";
 export const TAGLINE = "Fitas Adesivas Personalizadas";
 
 export const SITE_URL = "https://tapepro.roilabs.com.br";
-// ponytail: e-mail ainda é placeholder — trocar pelo final antes do deploy.
-export const EMAIL_CONTATO = "contato@tapepro.com.br";
+export const EMAIL_CONTATO = "jeanzorzetti@gmail.com";
 
 export const WHATSAPP_NUMERO = "5562983443919"; // wa.me (só dígitos, com DDI 55)
 export const WHATSAPP_DISPLAY = "(62) 98344-3919";
