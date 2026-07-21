@@ -6,7 +6,7 @@
 
 **Ordem sugerida: 2 → 3 → 1.** A compressão é config de 5 minutos com ganho imediato; o favicon é visível em todo link compartilhado; os testes são o maior investimento e o que mais rende se o site continuar evoluindo.
 
-**Atualização 2026-07-21:** itens 3 e 1 concluídos (o 1 em parte — ver abaixo). Resta o **item 2**, que é config de infra e não sai daqui.
+**Atualização 2026-07-21:** os 3 itens estão concluídos (o 1 com buracos declarados). Nada pendente neste documento.
 
 ---
 
@@ -56,11 +56,32 @@ Os três casos que mais importam foram **verificados por mutação** — desliga
 
 ---
 
-## 2. Compressão no proxy do Easypanel — 5 minutos, maior ganho restante
+## 2. Compressão no proxy do Easypanel — LIGADA em 2026-07-21
 
-**Confirmado em 2026-07-21:** `curl -H "Accept-Encoding: gzip, br" -D - https://tapepro.roilabs.com.br/` não devolve `content-encoding`. **Está servindo sem compressão.**
+Brotli ativo. Medido: HTML da home **37.777 → 6.971 bytes** (−82%), CSS **~57 KB → 8.830 bytes** (−85%). De ~95 KB para ~16 KB no primeiro carregamento.
 
-O Lighthouse aponta ~300–600 ms de economia (`uses-text-compression`), a maior parte no CSS único de 57 KB. É **config de infra, não de código** — ligar gzip/brotli no proxy do Easypanel. Depois de ligar, confirmar com o mesmo `curl` e rodar o Lighthouse de novo.
+Como foi feito (não está no repositório — é config do painel):
+1. Easypanel → **Settings → Custom Traefik Config**, um `custom.yaml`:
+   ```yaml
+   http:
+     middlewares:
+       compressao:
+         compress:
+           encodings:
+             - br
+             - gzip
+   ```
+2. Serviço do TapePro → **Domains → Middlewares**: `compressao@file`. O sufixo **`@file` é obrigatório** — diz ao Traefik que o middleware veio do arquivo e não de um label de container.
+
+> ⚠️ **Gotcha ao verificar:** `curl -I` faz **HEAD**, e o Traefik não comprime resposta sem corpo — dá falso negativo e parece que não funcionou. Meça com GET:
+> ```bash
+> curl -s -o /dev/null -D - -H "Accept-Encoding: gzip, br" https://tapepro.roilabs.com.br/
+> ```
+> No PowerShell: `curl.exe` (com `.exe`, senão pega o apelido do `Invoke-WebRequest`), `-o NUL`, e `Select-String` no lugar do `grep`.
+>
+> Sucesso = `Content-Encoding: br` + `Vary: Accept-Encoding`. Não espere `Content-Length`: resposta comprimida vai em chunks.
+
+Resta, se um dia quiser mais: `render-blocking-resources` (~307 ms). O CSS é quase todo fonte self-hosted (Archivo 500/700/800 + IBM Plex Sans 400/500/600 + Mono 400/500 = **8 pesos**). O caminho é cortar pesos que ninguém usa — conferir no `global.css` quais realmente aparecem no design antes de remover. Com o CSS já em 8,8 KB comprimido, o retorno agora é bem menor.
 
 O segundo item de performance é `render-blocking-resources` (~307 ms): o CSS de 57 KB é quase todo fonte self-hosted (Archivo 500/700/800 + IBM Plex Sans 400/500/600 + Mono 400/500 = **8 pesos**). Se quiser mais, o caminho é cortar pesos que ninguém usa — conferir no `global.css` quais realmente aparecem no design antes de remover.
 
