@@ -129,13 +129,29 @@ description: "Task list — Site Institucional SEO-first (TapePro)"
 
 **Purpose**: acabamento que cruza histórias.
 
-- [ ] T044 [P] Construir `src/pages/404.astro` (noindex, links úteis/busca)
-- [ ] T045 Auditar linkagem interna e órfãs (produtos ↔ segmentos ↔ posts; nenhuma página indexável órfã) conforme contracts/routing-seo.md
-- [ ] T046 [P] Passe de acessibilidade: foco de teclado visível, `prefers-reduced-motion` desliga a animação da TapeStrip, contraste WCAG AA nos tokens
-- [ ] T047 [P] Auditar imagens em `dist/` (sem placeholder, sem imagem quebrada, dimensões setadas → CLS ok)
-- [ ] T048 Rodar orçamento Lighthouse em home + uma página de produto + um post (falha se abaixo das metas)
-- [ ] T049 [P] Deploy no **Easypanel (VPS)**: app Node via `Dockerfile` + serviço Postgres no mesmo projeto, env `DATABASE_URL`/`SESSION_SECRET`/`ADMIN_EMAIL`/`ADMIN_SENHA`, domínio `tapepro.roilabs.com.br` com TLS. (Cloudflare Pages saiu de cena: Worker não fala TCP com Postgres.)
-- [ ] T050 Executar os cenários de validação do quickstart.md ponta a ponta
+- [x] T044 [P] Construir `src/pages/404.astro` (noindex, links úteis/busca) — sem busca (21 páginas: lista resolve sem JS). Prop `noindex` nova no `Seo.astro`. Confirmado no servidor Node real: status 404 + `<meta robots noindex>`, fora do sitemap.
+- [x] T045 Auditar linkagem interna e órfãs (produtos ↔ segmentos ↔ posts; nenhuma página indexável órfã) conforme contracts/routing-seo.md — `npm run verificar`: 22 páginas, nenhuma órfã, nenhum link interno quebrado. A `/404` é exceção declarada (não é linkada; em troca o script exige que ela seja noindex).
+- [x] T046 [P] Passe de acessibilidade: foco de teclado visível, `prefers-reduced-motion` desliga a animação da TapeStrip, contraste WCAG AA nos tokens — **Lighthouse a11y 100** nas 3 páginas. Ver "Decisões de contraste" abaixo.
+- [x] T047 [P] Auditar imagens em `dist/` (sem placeholder, sem imagem quebrada, dimensões setadas → CLS ok) — virou regra permanente no `verificar` (arquivo existe em disco, `width`/`height`, teto de 200 KB). Pegou o hero em 251 KB e o logo com aspecto errado (150×50 declarado, 1627×1167 real).
+- [x] T048 Rodar orçamento Lighthouse em home + uma página de produto + um post (falha se abaixo das metas) — **home 93 · produto 95 · post 91**; a11y/best-practices/SEO **100** nas três. CLS ≤ 0,028, TBT 0 ms.
+- [x] T049 [P] Deploy no **Easypanel (VPS)**: app Node via `Dockerfile` + serviço Postgres no mesmo projeto, env `DATABASE_URL`/`SESSION_SECRET`/`ADMIN_EMAIL`/`ADMIN_SENHA`, domínio `tapepro.roilabs.com.br` com TLS. (Cloudflare Pages saiu de cena: Worker não fala TCP com Postgres.) — no ar em https://tapepro.roilabs.com.br
+- [x] T050 Executar os cenários de validação do quickstart.md ponta a ponta — validado contra produção. Falta só colar o JSON-LD no Rich Results Test do Google (cenário 1).
+
+### Decisões de contraste (T046) — não reabrir sem medir
+
+Os pares foram medidos com alpha composto sobre o fundo real, não estimados. Quatro reprovavam:
+
+| Par | Antes | Depois |
+| --- | --- | --- |
+| Branco sobre a faixa laranja (CTA de 10 páginas + botão primário) | 2,71:1 | **navy sobre laranja, 4,53:1** |
+| `text-orange` como texto em superfície clara (eyebrows) | 2,55:1 | **`--color-orange-800` #8f4408, 6,6:1** |
+| `text-steel` sobre `kraft-100` | 4,29:1 | **#66635c, 4,84:1** |
+| Anel de foco laranja sobre `paper` | 2,55:1 | **anel duplo: tinta + laranja, ≥ 4,53:1 nos 3 fundos** |
+
+- O laranja da marca (`#f47c20`) continua intacto como **fundo** e como texto **sobre navy** (4,53:1). O que mudou é quem escreve em cima dele.
+- `--color-orange-400` (#f89138) existe porque o hover do botão precisa **clarear**: o rótulo agora é navy, e escurecer para `orange-600` derrubaria o par para 3,55:1.
+- A `TapeStrip` também passou a navy — é `aria-hidden`, mas é o mesmo par visual da faixa de CTA.
+- Duas correções de a11y não-cromáticas que o axe pegou: `<td>` sem cabeçalho em duas tabelas de post (a 1ª coluna estava sob um `<th>` vazio → viraram "Critério") e `ink/60` a 4,43:1 na FAQ.
 
 ---
 

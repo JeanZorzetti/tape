@@ -1,30 +1,28 @@
 # Handoff — Site TapePro (fitas adesivas personalizadas)
 
 > Documento de passagem entre sessões. **Leia isto primeiro**, junto com `CLAUDE.md` e `specs/001-site-institucional-seo/`.
-> Última atualização: **2026-07-21**. Próximo passo: **Phase 7 — polish (404, a11y, Lighthouse) e deploy**.
-> Domínio final: **https://tapepro.roilabs.com.br** (já configurado).
+> Última atualização: **2026-07-21**. Status: **no ar em https://tapepro.roilabs.com.br** — todas as fases da spec (T001–T050) fechadas.
+> Repositório: **https://github.com/JeanZorzetti/tape** (público — nada de segredo commitado).
 
-## 📌 Handoffs de frente aberta
+## 📌 Frentes
 
 | Documento | Frente | Status |
 | --- | --- | --- |
-| [`handoff-phase-7.md`](handoff-phase-7.md) | Acabamento e deploy (T044–T050) | não iniciado |
+| [`handoff-phase-7.md`](handoff-phase-7.md) | Acabamento e deploy (T044–T050) | ✅ **feita** — vale como registro das decisões de contraste |
 | [`handoff-imagens-blog.md`](handoff-imagens-blog.md) | Harness de prompt de imagem (Gemini) para as capas do blog | não iniciado |
 
 ---
 
-## 🎯 Próximo passo — Phase 7: acabamento e deploy
+## 🎯 Próximo passo
 
-Todas as histórias (US1–US4) estão feitas. **21 páginas** no ar, `astro build` passa, `npm run verificar` passa.
+O site está publicado. O que resta é operação e qualidade, em ordem de retorno:
 
-**Detalhe completo em [`handoff-phase-7.md`](handoff-phase-7.md).** Resumo:
-
-1. **T044 — `/404`** (`noindex`, links úteis). É a única rota do contrato que ainda não existe.
-2. **T046 — passe de acessibilidade**: foco de teclado visível, contraste WCAG AA nos tokens, `prefers-reduced-motion` (a TapeStrip já respeita).
-3. **T048 — Lighthouse** em home + produto + post.
-4. **T049 — deploy no Easypanel** (passo a passo no fim deste doc).
-5. **Testes** — T024/T030/T037/T043 seguem abertas: **não há test runner instalado**. Instalar Playwright uma vez e escrever as quatro juntas. Hoje quem cobre parte disso é `npm run verificar`.
-6. **Placeholders**: `EMAIL_CONTATO` em `constants.ts`, favicon e OG definitivos.
+1. **Search Console** — verificar o domínio e submeter `sitemap-index.xml`. Sem isso o SEO não começa a contar. **Maior impacto do que qualquer código agora.**
+2. **`EMAIL_CONTATO`** em `constants.ts` ainda é o placeholder `contato@tapepro.com.br` — aparece no rodapé das 22 páginas.
+3. **Rich Results Test** — colar as URLs de produto/post/FAQ e confirmar que o Google lê o JSON-LD (é o único cenário do quickstart que o deploy não provou sozinho).
+4. **Compressão no proxy do Easypanel** (gzip/brotli): o maior ganho de performance que sobrou, e é config de infra, não de build.
+5. **Testes** — T024/T030/T037/T043 seguem abertas, **sem test runner instalado**. Só vale investir se o site for evoluir; hoje `npm run verificar` cobre o estrutural.
+6. **Favicon e OG definitivos.**
 
 ## ✅ US4 — FEITA nesta sessão (T011, T038–T042)
 
@@ -64,7 +62,14 @@ Todas as histórias (US1–US4) estão feitas. **21 páginas** no ar, `astro bui
 - Copy de confiança oficial: *"Trabalhamos apenas com as fitas da tabela acima — transparentes com ou sem personalização e gomada reforçada com fios de nylon, garantindo mais resistência e segurança para caixas mais pesadas."*
 
 ### Padrões visuais a reaproveitar (não reinventar)
-Ver `/produtos/[slug]` e `/segmentos/[slug]` como referência: hero em faixa navy + `TapeStrip`, eyebrow em `font-mono uppercase tracking-[0.28em] text-orange`, `h2` navy, corpo `text-ink/75`, superfícies `kraft-100`, CTA final em faixa laranja. Componentes prontos: `WhatsAppCta`, `TapeStrip`, `JsonLd`, `BaseLayout`. Corpo de MDX = classe `.prosa`.
+Ver `/produtos/[slug]` e `/segmentos/[slug]` como referência: hero em faixa navy + `TapeStrip`, eyebrow em `font-mono uppercase tracking-[0.28em]`, `h2` navy, corpo `text-ink/75`, superfícies `kraft-100`, CTA final em faixa laranja. Componentes prontos: `WhatsAppCta`, `TapeStrip`, `JsonLd`, `BaseLayout`. Corpo de MDX = classe `.prosa`.
+
+⚠️ **Regras de cor com contraste medido (T046) — seguir, não improvisar:**
+- Texto sobre a **faixa laranja é navy**, nunca branco (branco dá 2,71:1 e reprova no AA).
+- **Eyebrow em superfície clara** = `text-orange-800`; **sobre navy** = `text-orange`. São tokens diferentes de propósito.
+- Hover de botão laranja **clareia** (`orange-400`), não escurece — o rótulo é navy.
+- Detalhes e a tabela completa em [`handoff-phase-7.md`](handoff-phase-7.md).
+
 ⚠️ Imagens de produto **não têm transparência** — o card em volta precisa ser **branco**, senão aparece um retângulo branco sobre o kraft.
 
 ## ✅ US3 — feita na sessão anterior
@@ -137,12 +142,13 @@ O hero da home passou por 3 versões. **A atual está APROVADA — não mexer se
 Regra: seguir as diretrizes anti-"cara de IA" do `CLAUDE.md`, carregar a skill `frontend-design`, e **iterar com screenshot via Playwright MCP** a cada passada.
 
 ## Estado do código
-`astro build` passa. **21 páginas** geradas e no sitemap. `npm run verificar` passa.
+`astro build` passa. **22 páginas** (21 no sitemap — a `/404` fica fora). `npm run verificar` passa. Lighthouse: home 93 · produto 95 · post 91, a11y/BP/SEO 100.
 
-- **Setup + Foundational + US1 (home) + US2 (orçamento) + US3 (produtos/sobre) + US4 (segmentos/blog/FAQ)** feitos.
+- **Setup + Foundational + US1 (home) + US2 (orçamento) + US3 (produtos/sobre) + US4 (segmentos/blog/FAQ) + Phase 7 (polish e deploy)** feitos.
 - Arquivos-chave:
-  - `astro.config.mjs` (site placeholder, mdx, sitemap, tailwind vite)
-  - `src/styles/global.css` (tokens + base + `prefers-reduced-motion`)
+  - `astro.config.mjs` (site, mdx, sitemap, tailwind vite, `security.allowedDomains`)
+  - `src/styles/global.css` (tokens + base + foco de duas cores + `prefers-reduced-motion`)
+  - `src/pages/404.astro` (noindex, servida pelo servidor Node)
   - `src/content.config.ts` (coleções segmentos/blog/faq — API nova)
   - `src/lib/constants.ts`, `src/lib/whatsapp.ts`, `src/lib/quoteForm.ts`, `src/lib/produtos.ts`, `src/lib/conteudo.ts`
   - `src/components/seo/{Seo,JsonLd}.astro`
@@ -152,7 +158,7 @@ Regra: seguir as diretrizes anti-"cara de IA" do `CLAUDE.md`, carregar a skill `
   - `src/layouts/BaseLayout.astro` (SEO + JSON-LD Organization + Header/Footer + skip-link)
   - `src/pages/index.astro` (home), `src/pages/orcamento.astro`, `src/pages/sobre.astro`, `src/pages/perguntas-frequentes.astro`, `src/pages/{produtos,segmentos,blog}/{index,[slug]}.astro`
   - `src/content/{segmentos/*.mdx, blog/*.mdx, faq/perguntas.json}`
-  - `scripts/verificar-seo.mjs` (`npm run verificar`)
+  - `scripts/verificar-seo.mjs` (`npm run verificar` — SEO, links, órfãs **e imagens**: arquivo existe, `width`/`height`, teto de 200 KB)
   - `public/robots.txt`, `public/favicon.svg`, `public/og-default.png`
 - Assets: `src/assets/marca/` (deposito-tapepro.jpg, hero-rolo-laranja.png, logo-tapepro.png) · `src/assets/portfolio/` (7 cases) · `src/assets/produtos/` (4 recortes novos).
 
@@ -163,10 +169,10 @@ Regra: seguir as diretrizes anti-"cara de IA" do `CLAUDE.md`, carregar a skill `
 - Submit faz `POST /api/lead` → grava no Postgres. Se o POST falhar, cai no **fallback WhatsApp** com os dados preenchidos.
 - **Web3Forms foi removido** (`PUBLIC_WEB3FORMS_KEY` não existe mais) — os leads agora vivem no CRM próprio.
 
-## 🗄️ CRM `/admin` — arquitetura (mudou o deploy!)
+## 🗄️ CRM `/admin` — arquitetura
 
-O site **deixou de ser 100% estático**. Continua SSG nas 7 páginas públicas; `/admin/*` e `/api/*` declaram `export const prerender = false` e rodam no **adapter Node** (`@astrojs/node`, modo standalone).
-**Deploy alvo mudou de Cloudflare Pages para o Easypanel (VPS)** — Worker não abre conexão TCP com Postgres. `Dockerfile` + `.dockerignore` prontos na raiz; o Postgres é um serviço separado no mesmo projeto do Easypanel.
+O site **não é 100% estático**. Continua SSG nas páginas públicas; `/admin/*` e `/api/*` declaram `export const prerender = false` e rodam no **adapter Node** (`@astrojs/node`, modo standalone). É por isso que a `/404` funciona de verdade: o servidor a serve com status 404.
+**Deploy no Easypanel (VPS)** — Cloudflare Pages saiu porque Worker não abre conexão TCP com Postgres. `Dockerfile` + `.dockerignore` na raiz; o Postgres é um serviço separado no mesmo projeto do Easypanel.
 
 **Variáveis de ambiente** (ver `.env.example`): `DATABASE_URL`, `SESSION_SECRET` (≥32 chars), `ADMIN_EMAIL`, `ADMIN_SENHA`.
 
@@ -186,12 +192,13 @@ Sem esse bloco no `astro.config.mjs`, o Astro **descarta o header `Host`**, mont
 
 ## Pendências (ordem sugerida)
 1. ~~Rework visual da home~~ ✅ hero cinematográfico aprovado.
-2. ~~US2 — `/orcamento` + `QuoteForm`~~ ✅ (T027/T028/T029/T031). Falta só a chave do usuário.
-3. ~~US3 — páginas de produto + /sobre~~ ✅ (T032–T036). Falta T037 (teste).
-4. ~~US4 — segmentos, blog, FAQ~~ ✅ (T011, T038–T042). Falta T043 (teste).
-5. **Phase 7 — polish** ← *próximo*: T044 (`/404` noindex), T046 (a11y), T047 (auditoria de imagens), T048 (Lighthouse), T050 (quickstart ponta a ponta).
-6. **Qualidade**: T016 (UI base Card/Eyebrow/SpecTable/Figure), T021 (pipeline de imagem). **Testes não existem** — T024 (Playwright SEO), T025 (Lighthouse), T026 (unit whatsapp), T030 (Playwright quote), T037 (Playwright produtos), T043 (Playwright conteúdo). **Não há test runner instalado**; ESLint/Prettier (T004) também não. Instalar Playwright uma vez e escrever T024/T030/T037/T043 juntos — `scripts/verificar-seo.mjs` já cobre a parte estrutural e serve de espec.
-6. **Placeholders restantes**: `EMAIL_CONTATO` (`constants.ts`), favicon e OG definitivos. ✅ Domínio já é **`https://tapepro.roilabs.com.br`** em `constants.ts`, `astro.config.mjs` e `robots.txt` (sitemap e canonical verificados no build).
+2. ~~US2 — `/orcamento` + `QuoteForm`~~ ✅ (T027–T031).
+3. ~~US3 — páginas de produto + /sobre~~ ✅ (T032–T036).
+4. ~~US4 — segmentos, blog, FAQ~~ ✅ (T011, T038–T042).
+5. ~~Phase 7 — polish e deploy~~ ✅ (T044–T050). Site no ar.
+6. **Operação** ← *agora*: Search Console (verificar domínio + submeter sitemap), `EMAIL_CONTATO` real, Rich Results Test, compressão no proxy do Easypanel.
+7. **Qualidade (opcional)**: T016 (UI base Card/Eyebrow/SpecTable/Figure — o padrão está repetido inline entre `/produtos/[slug]`, `/segmentos/[slug]` e `/blog/[slug]`; extrair só se aparecer uma quarta página igual), T021 (pipeline de imagem). **Testes não existem** — T024/T025/T026/T030/T037/T043. **Não há test runner instalado**; ESLint/Prettier (T004) também não. Instalar Playwright uma vez e escrever os de Playwright juntos — `scripts/verificar-seo.mjs` já cobre o estrutural e serve de espec.
+8. **Placeholders restantes**: `EMAIL_CONTATO` (`constants.ts`), favicon e OG definitivos. ✅ Domínio já é **`https://tapepro.roilabs.com.br`** em `constants.ts`, `astro.config.mjs` e `robots.txt`.
 
 Progresso com `[x]` em `specs/001-site-institucional-seo/tasks.md`. O projeto tem `.specify/` → **usar fluxo Spec Kit** (`/speckit-implement`), não superpowers, conforme regra global.
 
