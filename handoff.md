@@ -8,21 +8,21 @@
 
 | Documento | Frente | Status |
 | --- | --- | --- |
-| [`handoff-phase-7.md`](handoff-phase-7.md) | Acabamento e deploy (T044–T050) | ✅ **feita** — vale como registro das decisões de contraste |
+| [`handoff-qualidade.md`](handoff-qualidade.md) | **Testes, compressão no proxy, favicon/OG** — dívida assumida no lançamento | ← **próxima sessão** |
+| [`handoff-phase-7.md`](handoff-phase-7.md) | Acabamento e deploy (T044–T050) | ✅ feita — vale como registro das decisões de contraste |
 | [`handoff-imagens-blog.md`](handoff-imagens-blog.md) | Harness de prompt de imagem (Gemini) para as capas do blog | não iniciado |
 
 ---
 
 ## 🎯 Próximo passo
 
-O site está publicado. O que resta é operação e qualidade, em ordem de retorno:
+**Lançamento fechado.** ✅ Search Console verificado e sitemap submetido · ✅ Rich Results Test rodado (o "erro" de `Product` é esperado — explicação em [`handoff-qualidade.md`](handoff-qualidade.md)) · ✅ `EMAIL_CONTATO` real no ar.
 
-1. **Search Console** — verificar o domínio e submeter `sitemap-index.xml`. Sem isso o SEO não começa a contar. **Maior impacto do que qualquer código agora.**
-2. **`EMAIL_CONTATO`** em `constants.ts` ainda é o placeholder `contato@tapepro.com.br` — aparece no rodapé das 22 páginas.
-3. **Rich Results Test** — colar as URLs de produto/post/FAQ e confirmar que o Google lê o JSON-LD (é o único cenário do quickstart que o deploy não provou sozinho).
-4. **Compressão no proxy do Easypanel** (gzip/brotli): o maior ganho de performance que sobrou, e é config de infra, não de build.
-5. **Testes** — T024/T030/T037/T043 seguem abertas, **sem test runner instalado**. Só vale investir se o site for evoluir; hoje `npm run verificar` cobre o estrutural.
-6. **Favicon e OG definitivos.**
+O que resta é **dívida assumida**, toda em [`handoff-qualidade.md`](handoff-qualidade.md):
+
+1. **Testes** — não existe nenhum. Todo o comportamento foi verificado à mão, uma vez. É o item que mais importa se o site continuar evoluindo.
+2. **Compressão no proxy do Easypanel** — confirmado desligado; ~300–600 ms de ganho por uma chave no painel.
+3. **Favicon e OG definitivos** — os atuais são provisórios; o OG aparece em todo link compartilhado no WhatsApp.
 
 ## ✅ US4 — FEITA nesta sessão (T011, T038–T042)
 
