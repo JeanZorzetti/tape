@@ -10,8 +10,12 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 
 const RAIZ = "dist/client";
+const BLOG = "src/content/blog";
 const MAX_DESCRIPTION = 160;
 const MAX_IMAGEM_KB = 200;
+
+/** Acima disto, duas long-tails disputam a mesma busca (canibalização). */
+const SOBREPOSICAO_MAX = 0.75;
 
 const html = [];
 (function varrer(dir) {
@@ -125,6 +129,62 @@ const quebrados = [...links].flatMap(([de, para]) =>
 );
 console.log(`Links internos quebrados: ${quebrados.length ? quebrados.join(", ") : "nenhum"}`);
 if (quebrados.length) falhas++;
+
+// 9. duas long-tails de blog não podem mirar a mesma busca — com um post por dia,
+// dois artigos disputando a mesma intenção dividem o próprio ranking.
+// Compara conjuntos de palavras, não strings: "fita bopp ou gomada" e
+// "gomada ou bopp fita" são a mesma busca para o Google.
+const VAZIAS = new Set("a o e de da do em para por com que qual quais como e ou um uma no na os as".split(" "));
+
+const termos = (frase) =>
+  new Set(
+    frase
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .split(/[^a-z0-9]+/)
+      .filter((p) => p && !VAZIAS.has(p)),
+  );
+
+const sobreposicao = (a, b) => {
+  const comuns = [...a].filter((p) => b.has(p)).length;
+  return comuns / (a.size + b.size - comuns);
+};
+
+const intencoes = existsSync(BLOG)
+  ? readdirSync(BLOG)
+      .filter((n) => n.endsWith(".mdx"))
+      .map((nome) => {
+        const frontmatter = readFileSync(join(BLOG, nome), "utf8").split(/^---$/m)[1] ?? "";
+        const intencao = frontmatter.match(/^intencao:\s*["']?(.+?)["']?\s*$/m)?.[1];
+        return { nome, intencao };
+      })
+  : [];
+
+for (const { nome, intencao } of intencoes) {
+  if (!intencao) erro(`blog/${nome}`, "sem `intencao` no frontmatter");
+}
+
+const comIntencao = intencoes.filter((p) => p.intencao).map((p) => ({ ...p, termos: termos(p.intencao) }));
+const colisoes = [];
+for (let i = 0; i < comIntencao.length; i++) {
+  for (let j = i + 1; j < comIntencao.length; j++) {
+    const grau = sobreposicao(comIntencao[i].termos, comIntencao[j].termos);
+    if (grau >= SOBREPOSICAO_MAX) colisoes.push({ a: comIntencao[i], b: comIntencao[j], grau });
+  }
+}
+
+console.log(
+  `\nIntenções de blog: ${comIntencao.length} posts, ${colisoes.length ? `${colisoes.length} colisão(ões)` : "sem colisão"}`,
+);
+for (const { a, b, grau } of colisoes) {
+  erro(
+    "blog",
+    `intenção repetida (${(grau * 100).toFixed(0)}% igual) — reescreva uma delas:\n` +
+      `          ${a.nome}: "${a.intencao}"\n` +
+      `          ${b.nome}: "${b.intencao}"`,
+  );
+}
 
 console.log(`\n${falhas === 0 ? "TUDO OK" : `${falhas} FALHA(S)`} — ${html.length} páginas`);
 process.exit(falhas === 0 ? 0 : 1);
