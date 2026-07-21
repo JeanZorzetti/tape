@@ -98,7 +98,7 @@ const reqMark = '<span class="text-orange-800" aria-hidden="true">*</span>';
     };
 
     // registra a URL real de origem além do rótulo
-    el("paginaOrigem").value = `${el("paginaOrigem").value} — ${location.href}`;
+    el("paginaOrigem").value = `${el("paginaOrigem").value} · ${location.href}`;
 
     // CNPJ: se preenchido, exige 14 dígitos (limpa o erro ao editar)
     const cnpj = el("cnpj");
@@ -120,7 +120,7 @@ const reqMark = '<span class="text-orange-800" aria-hidden="true">*</span>';
         const res = await fetch("/api/lead", { method: "POST", body: new FormData(form) });
         const json = await res.json();
         if (!json.ok) throw new Error(json.erro || "falha");
-        setStatus("Recebemos seu pedido de orçamento — retornamos em breve.", "ok");
+        setStatus("Recebemos seu pedido de orçamento. Retornamos em breve.", "ok");
         form.reset();
       } catch {
         const wa = whatsappFromLead(resumo());

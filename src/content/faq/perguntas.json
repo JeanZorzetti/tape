@@ -4,7 +4,7 @@
     "grupo": "pedido",
     "ordem": 1,
     "pergunta": "Qual é o pedido mínimo?",
-    "resposta": "20 rolos para a fita transparente personalizada e 15 rolos para a fita gomada. Em fita de 48 mm × 100 m, 20 rolos costumam dar alguns milhares de caixas — na maioria das operações, meses de consumo. O preço por rolo cai em faixas conforme a quantidade sobe."
+    "resposta": "20 rolos para a fita transparente personalizada e 15 rolos para a fita gomada. Em fita de 48 mm × 100 m, 20 rolos costumam dar alguns milhares de caixas, o que na maioria das operações significa meses de consumo. O preço por rolo cai em faixas conforme a quantidade sobe."
   },
   {
     "id": "prazo-de-producao",
@@ -53,7 +53,7 @@
     "grupo": "produto",
     "ordem": 2,
     "pergunta": "Qual fita usar em caixa pesada?",
-    "resposta": "Acima de uns 15 a 20 kg, ou em caixa que vai empilhada em palete, a indicação é a fita gomada com fios de nylon. Ela é ativada com água e penetra na fibra do papelão, virando parte da caixa — não existe interface de cola para escorregar sob tensão, que é como a fita plástica falha nesse peso."
+    "resposta": "Acima de uns 15 a 20 kg, ou em caixa que vai empilhada em palete, a indicação é a fita gomada com fios de nylon. Ela é ativada com água e penetra na fibra do papelão, virando parte da caixa. Não existe interface de cola para escorregar sob tensão, que é como a fita plástica falha nesse peso."
   },
   {
     "id": "diferenca-gomada-bopp",
@@ -67,7 +67,7 @@
     "grupo": "produto",
     "ordem": 4,
     "pergunta": "A fita personalizada cola menos que a comum?",
-    "resposta": "Não. É a mesma base BOPP e a mesma adesão — a única diferença é a impressão. Largura e comprimento também são iguais, então ela entra na operação sem nenhuma adaptação de seladora ou de processo."
+    "resposta": "Não. É a mesma base BOPP e a mesma adesão. A única diferença é a impressão. Largura e comprimento também são iguais, então ela entra na operação sem nenhuma adaptação de seladora ou de processo."
   },
   {
     "id": "fita-descolando",
@@ -81,14 +81,14 @@
     "grupo": "personalizacao",
     "ordem": 1,
     "pergunta": "Em quantas cores posso imprimir a minha marca?",
-    "resposta": "Até 2 cores. Cada cor é uma passagem de impressão e uma matriz separada, e entra na composição do clichê. Na prática, duas cores cobrem a maioria das marcas — e uma versão de cor única costuma ler melhor na fita, porque o lacre é visto em movimento."
+    "resposta": "Até 2 cores. Cada cor é uma passagem de impressão e uma matriz separada, e entra na composição do clichê. Na prática, duas cores cobrem a maioria das marcas, e uma versão de cor única costuma ler melhor na fita, porque o lacre é visto em movimento."
   },
   {
     "id": "o-que-e-cliche",
     "grupo": "personalizacao",
     "ordem": 2,
     "pergunta": "O que é o clichê flexográfico?",
-    "resposta": "É a matriz com a sua arte gravada em alto-relevo — o carimbo que imprime a marca ao longo do rolo. Sem ela não existe fita personalizada: cada arte precisa da sua. É uma peça física, fabricada antes do primeiro metro de fita ser impresso."
+    "resposta": "É a matriz com a sua arte gravada em alto-relevo, o carimbo que imprime a marca ao longo do rolo. Sem ela não existe fita personalizada: cada arte precisa da sua. É uma peça física, fabricada antes do primeiro metro de fita ser impresso."
   },
   {
     "id": "cliche-todo-pedido",
@@ -102,7 +102,7 @@
     "grupo": "personalizacao",
     "ordem": 4,
     "pergunta": "Mudei o logo. Preciso de outro clichê?",
-    "resposta": "Sim. Qualquer alteração na arte — cor, texto, proporção, um aviso a mais — exige uma matriz nova, porque a gravação é física e não pode ser editada. Por isso vale fechar a arte antes de gravar o primeiro clichê."
+    "resposta": "Sim. Qualquer alteração na arte (cor, texto, proporção, um aviso a mais) exige uma matriz nova, porque a gravação é física e não pode ser editada. Por isso vale fechar a arte antes de gravar o primeiro clichê."
   },
   {
     "id": "como-enviar-arte",
@@ -116,7 +116,7 @@
     "grupo": "personalizacao",
     "ordem": 6,
     "pergunta": "O que vale a pena imprimir na fita além do logo?",
-    "resposta": "Os avisos que mais aparecem nos pedidos são \"ESTA FITA É SUA GARANTIA\", \"VOLUME CONFERIDO\" e \"CUIDADO, FRÁGIL\". O primeiro é o mais eficaz porque instrui o recebedor a conferir o lacre na hora da entrega — o único momento em que a responsabilidade por uma avaria ainda pode ser atribuída."
+    "resposta": "Os avisos que mais aparecem nos pedidos são \"ESTA FITA É SUA GARANTIA\", \"VOLUME CONFERIDO\" e \"CUIDADO, FRÁGIL\". O primeiro é o mais eficaz porque instrui o recebedor a conferir o lacre na hora da entrega, o único momento em que a responsabilidade por uma avaria ainda pode ser atribuída."
   },
   {
     "id": "atende-todo-brasil",

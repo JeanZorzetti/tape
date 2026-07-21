@@ -5,7 +5,7 @@ export const TIPOS_FITA = [
   { value: "personalizada", label: "Fita transparente personalizada" },
   { value: "gomada", label: "Fita gomada (kraft)" },
   { value: "comum", label: "Fita transparente comum" },
-  { value: "nao_sei", label: "Não sei ainda — preciso de orientação" },
+  { value: "nao_sei", label: "Não sei ainda, preciso de orientação" },
 ] as const;
 
 export type TipoFita = (typeof TIPOS_FITA)[number]["value"];
@@ -25,7 +25,7 @@ export interface LeadResumo {
 /** Link do WhatsApp com os dados do lead — usado quando o e-mail não está configurado ou o envio falha. */
 export function whatsappFromLead(lead: LeadResumo): string {
   const linhas = [
-    `Olá! Sou ${lead.nome || "—"} da ${lead.empresa || "—"}.`,
+    `Olá! Sou ${lead.nome || "(sem nome)"} da ${lead.empresa || "(sem empresa)"}.`,
     `Quero um orçamento de ${tipoFitaLabel(lead.tipoFita)}.`,
     `Quantidade estimada: ${lead.quantidadeEstimada || "a definir"}.`,
   ];

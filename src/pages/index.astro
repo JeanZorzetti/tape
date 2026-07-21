@@ -20,7 +20,7 @@ import quemed from "../assets/portfolio/quemed.png";
 const ORIGEM = "Home";
 
 const diferenciais = [
-  { num: `${PEDIDO_MINIMO_ROLOS}`, unidade: "rolos", texto: "Pedido mínimo — os concorrentes costumam exigir 100+." },
+  { num: `${PEDIDO_MINIMO_ROLOS}`, unidade: "rolos", texto: "Pedido mínimo. Os concorrentes costumam exigir 100+." },
   { num: `+${(EMPRESAS_ATENDIDAS).toLocaleString("pt-BR")}`, unidade: "empresas", texto: "Já estampam suas caixas com a TapePro." },
   { num: "2", unidade: "cores", texto: "De impressão inclusas na sua arte." },
   { num: "100%", unidade: "nacional", texto: "Atendimento e entrega para todo o Brasil." },
@@ -36,17 +36,17 @@ const portfolio = [
   { img: quemed, nome: "Quemed", tipo: "Gomada kraft" },
 ];
 
-const selos = ["Cuidado — Frágil", "Volume conferido", "Selo de garantia de violação"];
+const selos = ["Cuidado, Frágil", "Volume conferido", "Selo de garantia de violação"];
 
 const segmentos = (await getCollection("segmentos")).sort((a, b) => a.data.ordem - b.data.ordem);
 const posts = (await postsPublicados()).slice(0, 3);
 ---
 
 <BaseLayout
-  title="TapePro — Fitas Adesivas Personalizadas com a Sua Marca"
+  title="Fitas Adesivas Personalizadas com a Sua Marca | TapePro"
   description="Fitas adesivas personalizadas para empresas: transparente e kraft com a sua marca impressa. A partir de 20 rolos, até 2 cores, atendimento nacional."
 >
-  <!-- HERO — cinematográfico -->
+  <!-- HERO -->
   <section class="relative isolate overflow-hidden bg-navy text-white">
     <Image
       src={deposito}
@@ -69,7 +69,7 @@ const posts = (await postsPublicados()).slice(0, 3);
           Sua marca sela<br class="hidden sm:block" /> cada caixa que sai.
         </h1>
         <p class="mt-6 max-w-xl font-body text-lg leading-relaxed text-white/85">
-          A TapePro imprime a identidade da sua empresa em fita transparente ou kraft — lacre, proteja e divulgue a cada
+          A TapePro imprime a identidade da sua empresa em fita transparente ou kraft: lacre, proteja e divulgue a cada
           envio. A partir de {PEDIDO_MINIMO_ROLOS} rolos, com até 2 cores.
         </p>
         <div class="mt-9 flex flex-wrap items-center gap-4">
@@ -143,7 +143,7 @@ const posts = (await postsPublicados()).slice(0, 3);
     <div class="max-w-2xl">
       <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Portfólio</p>
       <h2 class="mt-3 text-3xl md:text-4xl">Marcas que já viajam em cada encomenda.</h2>
-      <p class="mt-4 font-body text-ink/70">Trabalhos reais impressos pela TapePro — do jeans ao autopeças, da farmácia ao alimentício.</p>
+      <p class="mt-4 font-body text-ink/70">Trabalhos reais impressos pela TapePro: do jeans ao autopeças, da farmácia ao alimentício.</p>
     </div>
     <ul class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
       {
@@ -176,7 +176,7 @@ const posts = (await postsPublicados()).slice(0, 3);
         <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange">Fita que protege e comunica</p>
         <h2 class="mt-3 text-3xl md:text-4xl">Mais que marca: segurança impressa.</h2>
         <p class="mt-5 max-w-lg font-body leading-relaxed text-white/80">
-          Além do seu logo, imprimimos avisos que reduzem extravio e contestação — e mostram ao cliente que o pacote chegou
+          Além do seu logo, imprimimos avisos que reduzem extravio e contestação, e mostram ao cliente que o pacote chegou
           intacto.
         </p>
       </div>
@@ -255,7 +255,7 @@ const posts = (await postsPublicados()).slice(0, 3);
         <h2 class="text-3xl md:text-4xl">Peça seu orçamento hoje.</h2>
         <p class="mt-3 font-body text-navy">Resposta rápida no WhatsApp · pedido mínimo de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.</p>
       </div>
-      <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} — CTA final`} variant="light" />
+      <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} · CTA final`} variant="light" />
     </div>
   </section>
 </BaseLayout>

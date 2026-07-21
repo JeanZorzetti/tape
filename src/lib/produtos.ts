@@ -48,7 +48,7 @@ export const PRODUTOS: Produto[] = [
     eyebrow: "BOPP cristal · impressa",
     chamada: "Sua marca impressa e o lacre continua discreto.",
     resumo:
-      "A fita de lacre mais usada no Brasil, com a sua marca impressa ao longo de todo o rolo. O filme BOPP transparente mantém a caixa limpa e deixa a arte aparecer — logo, aviso de segurança ou os dois.",
+      "A fita de lacre mais usada no Brasil, com a sua marca impressa ao longo de todo o rolo. O filme BOPP transparente mantém a caixa limpa e deixa a arte aparecer: logo, aviso de segurança ou os dois.",
     specs: [
       { label: "Largura", valor: "48 mm" },
       { label: "Comprimento", valor: "100 m" },
@@ -94,7 +94,7 @@ export const PRODUTOS: Produto[] = [
     eyebrow: "Kraft · fios de nylon",
     chamada: "Lacre inviolável para caixa pesada.",
     resumo:
-      "Papel kraft gomado com fios de nylon na estrutura, ativado com água: a cola penetra na fibra do papelão e vira parte da caixa. É o lacre que não se descola sem deixar marca — e o mais indicado para volumes pesados.",
+      "Papel kraft gomado com fios de nylon na estrutura, ativado com água: a cola penetra na fibra do papelão e vira parte da caixa. É o lacre que não se descola sem deixar marca, e o mais indicado para volumes pesados.",
     specs: [
       { label: "Largura", valor: "70 mm" },
       { label: "Comprimento", valor: "150 m" },
@@ -113,7 +113,7 @@ export const PRODUTOS: Produto[] = [
       {
         titulo: "Vira parte da caixa",
         texto:
-          "A goma ativada por água penetra nas fibras do papelão. Para abrir é preciso rasgar — a violação fica evidente.",
+          "A goma ativada por água penetra nas fibras do papelão. Para abrir é preciso rasgar: a violação fica evidente.",
       },
       {
         titulo: "Aguenta peso",
@@ -162,7 +162,7 @@ export const PRODUTOS: Produto[] = [
       },
       {
         titulo: "Custo por escala",
-        texto: "Quanto maior o volume, melhor o preço por rolo — o orçamento é fechado sobre a sua quantidade.",
+        texto: "Quanto maior o volume, melhor o preço por rolo. O orçamento é fechado sobre a sua quantidade.",
       },
       {
         titulo: "Compra junto",
