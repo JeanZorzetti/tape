@@ -16,7 +16,9 @@ Valor público que prova controle sobre o domínio.
 | localização | `https://tapepro.roilabs.com.br/<valor>.txt` |
 | conteúdo do arquivo | exatamente o valor, sem espaço, quebra de linha final tolerada |
 
-**Fonte de verdade**: `CHAVE_INDEXNOW` em `src/lib/constants.ts`. O nome do arquivo em `public/` deriva desse valor — se divergirem, o buscador responde `403` e a submissão é registrada como falha.
+**Fonte de verdade**: o **nome do arquivo** em `public/`. O conteúdo precisa ser igual ao nome sem a extensão — se divergirem, o buscador responde `403` e a submissão é registrada como falha.
+
+**Não existe constante em `src/`.** `scripts/indexnow.mjs` roda na imagem de runtime, que copia apenas `dist`, `node_modules` e `package.json` — não há `src/` para importar, e o script é `.mjs` puro, sem transpilação de TypeScript. O script descobre a chave localizando o único `*.txt` na raiz de `dist/client`.
 
 **Não é segredo.** Por definição do protocolo precisa ser legível por qualquer um.
 
@@ -28,14 +30,15 @@ Montado a cada disparo, nunca persistido.
 
 | Campo | Origem | Validação |
 |-------|--------|-----------|
-| `host` | host de `SITE_URL` | precisa ser o domínio de produção, senão o disparo é pulado |
-| `key` | `CHAVE_INDEXNOW` | não vazio |
-| `keyLocation` | `SITE_URL` + `/` + chave + `.txt` | absoluto |
-| `urlList` | `<loc>` de `dist/client/sitemap-*.xml` | toda URL começa com `SITE_URL`; nenhuma contém `/admin` ou `/api`; lista não vazia (vazia = pular, não erro) |
+| `host` | host das próprias URLs do sitemap | precisa ser o domínio de produção, senão o disparo é pulado |
+| `key` | nome do único `*.txt` na raiz de `dist/client`, sem extensão | não vazio; conteúdo do arquivo tem que bater com o nome |
+| `keyLocation` | `https://<host>/<chave>.txt` | absoluto |
+| `urlList` | `<loc>` dos sitemaps em `dist/client/` | toda URL começa com o host; nenhuma contém `/admin` ou `/api`; **nenhuma termina em `.xml`**; lista não vazia (vazia = pular, não erro) |
 
 **Regras derivadas dos requisitos**:
 
 - URL fora do host declarado → descartada (o serviço responderia `422` para o lote inteiro).
+- URL terminada em `.xml` → descartada. O `sitemap-index.xml` é lido junto com o `sitemap-0.xml` e seu `<loc>` aponta para outro sitemap — sem esse filtro, a URL de um arquivo XML entraria na lista como se fosse página.
 - Lista vazia após o filtro → registra "nada a submeter" e encerra com sucesso.
 - Duplicatas → removidas antes do envio.
 

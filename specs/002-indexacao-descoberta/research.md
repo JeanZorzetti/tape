@@ -24,13 +24,15 @@ Nenhum `NEEDS CLARIFICATION` sobreviveu à spec. As decisões abaixo resolvem as
 
 ## D2 — Quais URLs submeter
 
-**Decision**: todas as `<loc>` do sitemap gerado em `dist/client/sitemap-*.xml`, extraídas por regex, com filtro defensivo que descarta qualquer coisa sob `/admin` ou `/api`.
+**Decision**: todas as `<loc>` dos sitemaps gerados em `dist/client/`, extraídas por regex, com filtro que descarta qualquer coisa sob `/admin` ou `/api` **e qualquer `<loc>` terminada em `.xml`**.
+
+**O filtro de `.xml` não é decorativo**: o `@astrojs/sitemap` gera `sitemap-index.xml` **e** `sitemap-0.xml`, e o `<loc>` do índice aponta para o outro sitemap. Ler os dois e submeter tudo mandaria a URL de um arquivo XML como se fosse página.
 
 **Rationale**: o sitemap já é a fonte de verdade das URLs públicas e já exclui `/admin` pelo `filter` em `astro.config.mjs` — reusá-lo evita manter uma segunda lista de rotas (DRY). O filtro extra é cinto e suspensório barato para FR-003: se alguém afrouxar o filtro do sitemap, a submissão continua limpa. Regex sobre `<loc>` dispensa parser de XML para um arquivo que nós mesmos geramos.
 
 **Alternatives considered**:
 
-- *Só as URLs alteradas*: o protocolo recomenda, mas o `@astrojs/sitemap` não emite `lastmod` na configuração atual, e derivar data por rota exigiria mapear rota→conteúdo. Com ~30 URLs e submissão por deploy (D1), o conjunto completo é aceitável e honesto: um deploy só acontece quando o conteúdo muda.
+- *Só as URLs alteradas*: o protocolo recomenda, mas com ~30 URLs e submissão por deploy (D1) o conjunto completo é aceitável e honesto — um deploy só acontece quando o conteúdo muda. O `lastmod` que D7 passou a emitir cobre só as rotas de blog, insuficiente para filtrar o site inteiro.
 - *Lista manual de URLs importantes*: segunda fonte de verdade, apodrece no primeiro post novo.
 
 ---
@@ -47,11 +49,17 @@ Nenhum `NEEDS CLARIFICATION` sobreviveu à spec. As decisões abaixo resolvem as
 
 ## D4 — A chave IndexNow
 
-**Decision**: string hexadecimal de 32 caracteres, gerada uma vez, **versionada no repositório** em dois lugares: `public/<chave>.txt` (conteúdo = a própria chave) e como constante nomeada em `src/lib/constants.ts`.
+**Decision**: string hexadecimal de 32 caracteres, gerada uma vez, existindo em **um único lugar**: `public/<chave>.txt`, cujo nome sem extensão é igual ao conteúdo. O script descobre a chave localizando o único `*.txt` na raiz de `dist/client`.
 
-**Rationale**: o protocolo exige que a chave seja publicamente legível na raiz do domínio — é justamente assim que o buscador prova que quem submeteu controla o site. Não é segredo e não conta como credencial no repositório. Manter o valor numa constante evita que o nome do arquivo e o corpo da requisição divirjam.
+**Rationale**: o protocolo exige que a chave seja publicamente legível na raiz do domínio — é justamente assim que o buscador prova que quem submeteu controla o site. Não é segredo e não conta como credencial no repositório.
 
-**Alternatives considered**: chave em variável de ambiente — acrescenta um ponto de configuração no Easypanel para um valor que precisa ser público de qualquer forma.
+Uma constante em `src/lib/constants.ts` **não funcionaria**: o `Dockerfile` copia para a imagem de runtime apenas `dist`, `node_modules` e `package.json`. Não existe `src/` para o `scripts/indexnow.mjs` importar, e ele é `.mjs` puro — não há transpilação de TypeScript no runtime. Derivar tudo do `dist` elimina o acoplamento em vez de contorná-lo.
+
+**Alternatives considered**:
+
+- *Constante em `src/lib/constants.ts`*: quebra na primeira execução dentro do container, e quebraria em produção, onde ninguém está olhando.
+- *Copiar `src/` para a imagem de runtime*: engorda a imagem e ainda deixa o problema do import de TypeScript.
+- *Chave em variável de ambiente*: acrescenta um ponto de configuração no Easypanel para um valor que precisa ser público de qualquer forma.
 
 ---
 
@@ -73,11 +81,19 @@ Nenhum `NEEDS CLARIFICATION` sobreviveu à spec. As decisões abaixo resolvem as
 
 ---
 
-## D7 — Google Search Console: confirmado sem ação adicional
+## D7 — Google Search Console: sem API, mas com `lastmod`
 
-**Decision**: fora de escopo, registrado.
+**Decision**: submissão programática fora de escopo. **Passar a emitir `lastmod` nas rotas `/blog/*`** (T031).
 
-**Rationale**: a Indexing API do Google aceita apenas `JobPosting` e `BroadcastEvent` — nenhum dos dois existe neste site. Para páginas comuns, o Google só oferece sitemap e a inspeção manual de URL no painel, ambos já cobertos. O IndexNow **não** é aceito pelo Google. A única higiene contínua é `lastmod` correto no sitemap.
+**Rationale**: a Indexing API do Google aceita apenas `JobPosting` e `BroadcastEvent` — nenhum dos dois existe neste site. Para páginas comuns, o Google só oferece sitemap e a inspeção manual de URL no painel. O IndexNow **não** é aceito pelo Google.
+
+Resta o `lastmod`, e aqui a versão anterior deste documento se contradizia: afirmava que "o gerador de sitemap já faz", quando [astro.config.mjs](../../astro.config.mjs) não configura `serialize` nem `lastmod` — o `@astrojs/sitemap` **não** emite `lastmod` por padrão. Como é o único sinal de atualização que temos para o Google, passa a ser emitido de verdade.
+
+**Escopo do `lastmod`**: só as rotas de blog, a partir de `atualizadoEm ?? publicadoEm`. As páginas institucionais e de produto mudam junto com o deploy inteiro — carimbar todas com a data do build seria ruído, não sinal.
+
+**Implementação**: o `astro.config.mjs` não acessa `astro:content`, então as datas saem de `fs` + regex sobre o frontmatter de `src/content/blog/*.mdx`, com o slug vindo do nome do arquivo.
+
+`ponytail:` regex sobre frontmatter em vez de parser de YAML — o formato dessas datas é gerado pelo nosso próprio schema. Migrar para leitura da coleção se o frontmatter ficar irregular.
 
 ---
 

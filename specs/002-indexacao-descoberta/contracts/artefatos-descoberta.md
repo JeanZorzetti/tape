@@ -12,10 +12,12 @@ As interfaces externas desta feature são **arquivos servidos publicamente** e *
 |------|----------|
 | Status | `200` |
 | Content-Type | `text/plain` |
-| Corpo | exatamente o valor de `CHAVE_INDEXNOW`, sem outro conteúdo |
-| Nome do arquivo | `<valor da chave>.txt`, na raiz do domínio |
+| Corpo | exatamente a chave, sem outro conteúdo |
+| Nome do arquivo | `<chave>.txt`, na raiz do domínio |
 
-✅ Verificado: o arquivo existe em `dist/client/` e seu conteúdo bate com a constante.
+**Invariante**: nome do arquivo sem extensão == conteúdo do arquivo. É a única definição da chave — não há constante em `src/`.
+
+✅ Verificado: existe exatamente um `*.txt` na raiz de `dist/client/` e seu conteúdo é igual ao nome sem a extensão.
 
 ---
 
@@ -102,8 +104,8 @@ Content-Type: application/json; charset=utf-8
 
 {
   "host": "tapepro.roilabs.com.br",
-  "key": "<CHAVE_INDEXNOW>",
-  "keyLocation": "https://tapepro.roilabs.com.br/<CHAVE_INDEXNOW>.txt",
+  "key": "<chave — nome do .txt em dist/client, sem extensão>",
+  "keyLocation": "https://tapepro.roilabs.com.br/<chave>.txt",
   "urlList": ["https://tapepro.roilabs.com.br/", "..."]
 }
 ```
@@ -122,9 +124,10 @@ Content-Type: application/json; charset=utf-8
 
 **Pré-condições para disparar**:
 
-1. Host de `SITE_URL` é o domínio de produção — senão, pula.
+1. O host derivado das URLs do sitemap é o domínio de produção — senão, pula.
 2. `dist/.indexnow-enviado` não existe — senão, pula.
-3. `urlList` não vazia após filtro — senão, pula.
+3. Existe exatamente um `*.txt` na raiz de `dist/client` — senão, registra e pula.
+4. `urlList` não vazia após o filtro (fora `/admin`, `/api`, `.xml`, host estranho, duplicata) — senão, pula.
 
 **Formato do log** (FR-006), uma linha por disparo:
 

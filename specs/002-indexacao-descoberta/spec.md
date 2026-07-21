@@ -96,6 +96,8 @@ Leitores, agregadores e ferramentas de monitoramento conseguem acompanhar novos 
 - **FR-005**: A submissão NÃO PODE ocorrer fora do domínio de produção.
 - **FR-006**: O resultado de cada submissão (quantidade de URLs e resposta do serviço) DEVE ser observável no log do deploy.
 
+- **FR-017**: O sitemap DEVE informar a data da última modificação das páginas do blog, derivada da data de atualização (ou de publicação, na ausência dela) do próprio post. É o único sinal de atualização disponível para buscadores que não aceitam submissão programática.
+
 #### Verificação no Bing Webmaster Tools
 
 - **FR-007**: O site DEVE publicar o marcador de verificação de propriedade exigido pelo Bing.
@@ -137,7 +139,7 @@ Leitores, agregadores e ferramentas de monitoramento conseguem acompanhar novos 
 ## Assumptions
 
 - **`/admin` é CRM de leads, não CMS.** A descrição original previa ping "ao publicar post pelo admin", mas o painel administrativo gerencia leads; os posts do blog são arquivos de conteúdo versionados no repositório. Logo, conteúdo só muda em deploy, e o deploy é o único gatilho de submissão necessário. Um gatilho sob demanda seria código sem caso de uso.
-- **Google Search Console fica fora de escopo**, com justificativa: a propriedade já foi verificada e o sitemap submetido; a API de indexação do Google aceita apenas os tipos JobPosting e BroadcastEvent, nenhum aplicável a este site. A única ação contínua para o Google é manter as datas de modificação corretas no sitemap, o que o gerador de sitemap já faz.
+- **Submissão programática ao Google fica fora de escopo**, com justificativa: a propriedade já foi verificada no Search Console e o sitemap submetido; a API de indexação do Google aceita apenas os tipos JobPosting e BroadcastEvent, nenhum aplicável a este site. Sobra o sinal de data de modificação no sitemap — que **hoje não é emitido** e passa a ser, nas páginas do blog, como parte desta feature.
 - **O domínio de produção é o publicado no sitemap atual**; ambientes de preview não disparam submissão.
 - **O sitemap existente é a fonte de verdade** das URLs públicas — ele já exclui a área administrativa, então a submissão herda essa exclusão em vez de manter uma segunda lista.
 - **Volume de URLs é pequeno** (dezenas, não milhares), então submeter o conjunto completo do sitemap por deploy é aceitável enquanto não houver como derivar de forma confiável só o que mudou.

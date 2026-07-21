@@ -8,7 +8,7 @@
 
 Quatro artefatos públicos e um disparo automático, todos derivados do conteúdo que já existe no repositório:
 
-1. **IndexNow** — arquivo de chave em `public/`, e um script que lê o sitemap já gerado e submete as URLs para `api.indexnow.org`. Dispara **na subida do container** (não no build da imagem), em background, com marcador de idempotência dentro do `dist` para não repetir a submissão a cada restart.
+1. **IndexNow** — arquivo de chave em `public/`, e um script que lê o sitemap já gerado e submete as URLs para `api.indexnow.org`. Dispara **na subida do container** (não no build da imagem), em background, com marcador de idempotência dentro do `dist` para não repetir a submissão a cada restart. O script lê tudo do `dist` — host, URLs e chave — porque a imagem de runtime não carrega `src/`.
 2. **Bing Webmaster** — verificação preferencialmente por **importação do Google Search Console** (já verificado, zero mudança no repo); arquivo de verificação em `public/` como plano B. Passos manuais documentados em `docs/`.
 3. **llms.txt** — endpoint estático gerado das coleções e do catálogo, mais regras explícitas de crawler de IA no `robots.txt` estático.
 4. **RSS** — endpoint `/rss.xml` com `@astrojs/rss`, reusando `postsPublicados()`, com `<link rel="alternate">` no `BaseLayout`.
@@ -92,7 +92,8 @@ src/
 ├── layouts/
 │   └── BaseLayout.astro          # MODIFICADO: <link rel="alternate"> do feed
 └── lib/
-    ├── constants.ts              # MODIFICADO: CHAVE_INDEXNOW, FEED_URL
+    ├── constants.ts              # MODIFICADO: FEED_URL (só isso — a chave IndexNow
+    │                             #   não vive aqui, ver research.md D4)
     └── conteudo.ts               # REUSADO: postsPublicados() alimenta feed e llms.txt
 
 scripts/
@@ -105,6 +106,7 @@ tests/
 docs/
 └── bing-webmaster.md             # NOVO: passos manuais do painel
 
+astro.config.mjs                  # MODIFICADO: lastmod nas rotas /blog/* (T031)
 Dockerfile                        # MODIFICADO: copia scripts/, dispara o ping na subida
 ```
 
