@@ -112,7 +112,9 @@ Preencher ao executar — é o que prova que os passos 2 a 4 aconteceram.
 | Método escolhido | Arquivo XML (plano B), não a importação do GSC |
 | Motivo do plano B | O usuário pegou o token de verificação manual direto no painel. Entre os três métodos manuais, o arquivo evita somar bytes ao `<head>` de todas as páginas. |
 | Data da verificação | **2026-07-21 — verificada** |
+| Sitemap submetido | **2026-07-21** — `https://tapepro.roilabs.com.br/sitemap-index.xml` |
 | URLs descobertas no sitemap | _aguardando o processamento do Bing; o `sitemap-0.xml` publica **21 URLs**, com `lastmod` nos 7 posts_ |
+| Primeira submissão IndexNow aceita | **2026-07-21** — `21 URLs -> 200 OK` (200, não 202: chave validada) |
 
 ⚠️ **O botão `Verificar` do bloco "Marca Meta HTML" nunca vai passar** — a home
 não tem a meta tag de propósito. Clicar nele devolve um `Erro: ocorreu um erro
