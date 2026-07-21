@@ -24,6 +24,27 @@ O que resta é **dívida assumida**, toda em [`handoff-qualidade.md`](handoff-qu
 2. **Compressão no proxy do Easypanel** — confirmado desligado; ~300–600 ms de ganho por uma chave no painel.
 3. **Favicon e OG definitivos** — os atuais são provisórios; o OG aparece em todo link compartilhado no WhatsApp.
 
+## ✅ 002 — Indexação e descoberta (feita nesta sessão)
+
+Spec em `specs/002-indexacao-descoberta/`. Quatro artefatos públicos + um disparo automático, todos derivados do conteúdo que já existe. Única dependência nova: `@astrojs/rss`.
+
+**Automático, não precisa de ninguém:**
+- `scripts/indexnow.mjs` — a cada **subida de container** lê os sitemaps do `dist`, filtra e submete as URLs para `api.indexnow.org` (Bing, Yandex, Seznam, Naver). Dispara ~15s após o start, desanexado, e **nunca** sai com código ≠ 0: falha de rede aqui não pode derrubar o site.
+- `/llms.txt` — endpoint gerado de `PRODUTOS` + coleção `segmentos` + `postsPublicados()`. Página nova entra sozinha, sem edição manual.
+- `/rss.xml` — `@astrojs/rss` sobre `postsPublicados()` (já exclui rascunho e ordena por data). `<link rel="alternate">` no `BaseLayout`.
+- `public/robots.txt` — bloqueia `/admin/` e `/api/`, libera explicitamente os 12 agentes de IA (GPTBot, ClaudeBot, PerplexityBot, Google-Extended…).
+- `astro.config.mjs` — `lastmod` no sitemap **só nas rotas `/blog/*`**, de `atualizadoEm ?? publicadoEm`. É o único sinal de atualização que o Google aceita (ele não usa IndexNow).
+
+**Exige painel — ainda pendente:** verificar o domínio no **Bing Webmaster Tools** e submeter o sitemap. Passos em [`docs/bing-webmaster.md`](docs/bing-webmaster.md), com uma tabela *Registro* para preencher. Rota preferida é **importar do Google Search Console** (já verificado, zero mudança no repo). Sem isso a submissão funciona mas ninguém consegue conferir o resultado.
+
+**⚠️ Duas armadilhas que já morderam:**
+1. **A guarda de ambiente é o `NODE_ENV`, não o host.** O host sai do sitemap e diz `tapepro.roilabs.com.br` mesmo num build local — a spec original mandava usar o host como guarda, e com isso um `npm run build` na máquina de alguém submeteu de verdade (aconteceu). Quem separa local de container é o `NODE_ENV=production` do estágio de runtime do `Dockerfile`. **Não trocar por uma checagem de host.**
+2. **A chave IndexNow é descoberta pelo conteúdo, não por contagem.** `public/<chave>.txt` é o único lugar onde a chave existe (nada em `src/` — a imagem de runtime não copia `src/`). O contrato dizia "o único `*.txt` na raiz do `dist`", mas `robots.txt` e `llms.txt` também moram lá. A regra real, em `lerChave()` e no `verificar`, é *o `.txt` cujo conteúdo é igual ao próprio nome* — que é a mesma invariante que o buscador confere para responder 200 em vez de 403.
+
+**Teto conhecido (aceito):** o marcador de idempotência é `dist/.indexnow-enviado`, dentro do container. Some quando uma imagem nova é construída (deploy = conteúdo novo = submeter) e sobrevive a restart do mesmo container. **Se o Easypanel recriar o container sem novo build, sai uma submissão a mais** — custo nulo neste volume. Se um dia doer, o marcador passa a guardar o hash do conjunto de URLs em vez de existir/não existir.
+
+**Verificado:** `npm test` = 30 testes passando · `npm run build && npm run verificar` = TUDO OK (22 páginas, 17 links no `llms.txt` cobrindo as 14 páginas de conteúdo, 7 `<item>` no feed para 7 posts) · `node scripts/indexnow.mjs` local = `pulado: ambiente local não é produção`, sem requisição de rede. **Falta o passo de produção**: conferir o log do container após o deploy (`[indexnow] N URLs -> 200 OK`) e o §6 do quickstart (página nova indexada em 48h).
+
 ## ✅ US4 — FEITA nesta sessão (T011, T038–T042)
 
 **O motor de SEO long-tail está no ar.** 14 páginas novas: 4 segmentos, 7 posts, índices de blog/segmentos e a FAQ.
@@ -261,7 +282,8 @@ npm install
 npm run dev                          # dev (confira a porta no log!)
 npm run build                        # gera dist/client + dist/server
 npm run verificar                    # confere o dist contra os contratos de SEO
-npm test                             # 25 testes (as suítes de integração pedem build + DATABASE_URL)
+npm run indexnow                     # submissão IndexNow (pula fora de NODE_ENV=production)
+npm test                             # 30 testes (as suítes de integração pedem build + DATABASE_URL)
 node dist/server/entry.mjs           # server real (precisa das env vars)
 ```
 

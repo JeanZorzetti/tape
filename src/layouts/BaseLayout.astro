@@ -4,7 +4,7 @@ import Seo from "../components/seo/Seo.astro";
 import JsonLd from "../components/seo/JsonLd.astro";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
-import { NOME_MARCA, SITE_URL, TAGLINE, WHATSAPP_NUMERO } from "../lib/constants";
+import { FEED_URL, NOME_MARCA, SITE_URL, TAGLINE, WHATSAPP_NUMERO } from "../lib/constants";
 
 interface Props {
   title: string;
@@ -38,6 +38,7 @@ const organization = {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="alternate" type="application/rss+xml" title="Blog TapePro" href={FEED_URL} />
     <Seo title={title} description={description} image={image} noindex={noindex} />
     <JsonLd data={organization} />
   </head>

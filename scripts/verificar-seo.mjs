@@ -55,8 +55,9 @@ for (const arquivo of html.sort()) {
     }
   }
 
-  // 3. canonical + description
+  // 3. canonical + description + feed
   if (!src.includes('rel="canonical"')) erro(rota, "sem canonical");
+  if (!src.includes('rel="alternate"')) erro(rota, "sem <link rel=alternate> apontando o feed");
   const desc = src.match(/<meta name="description" content="([^"]*)"/);
   if (!desc) erro(rota, "sem meta description");
   else if (desc[1].length > MAX_DESCRIPTION)
@@ -184,6 +185,60 @@ for (const { a, b, grau } of colisoes) {
       `          ${a.nome}: "${a.intencao}"\n` +
       `          ${b.nome}: "${b.intencao}"`,
   );
+}
+
+// 10. llms.txt — índice do site para motores de busca generativa. Confere as
+// duas direções contra as rotas realmente construídas: link que não resolve
+// (sobrar) e página de conteúdo que ficou de fora do índice (faltar). Só as
+// duas juntas provam que o índice se mantém sozinho (FR-010).
+const llms = join(RAIZ, "llms.txt");
+if (!existsSync(llms)) erro("/llms.txt", "não existe no build");
+else {
+  const indexadas = new Set(
+    [...readFileSync(llms, "utf8").matchAll(/\]\((https?:\/\/[^)]+)\)/g)].map((m) => new URL(m[1]).pathname),
+  );
+  for (const destino of indexadas) {
+    if (!rotas.has(destino)) erro("/llms.txt", `link para rota inexistente: ${destino}`);
+  }
+
+  const deConteudo = [...rotas].filter((r) => /^\/(produtos|segmentos|blog)\/[^/]+\/$/.test(r));
+  for (const destino of deConteudo) {
+    if (!indexadas.has(destino)) erro("/llms.txt", `rota de conteúdo fora do índice: ${destino}`);
+  }
+  console.log(`\nllms.txt: ${indexadas.size} links, ${deConteudo.length} páginas de conteúdo cobertas`);
+}
+
+// 11. robots.txt — o CRM de leads e o endpoint de formulário não são conteúdo
+// público, e nenhum bloco pode reabri-los por engano de ordenação (FR-012).
+const robots = readFileSync(join(RAIZ, "robots.txt"), "utf8");
+for (const privada of ["/admin/", "/api/"]) {
+  if (!robots.includes(`Disallow: ${privada}`)) erro("/robots.txt", `não bloqueia ${privada}`);
+  if (new RegExp(`^Allow:\\s*${privada}`, "m").test(robots)) erro("/robots.txt", `libera ${privada}`);
+}
+if (!/^Sitemap:/m.test(robots)) erro("/robots.txt", "sem linha Sitemap:");
+
+// 12. rss.xml — um <item> por post publicado. Divergência aqui significa que o
+// feed e a listagem do blog saíram de fontes diferentes.
+const feed = join(RAIZ, "rss.xml");
+if (!existsSync(feed)) erro("/rss.xml", "não existe no build");
+else {
+  const itens = (readFileSync(feed, "utf8").match(/<item>/g) ?? []).length;
+  const posts = [...rotas].filter((r) => /^\/blog\/[^/]+\/$/.test(r)).length;
+  console.log(`rss.xml: ${itens} <item> para ${posts} posts publicados`);
+  if (itens !== posts) erro("/rss.xml", `${itens} <item> para ${posts} posts publicados`);
+}
+
+// 13. chave IndexNow: o arquivo publicado precisa conter exatamente o próprio
+// nome. Se divergirem, a submissão volta 403 e ninguém percebe — o site segue
+// no ar, só deixa de ser indexado rápido. Mesma regra que scripts/indexnow.mjs
+// usa para descobrir a chave, então `robots.txt` e `llms.txt` não confundem.
+const chaves = readdirSync(RAIZ)
+  .filter((nome) => nome.endsWith(".txt"))
+  .filter((nome) => readFileSync(join(RAIZ, nome), "utf8").trim() === nome.slice(0, -".txt".length));
+
+console.log(`\nChave IndexNow: ${chaves.length === 1 ? chaves[0] : `${chaves.length} arquivos (esperado 1)`}`);
+if (chaves.length !== 1) {
+  erro("global", "esperado exatamente 1 arquivo de chave IndexNow em dist/client (nome sem extensão == conteúdo)");
 }
 
 console.log(`\n${falhas === 0 ? "TUDO OK" : `${falhas} FALHA(S)`} — ${html.length} páginas`);

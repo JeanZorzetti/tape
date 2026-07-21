@@ -1,4 +1,30 @@
+# Índice do site para motores de busca generativa:
+# https://tapepro.roilabs.com.br/llms.txt
+
+# /admin é o CRM de leads e /api recebe os formulários: nenhum dos dois é
+# conteúdo público, e nenhum bloco abaixo pode reabri-los para agente nenhum.
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Permissão explícita para agentes de busca generativa e de treinamento. O
+# `Allow: /` acima já bastaria, mas é a declaração explícita que as ferramentas
+# de auditoria GEO/AEO leem — e que documenta a decisão para quem mexer depois.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-User
+User-agent: Claude-SearchBot
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: meta-externalagent
+User-agent: CCBot
+Allow: /
+Disallow: /admin/
+Disallow: /api/
 
 Sitemap: https://tapepro.roilabs.com.br/sitemap-index.xml
