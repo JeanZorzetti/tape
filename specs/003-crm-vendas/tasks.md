@@ -70,9 +70,9 @@ description: "Task list for CRM de Vendas (003)"
 - [ ] T013 [US2] Adicionar tabela `pedidos` + índice `pedidos_lead_idx` ao `aplicarSchema()` em `src/lib/crm.ts`
 - [ ] T014 [P] [US2] Implementar `vencidoCarteira(proximoContato, temPedido, hoje)` em `src/lib/adminUi.ts`
 - [ ] T015 [US2] Implementar `inserirPedido(leadId, data, valorCentavos, volumeRolos)` como **transação** em `src/lib/crm.ts`: se 1º pedido → status `fechado` + `registrarTransicao(...,'fechado')` + `proximo_contato = data + 30`; senão → `proximo_contato = max(data) + 30` (depende de T013, T004)
-- [ ] T016 [US2] Implementar `listarPedidos`, `listarCarteira({nicho?})`, `contarCarteiraVencida`, `pausarCarteira` em `src/lib/crm.ts`
+- [ ] T016 [US2] Implementar `listarPedidos`, `listarCarteira({nicho?})` (filtro `nicho` **condicional** — só anexa a cláusula quando fornecido, para não referenciar `leads.nicho` antes de T025), `contarCarteiraVencida`, `pausarCarteira`, `reagendarCarteira` em `src/lib/crm.ts`
 - [ ] T017 [P] [US2] Teste de integração em `tests/crm-vendas.test.mjs` (build + `DATABASE_URL`): 1º pedido fecha e agenda +30d; 2º só reagenda; `aplicarSchema` rodado 2× não duplica transições
-- [ ] T018 [US2] Painel de pedidos em `src/pages/admin/[id].astro`: form (`data` default hoje, `valor` em R$ → centavos no servidor, `volume`), histórico de pedidos, "última compra" + "próximo recontato", botão pausar carteira; tratar `acao=pedido` e `acao=pausar-carteira` (PRG)
+- [ ] T018 [US2] Painel de pedidos em `src/pages/admin/[id].astro`: form (`data` default hoje, `valor` em R$ → centavos no servidor, `volume`), histórico de pedidos, "última compra" + "próximo recontato", botões **"registrar recontato"** e **"pausar carteira"**; tratar `acao=pedido`, `acao=recontato-carteira` e `acao=pausar-carteira` (PRG)
 - [ ] T019 [US2] Visão carteira em `src/pages/admin/index.astro`: `?visao=carteira` (clientes ordenados por `proximo_contato`, vencidos destacados via `vencidoCarteira`) + contador de carteira vencida
 
 **Checkpoint**: US1 e US2 funcionam independentemente.
@@ -104,7 +104,7 @@ description: "Task list for CRM de Vendas (003)"
 - [ ] T025 [US4] Adicionar coluna `leads.nicho` (`add column if not exists`) ao `aplicarSchema()` em `src/lib/crm.ts`
 - [ ] T026 [US4] Implementar `definirNicho(leadId, nicho)` (valida contra `NICHOS`) e estender `listarLeads` para aceitar filtro `nicho` em `src/lib/crm.ts`
 - [ ] T027 [US4] Implementar `distribuicaoPorNicho(periodo?)` em `src/lib/crm.ts` (`group by nicho`)
-- [ ] T028 [US4] Adicionar `<select>` de nicho ao painel "Situação" em `src/pages/admin/[id].astro` e persistir (validar contra `NICHOS`)
+- [ ] T028 [US4] Adicionar `<select>` de nicho ao painel "Situação" em `src/pages/admin/[id].astro`; persistir **junto no `acao=salvar`** (handler chama `definirNicho`), validando contra `NICHOS`
 - [ ] T029 [US4] Filtro por nicho em `src/pages/admin/index.astro` (`?nicho=`) + contadores de distribuição por nicho
 - [ ] T030 [US4] Estender `funilCoorte` para aceitar `nicho` opcional (`src/lib/crm.ts`) e adicionar controle de nicho a `src/pages/admin/funil.astro` (funil por nicho) — depende de T022, T023, T025
 

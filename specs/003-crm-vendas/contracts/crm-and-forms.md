@@ -24,6 +24,7 @@ listarCarteira(filtro?: { nicho?: string }): Promise<Lead[]>
   // clientes (tem pedido) ordenados por proximo_contato asc (vencidos primeiro)
 contarCarteiraVencida(): Promise<number>                   // clientes com proximo_contato <= hoje
 pausarCarteira(leadId: number): Promise<void>              // proximo_contato = null
+reagendarCarteira(leadId: number): Promise<void>           // proximo_contato = hoje + RECONTATO_CARTEIRA_DIAS
 
 // Funil por coorte
 registrarTransicao(leadId: number, de: string | null, para: string): Promise<void>
@@ -76,11 +77,11 @@ Todas seguem o padrão atual: POST → efeito → `Astro.redirect` (PRG). Zero J
 ### `POST /admin/[id]`
 | `acao` | Campos | Efeito |
 |---|---|---|
-| `salvar` *(existente)* | `status`, `proximoContato` | `atualizarLead` (+ transição se status mudou) |
-| `nicho` **novo** | `nicho` | `definirNicho` |
+| `salvar` *(existente, estendido)* | `status`, `proximoContato`, **`nicho`** | `atualizarLead` (+ transição se status mudou) + `definirNicho` |
 | `tentativa` **novo** | `canal`, `resultado`, `observacao?`, `proximoContato?` | `registrarTentativa` — grava toque; `proximoContato` já vem pré-preenchido com a data sugerida (editável) |
 | `pedido` **novo** | `data`, `valor?`, `volume?` | `inserirPedido` — 1º pedido fecha o lead e agenda carteira |
 | `nota` *(existente)* | `texto` | `adicionarNota` |
+| `recontato-carteira` **novo** | — | `reagendarCarteira` — recontato de carteira **sem** pedido; empurra +30d |
 | `pausar-carteira` **novo** | — | `pausarCarteira` |
 
 `valor` é digitado em reais no form e convertido para centavos no servidor (parse tolerante:
@@ -105,6 +106,7 @@ no header do `AdminLayout`.
 
 - Registrar o **1º** pedido ⇒ `status='fechado'`, existe `transicao …→fechado`,
   `proximo_contato = data + 30`. Registrar o **2º** ⇒ status intacto, carteira reagendada.
+- Registrar `recontato-carteira` (sem pedido) ⇒ `proximo_contato = hoje + 30`, status intacto.
 - `contarTentativas` reflete 1:1 as tentativas gravadas; `cadenciaEsgotada` vira `true` no 6º.
 - Backfill: rodar `aplicarSchema` duas vezes **não** duplica transições.
 - Funil: divisor zero ⇒ taxa `null` (UI mostra "—"), nunca erro/`NaN`.
