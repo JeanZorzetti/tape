@@ -241,7 +241,13 @@ Mapa: comando · natures · gomada-quemed · lyon · halyee · gomada-yanmei · 
 - **`caixas-lacradas`** (`SaveClip_..._723100504_...`): tem um adesivo "Entregas 🚚" colado embaixo. Cortar antes com `.extract({ left: 0, top: 430, width: 1206, height: 1280 })`.
 
 ## Gotchas do ambiente (Windows)
-- **Portas 4321 e 4399 ocupadas** por outro projeto ("Meridian"). O Astro pula sozinho para a próxima livre — na última sessão subiu em **4400**. **Confira a porta real no log**, não presuma.
+- **Feche o `astro dev` ao terminar a sessão.** Quem ocupa as portas é o próprio TapePro, não outro projeto: cada sessão sobe um dev server, encontra a porta da anterior ocupada, pula para a próxima e ninguém fecha. Em 2026-07-21 havia **quatro** dev servers do TapePro vivos (4322, 4399, 4400, 4500) de sessões do mesmo dia, mais dois builds do Meridian (3111/3112) parados havia cinco dias. **Confira a porta real no log**, não presuma — e limpe antes de sair:
+  ```powershell
+  Get-CimInstance Win32_Process -Filter "Name='node.exe'" |
+    Where-Object { $_.CommandLine -like '*Tapepro*' } |
+    Select-Object ProcessId, CommandLine
+  ```
+  Processo esquecido não é só porta ocupada: um `dist/server/entry.mjs` zumbi **sem `DATABASE_URL`** fez a suíte de testes conversar com ele em vez do servidor recém-subido — validação passava e todo INSERT dava 500. Ver `handoff-qualidade.md`, seção 1.
 - **`python` no Git Bash é stub vazio da Microsoft Store** (não roda). Use **PowerShell** para Python, ou Node para scripts (sharp).
 - **cwd da sessão** pode ficar em subpasta — use caminhos absolutos ou `cd` no comando.
 - **Screenshots do Playwright saem em branco** se as imagens não decodificaram: rode `await Promise.all([...document.images].map(i=>i.decode().catch(()=>{})))` via `browser_evaluate` antes do `browser_take_screenshot`. Use `loading="eager"` em imagens críticas.
