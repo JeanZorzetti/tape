@@ -75,7 +75,7 @@ Projeto único Astro na raiz: `src/`, `public/`, `scripts/`, `tests/`, `docs/`.
 
 - [X] T014 [P] [US2] Criar `docs/bing-webmaster.md` com os cinco passos de [contracts §6](contracts/artefatos-descoberta.md), deixando explícito que a **importação do Google Search Console** é a rota preferida porque o GSC já está verificado e não exige mudança no repositório
 - [ ] T015 [US2] Executar a verificação no painel do Bing pela importação do GSC e registrar em `docs/bing-webmaster.md` a data e o método que funcionou — **bloqueada: exige a conta do usuário no Bing Webmaster Tools**
-- [ ] T016 [US2] Se — e somente se — a importação não estiver disponível: criar `public/BingSiteAuth.xml` com o token do painel e verificar por arquivo, anotando o motivo do plano B em `docs/bing-webmaster.md`
+- [X] T016 [US2] Se — e somente se — a importação não estiver disponível: criar `public/BingSiteAuth.xml` com o token do painel e verificar por arquivo, anotando o motivo do plano B em `docs/bing-webmaster.md` — **arquivo criado e motivo registrado; o clique em `Verificar` no painel só funciona depois do deploy**
 - [ ] T017 [US2] Submeter `https://tapepro.roilabs.com.br/sitemap-index.xml` no painel e registrar em `docs/bing-webmaster.md` o número de URLs descobertas
 
 **Checkpoint**: US1 e US2 funcionam independentes — agora o disparo é observável

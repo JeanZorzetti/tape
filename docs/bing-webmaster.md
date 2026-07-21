@@ -24,16 +24,24 @@ verificação, sitemaps e histórico **sem nenhuma alteração no repositório**
 
 **Esperado**: a propriedade aparece como verificada em minutos.
 
-## 3. Plano B — arquivo de verificação
+## 3. Plano B — arquivo de verificação ← **foi por aqui**
 
-Só se a importação não estiver disponível na conta.
+Usado quando a importação não serve. É o caminho que este site seguiu.
 
-1. No painel, `Adicionar site manualmente` → aba `Arquivo XML` → copiar o token.
-2. Criar `public/BingSiteAuth.xml` com o conteúdo que o painel fornece.
+O painel oferece três métodos com **o mesmo token**: meta tag, arquivo XML e
+registro DNS. Ficamos no **arquivo XML** — a meta tag resolveria igual, mas
+somaria bytes ao `<head>` de *todas* as páginas para um efeito que um arquivo
+estático entrega uma vez (research.md D6).
+
+1. No painel, `Adicionar site manualmente` → copiar o token.
+2. Criar `public/BingSiteAuth.xml` com o token dentro de `<users><user>`.
 3. Deploy, e conferir que `https://tapepro.roilabs.com.br/BingSiteAuth.xml`
    responde 200.
 4. Voltar ao painel e clicar em `Verificar`.
-5. Anotar na seção *Registro* abaixo por que a importação não serviu.
+
+⚠️ **O passo 4 só funciona depois do deploy.** O Bing busca o arquivo no
+domínio de produção; verificar antes de publicar falha e o painel pede para
+tentar de novo.
 
 ## 4. Submeter o sitemap
 
@@ -68,7 +76,12 @@ Preencher ao executar — é o que prova que os passos 2 a 4 aconteceram.
 
 | Item | Valor |
 |------|-------|
-| Data da verificação | _pendente_ |
-| Método que funcionou | _pendente (importação do GSC ou arquivo XML)_ |
-| Motivo do plano B, se usado | _n/a_ |
-| URLs descobertas no sitemap | _pendente_ |
+| Token da propriedade | `9E40520DFE09119E7EB8E15A8ED12DEB` |
+| Arquivo publicado | [`public/BingSiteAuth.xml`](../public/BingSiteAuth.xml) — commit de 2026-07-21 |
+| Método escolhido | Arquivo XML (plano B), não a importação do GSC |
+| Motivo do plano B | O usuário pegou o token de verificação manual direto no painel. Entre os três métodos manuais, o arquivo evita somar bytes ao `<head>` de todas as páginas. |
+| Data da verificação | _pendente — só dá para clicar em `Verificar` depois do deploy_ |
+| URLs descobertas no sitemap | _pendente — passo 4_ |
+
+> O token é **público por natureza** (o Bing precisa lê-lo sem autenticação),
+> como a chave do IndexNow. Não é credencial e pode ficar versionado.
