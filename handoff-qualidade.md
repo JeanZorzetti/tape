@@ -81,9 +81,11 @@ Gerado por **`scripts/gerar-og.mjs`** (`node scripts/gerar-og.mjs`) — mexer l�
 
 ---
 
-## 4. Frente aberta separada
+## 4. Frente separada — CONCLUÍDA
 
-[`handoff-imagens-blog.md`](handoff-imagens-blog.md) — harness de prompt (Gemini) para gerar as capas dos posts. Não iniciado, é melhoria de conteúdo. O schema do blog já tem o campo `cenaImagem` reservado para isso (`src/content.config.ts`).
+[`handoff-imagens-blog.md`](handoff-imagens-blog.md) — harness de prompt (Gemini) para as capas dos posts. **Concluído:** `scripts/prompt-imagem-post.mjs` e `scripts/normalizar-imagem-post.mjs` existem e as 7 capas já foram trocadas. Aquele doc é a fonte da verdade sobre o fluxo e sobre a exceção que ele abre no `CLAUDE.md`.
+
+> Esta seção dizia "não iniciado" até 2026-07-21 e induziu ao erro numa sessão seguinte. **Confira o repositório antes de confiar no status escrito aqui.**
 
 ---
 
