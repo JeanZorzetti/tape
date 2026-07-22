@@ -10,9 +10,76 @@ export const isoDe = (d: Date | null) => (d ? d.toISOString().slice(0, 10) : "")
 
 export const hojeISO = () => new Date().toLocaleDateString("sv-SE", { timeZone: FUSO });
 
-/** Vencido = data marcada já passou e o lead ainda está vivo. */
+/* ── Pipelines (004): funis lógicos com etapas próprias mas máquina única ────
+   Vive aqui (módulo baixo-nível) e não em crm.ts para evitar o ciclo
+   adminUi → crm → adminUi: estaAtrasado depende de TERMINAIS, que deriva daqui. */
+
+export type Pipeline = "inbound" | "recuperacao";
+export interface Stage {
+  value: string;
+  label: string;
+}
+/** Papéis semânticos 1:1 entre as pipelines — só muda o rótulo/valor da string. */
+export interface Roles {
+  inicial: string;
+  primeiro_toque: string;
+  meio: string;
+  ganho: string;
+  perdido: string;
+}
+
+export const PIPELINES: Record<Pipeline, { label: string; stages: readonly Stage[]; roles: Roles }> = {
+  inbound: {
+    label: "Inbound",
+    stages: [
+      { value: "novo", label: "Novo" },
+      { value: "em_contato", label: "Em contato" },
+      { value: "orcado", label: "Orçado" },
+      { value: "fechado", label: "Fechado" },
+      { value: "perdido", label: "Perdido" },
+    ],
+    roles: { inicial: "novo", primeiro_toque: "em_contato", meio: "orcado", ganho: "fechado", perdido: "perdido" },
+  },
+  recuperacao: {
+    label: "Recuperação",
+    stages: [
+      { value: "a_contatar", label: "A contatar" },
+      { value: "contatado", label: "Contatado" },
+      { value: "interessado", label: "Interessado" },
+      { value: "recuperado", label: "Recuperado" },
+      { value: "descartado", label: "Descartado" },
+    ],
+    roles: { inicial: "a_contatar", primeiro_toque: "contatado", meio: "interessado", ganho: "recuperado", perdido: "descartado" },
+  },
+};
+
+export const isPipeline = (v: string): v is Pipeline => v === "inbound" || v === "recuperacao";
+export const statusesDaPipeline = (p: Pipeline) => PIPELINES[p].stages;
+export const rolesDaPipeline = (p: Pipeline) => PIPELINES[p].roles;
+
+/** Todos os status ganho+perdido das duas pipelines — quem está num deles não é "vivo". */
+export const TERMINAIS: ReadonlySet<string> = new Set(
+  Object.values(PIPELINES).flatMap((p) => [p.roles.ganho, p.roles.perdido]),
+);
+
+/** Valida um status; com `pipeline`, exige que pertença àquela pipeline. Sem ela, aceita de qualquer. */
+export const isStatus = (v: string, pipeline?: Pipeline): boolean =>
+  pipeline
+    ? PIPELINES[pipeline].stages.some((s) => s.value === v)
+    : Object.values(PIPELINES).some((p) => p.stages.some((s) => s.value === v));
+
+/** Rótulo global — os valores não colidem entre pipelines, então um lookup único basta. */
+export const statusLabel = (v: string): string => {
+  for (const p of Object.values(PIPELINES)) {
+    const s = p.stages.find((st) => st.value === v);
+    if (s) return s.label;
+  }
+  return v;
+};
+
+/** Vencido = data marcada já passou e o lead ainda está vivo (fora dos terminais de qualquer pipeline). */
 export const estaAtrasado = (proximoContato: Date | null, status: string, hoje: string) =>
-  !!proximoContato && isoDe(proximoContato) <= hoje && status !== "fechado" && status !== "perdido";
+  !!proximoContato && isoDe(proximoContato) <= hoje && !TERMINAIS.has(status);
 
 export const CLS_STATUS: Record<string, string> = {
   novo: "bg-orange/15 text-orange-800",
@@ -20,6 +87,11 @@ export const CLS_STATUS: Record<string, string> = {
   orcado: "bg-kraft/30 text-ink",
   fechado: "bg-[#1b7f4b]/12 text-[#1b7f4b]",
   perdido: "bg-steel/15 text-steel",
+  a_contatar: "bg-orange/15 text-orange-800",
+  contatado: "bg-navy/10 text-navy",
+  interessado: "bg-kraft/30 text-ink",
+  recuperado: "bg-[#1b7f4b]/12 text-[#1b7f4b]",
+  descartado: "bg-steel/15 text-steel",
 };
 
 /* ── CRM de vendas (003): taxonomias, cadência, carteira, funil ─────────────

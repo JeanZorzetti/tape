@@ -3,8 +3,8 @@ export const prerender = false;
 
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { sessaoAtual } from "../../lib/auth";
-import { distribuicaoPorNicho, funilCoorte, STATUS_LEAD, statusLabel } from "../../lib/crm";
-import { isNicho, NICHOS, nichoLabel } from "../../lib/adminUi";
+import { distribuicaoPorNicho, funilCoorte, statusLabel } from "../../lib/crm";
+import { isNicho, isPipeline, NICHOS, nichoLabel, rolesDaPipeline, statusesDaPipeline } from "../../lib/adminUi";
 
 if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
 
@@ -14,6 +14,9 @@ const PERIODOS = [
   { value: "tudo", label: "Tudo" },
 ] as const;
 
+const pipelineParam = Astro.url.searchParams.get("pipeline") ?? "";
+const pipeline = isPipeline(pipelineParam) ? pipelineParam : "inbound";
+const roles = rolesDaPipeline(pipeline);
 const periodoParam = Astro.url.searchParams.get("periodo") ?? "mes";
 const periodo = PERIODOS.some((p) => p.value === periodoParam) ? periodoParam : "mes";
 const nichoParam = Astro.url.searchParams.get("nicho") ?? "";
@@ -25,8 +28,8 @@ let erro = "";
 
 try {
   [funil, distribuicao] = await Promise.all([
-    funilCoorte(periodo, nicho || undefined),
-    distribuicaoPorNicho(periodo),
+    funilCoorte(periodo, pipeline, nicho || undefined),
+    distribuicaoPorNicho(periodo, pipeline),
   ]);
 } catch (e) {
   console.error("[funil] falha ao carregar", e);
@@ -39,6 +42,7 @@ const pct = (v: number | null | undefined) =>
 
 const linkFunil = (over: Record<string, string> = {}) => {
   const p = new URLSearchParams();
+  if (pipeline === "recuperacao") p.set("pipeline", pipeline);
   if (periodo !== "mes") p.set("periodo", periodo);
   if (nicho) p.set("nicho", nicho);
   for (const [k, v] of Object.entries(over)) v ? p.set(k, v) : p.delete(k);
@@ -46,11 +50,13 @@ const linkFunil = (over: Record<string, string> = {}) => {
   return s ? `/admin/funil?${s}` : "/admin/funil";
 };
 
+// Rótulos das taxas derivam dos papéis da pipeline: primeiro_toque → meio → ganho.
+const ganhoLbl = statusLabel(roles.ganho);
 const taxas = funil
   ? [
-      { label: "Lead → fechado", valor: funil.taxaLeadFechado, base: `${funil.chegaramFechado} de ${funil.totalLeads} leads` },
-      { label: "Em contato → fechado", valor: funil.taxaEmContatoFechado, base: `${funil.fechadoDesdeEmContato} de ${funil.chegaramEmContato} contatados` },
-      { label: "Orçado → fechado", valor: funil.taxaOrcadoFechado, base: `${funil.fechadoDesdeOrcado} de ${funil.chegaramOrcado} orçados` },
+      { label: `Lead → ${ganhoLbl}`, valor: funil.taxaLeadFechado, base: `${funil.chegaramFechado} de ${funil.totalLeads} leads` },
+      { label: `${statusLabel(roles.primeiro_toque)} → ${ganhoLbl}`, valor: funil.taxaEmContatoFechado, base: `${funil.fechadoDesdeEmContato} de ${funil.chegaramEmContato} · ${statusLabel(roles.primeiro_toque)}` },
+      { label: `${statusLabel(roles.meio)} → ${ganhoLbl}`, valor: funil.taxaOrcadoFechado, base: `${funil.fechadoDesdeOrcado} de ${funil.chegaramOrcado} · ${statusLabel(roles.meio)}` },
     ]
   : [];
 
@@ -106,7 +112,7 @@ const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel
         <>
           <h2 class="mt-8 font-display text-base font-bold text-navy">Contagem por etapa</h2>
           <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-            {STATUS_LEAD.map((s) => (
+            {statusesDaPipeline(pipeline).map((s) => (
               <div class="rounded-xl border border-kraft/60 bg-white px-4 py-4">
                 <p class={carimbo}>{statusLabel(s.value)}</p>
                 <p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-navy">{funil.porEtapa[s.value] ?? 0}</p>

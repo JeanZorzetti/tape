@@ -13,7 +13,7 @@ import {
   pausarCarteira,
   reagendarCarteira,
   registrarTentativa,
-  STATUS_LEAD,
+  salvarDadosImport,
   statusLabel,
 } from "../../lib/crm";
 import { tipoFitaLabel } from "../../lib/quoteForm";
@@ -36,12 +36,26 @@ import {
   reaisParaCentavos,
   RECONTATO_CARTEIRA_DIAS,
   RESULTADOS,
+  statusesDaPipeline,
 } from "../../lib/adminUi";
 
 if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
 
 const id = Number(Astro.params.id);
 if (!Number.isInteger(id) || id < 1) return Astro.redirect("/admin");
+
+// Carrega antes do POST: a validação de status e a seção de prospecção dependem da pipeline do lead.
+const dados = await buscarLead(id);
+if (!dados) return Astro.redirect("/admin");
+const { lead, notas, tentativas, pedidos } = dados;
+const recuperacao = lead.pipeline === "recuperacao";
+
+// Ordem canônica das 12 colunas da planilha; arquivo/confianca são proveniência (read-only).
+const ORDEM_IMPORT = [
+  "arquivo", "empresa", "ramo", "telefone", "whatsapp", "cidade_uf",
+  "email", "instagram", "endereco", "cnpj", "confianca", "observacao",
+] as const;
+const READONLY_IMPORT = new Set<string>(["arquivo", "confianca"]);
 
 if (Astro.request.method === "POST") {
   const form = await Astro.request.formData();
@@ -51,7 +65,7 @@ if (Astro.request.method === "POST") {
     const status = String(form.get("status") ?? "");
     const proximo = String(form.get("proximoContato") ?? "").trim();
     const nicho = String(form.get("nicho") ?? "").trim();
-    if (isStatus(status)) await atualizarLead(id, status, proximo || null);
+    if (isStatus(status, lead.pipeline)) await atualizarLead(id, status, proximo || null);
     await definirNicho(id, isNicho(nicho) ? nicho : null);
   } else if (acao === "tentativa") {
     const canal = String(form.get("canal") ?? "");
@@ -71,6 +85,13 @@ if (Astro.request.method === "POST") {
     await reagendarCarteira(id);
   } else if (acao === "pausar-carteira") {
     await pausarCarteira(id);
+  } else if (acao === "dados-import" && recuperacao) {
+    const editaveis = [...ORDEM_IMPORT, ...Object.keys(lead.dados_import ?? {})].filter(
+      (k) => !READONLY_IMPORT.has(k),
+    );
+    const campos: Record<string, string> = {};
+    for (const k of new Set(editaveis)) campos[k] = String(form.get(k) ?? "").trim();
+    await salvarDadosImport(id, campos);
   } else if (acao === "nota") {
     const texto = String(form.get("texto") ?? "").trim().slice(0, 2000);
     if (texto) await adicionarNota(id, texto);
@@ -79,13 +100,11 @@ if (Astro.request.method === "POST") {
   return Astro.redirect(`/admin/${id}`);
 }
 
-const dados = await buscarLead(id);
-if (!dados) return Astro.redirect("/admin");
-const { lead, notas, tentativas, pedidos } = dados;
-
 const hoje = hojeISO();
 const atrasado = estaAtrasado(lead.proximo_contato, lead.status, hoje);
-const saudacao = `Olá ${lead.nome}, aqui é da TapePro sobre o seu orçamento de ${tipoFitaLabel(lead.tipo_fita)}.`;
+const saudacao = recuperacao
+  ? `Olá, aqui é da TapePro. Vi a ${lead.empresa} e queria falar sobre fitas personalizadas.`
+  : `Olá ${lead.nome}, aqui é da TapePro sobre o seu orçamento de ${tipoFitaLabel(lead.tipo_fita ?? "")}.`;
 
 const temPedido = pedidos.length > 0;
 const nToques = tentativas.length;
@@ -96,16 +115,35 @@ const ultimaCompra = pedidos[0]?.data ?? null; // pedidos vem desc por data
 const carteiraPausada = temPedido && lead.proximo_contato === null;
 
 const ficha = [
-  { label: "Contato", valor: lead.nome },
-  { label: "E-mail", valor: lead.email, href: `mailto:${lead.email}` },
-  { label: "Telefone", valor: lead.telefone, href: whatsappParaNumero(lead.telefone, saudacao) },
+  ...(recuperacao ? [] : [{ label: "Contato", valor: lead.nome ?? "—" }]),
+  { label: "E-mail", valor: lead.email || "—", href: lead.email ? `mailto:${lead.email}` : undefined },
+  { label: "Telefone", valor: lead.telefone || "—", href: lead.telefone ? whatsappParaNumero(lead.telefone, saudacao) : undefined },
   { label: "CNPJ", valor: lead.cnpj ?? "—" },
-  { label: "Tipo de fita", valor: tipoFitaLabel(lead.tipo_fita) },
-  { label: "Quantidade", valor: lead.quantidade },
+  ...(recuperacao
+    ? [
+        { label: "Ramo", valor: lead.dados_import?.ramo || "—" },
+        { label: "Cidade/UF", valor: lead.dados_import?.cidade_uf || "—" },
+      ]
+    : [
+        { label: "Tipo de fita", valor: tipoFitaLabel(lead.tipo_fita ?? "") },
+        { label: "Quantidade", valor: lead.quantidade ?? "—" },
+      ]),
   { label: "Nicho", valor: nichoLabel(lead.nicho) },
   { label: "Recebido em", valor: dataBR(lead.criado_em) },
   { label: "Origem", valor: lead.origem ?? "—" },
 ];
+
+// Seção "Dados da prospecção" (só recuperação): rótulos humanos; Title-case p/ chaves desconhecidas.
+const ROTULOS_IMPORT: Record<string, string> = {
+  arquivo: "Arquivo", empresa: "Empresa", ramo: "Ramo", telefone: "Telefone",
+  whatsapp: "WhatsApp", cidade_uf: "Cidade/UF", email: "E-mail", instagram: "Instagram",
+  endereco: "Endereço", cnpj: "CNPJ", confianca: "Confiança", observacao: "Observação",
+};
+const tituloImport = (k: string) =>
+  ROTULOS_IMPORT[k] ?? k.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+const chavesProspec = recuperacao
+  ? [...ORDEM_IMPORT, ...Object.keys(lead.dados_import ?? {}).filter((k) => !ORDEM_IMPORT.includes(k as (typeof ORDEM_IMPORT)[number]))]
+  : [];
 
 const labelDe = (lista: readonly { value: string; label: string }[], v: string) =>
   lista.find((o) => o.value === v)?.label ?? v;
@@ -120,13 +158,17 @@ const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel
 ---
 
 <AdminLayout title={lead.empresa}>
-  <a href="/admin" class="font-body text-sm text-steel hover:text-navy">← Todos os leads</a>
+  <a href={recuperacao ? "/admin?pipeline=recuperacao" : "/admin"} class="font-body text-sm text-steel hover:text-navy">← Todos os leads</a>
 
   <div class="mt-4 flex flex-wrap items-start justify-between gap-4">
     <div>
       <h1 class="font-display text-2xl font-extrabold text-navy">{lead.empresa}</h1>
       <p class="mt-1 font-body text-sm text-steel">
-        {tipoFitaLabel(lead.tipo_fita)} · {lead.quantidade}
+        {
+          recuperacao
+            ? [lead.dados_import?.ramo, lead.dados_import?.cidade_uf].filter(Boolean).join(" · ") || "Lead de recuperação"
+            : `${tipoFitaLabel(lead.tipo_fita ?? "")} · ${lead.quantidade}`
+        }
       </p>
     </div>
     <div class="flex items-center gap-3">
@@ -192,7 +234,7 @@ const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel
           <div>
             <label for="status" class="mb-1.5 block font-body text-sm font-medium text-navy">Status</label>
             <select id="status" name="status" class={inputCls}>
-              {STATUS_LEAD.map((s) => <option value={s.value} selected={s.value === lead.status}>{s.label}</option>)}
+              {statusesDaPipeline(lead.pipeline).map((s) => <option value={s.value} selected={s.value === lead.status}>{s.label}</option>)}
             </select>
           </div>
           <div>
@@ -217,6 +259,44 @@ const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel
           <button class={btnPrimario}>Salvar</button>
         </div>
       </form>
+
+      {
+        recuperacao && (
+          <form method="POST" class="mt-8 rounded-xl border border-kraft/60 bg-white p-5">
+            <input type="hidden" name="acao" value="dados-import" />
+            <h2 class="font-display text-base font-bold text-navy">Dados da prospecção</h2>
+            <p class="mt-1 font-body text-xs text-steel">
+              Da planilha importada. Salvar atualiza empresa, telefone, e-mail e CNPJ do lead.
+            </p>
+            <div class="mt-4 grid gap-4">
+              {chavesProspec.map((k) => {
+                const valor = lead.dados_import?.[k] ?? "";
+                if (READONLY_IMPORT.has(k)) {
+                  return (
+                    <div class="flex items-baseline justify-between gap-4">
+                      <span class={carimbo}>{tituloImport(k)}</span>
+                      <span class="text-right font-body text-sm text-ink/70">{valor || "—"}</span>
+                    </div>
+                  );
+                }
+                return (
+                  <div>
+                    <label for={`di-${k}`} class="mb-1.5 block font-body text-sm font-medium text-navy">
+                      {tituloImport(k)}
+                    </label>
+                    {k === "endereco" || k === "observacao" ? (
+                      <textarea id={`di-${k}`} name={k} rows="2" class={inputCls}>{valor}</textarea>
+                    ) : (
+                      <input id={`di-${k}`} name={k} type="text" value={valor} class={inputCls} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <button class={`mt-4 ${btnPrimario}`}>Salvar dados da prospecção</button>
+          </form>
+        )
+      }
     </section>
 
     <section class="md:col-span-7 space-y-8">
@@ -353,7 +433,7 @@ const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel
         <form method="POST" class="mt-4 rounded-xl border border-kraft/60 bg-white p-5">
           <input type="hidden" name="acao" value="pedido" />
           <p class="font-body text-sm font-medium text-navy">
-            {temPedido ? "Registrar novo pedido" : "Registrar 1º pedido — fecha o lead e abre a carteira"}
+            {temPedido ? "Registrar novo pedido" : "Registrar 1º pedido — vira cliente e abre a carteira"}
           </p>
           <div class="mt-4 grid gap-4 sm:grid-cols-3">
             <div>

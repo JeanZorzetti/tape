@@ -4,6 +4,31 @@
 > Fonte da lista: [`docs/leads-bruto.csv`](docs/leads-bruto.csv). CRM atual descrito em
 > [`handoff.md`](handoff.md) (seção "🗄️ CRM `/admin`").
 
+## ✅ STATUS: IMPLEMENTADO (spec 004, 2026-07-22)
+
+Feature entregue via `specs/004-pipeline-recuperacao/` (spec → plan → tasks → implement). Estado:
+
+- **Foundational**: `PIPELINES`/papéis/`TERMINAIS` em `src/lib/adminUi.ts`; schema delta idempotente
+  (`pipeline`/`dados_import`/`import_ref` + `not null` afrouxados) em `src/lib/crm.ts`.
+- **US1 (funil separado)**: 7 leituras e 3 escritas escopadas/por-papel; seletor Inbound × Recuperação
+  no header; `index.astro`/`funil.astro` threadam `?pipeline=` com etapas próprias.
+- **US2 (enriquecimento)**: `salvarDadosImport()` + seção "Dados da prospecção" no `[id].astro`
+  (12 colunas editáveis, `arquivo`/`confianca` read-only, ressincroniza empresa/telefone/email/cnpj).
+- **US3 (import)**: `scripts/importar-recuperacao.mjs` (parser CSV próprio + upsert idempotente por
+  `import_ref`). **Validado em banco de teste**: `inseridos: 502 · pulados: 0 · sem-empresa: 1`;
+  2ª execução `inseridos: 0` (idempotente).
+- **Testes**: `tests/pipeline-recuperacao.test.mjs` + `tests/importar-recuperacao.test.mjs`; `npm test`
+  verde com e sem `DATABASE_URL` (integração pula sem banco). Test runner serializado
+  (`--test-concurrency=1`) para os suites de integração não colidirem no mesmo Postgres.
+- **Bootstrap hardening**: `aplicarSchema` ganhou fast-path `schemaAtual` — só a 1ª subida roda o DDL
+  (evita re-trancar `leads` em ACCESS EXCLUSIVE a cada boot/deploy e deadlockar com escritas).
+
+> ⚠️ **O import NÃO foi rodado contra produção.** O script está pronto e testado; rodar
+> `DATABASE_URL=<prod> node scripts/importar-recuperacao.mjs docs/leads-bruto.csv` é uma decisão
+> operacional deliberada, fora do escopo desta feature.
+
+---
+
 ## TL;DR
 
 Hoje o CRM tem **um** funil só (leads inbound do formulário `/orcamento`). Preciso de uma

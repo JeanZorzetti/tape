@@ -1,5 +1,14 @@
 import postgres from "postgres";
-import { RECONTATO_CARTEIRA_DIAS, inicioPeriodo, isNicho, taxasFunil } from "./adminUi.ts";
+import {
+  PIPELINES,
+  RECONTATO_CARTEIRA_DIAS,
+  inicioPeriodo,
+  isNicho,
+  isStatus,
+  rolesDaPipeline,
+  taxasFunil,
+} from "./adminUi.ts";
+import type { Pipeline } from "./adminUi.ts";
 
 /**
  * Camada de dados do CRM: conexão, schema, status e as consultas do /admin.
@@ -9,34 +18,28 @@ import { RECONTATO_CARTEIRA_DIAS, inicioPeriodo, isNicho, taxasFunil } from "./a
  * Se o schema começar a evoluir de verdade, trocar por migrations numeradas.
  */
 
-export const STATUS_LEAD = [
-  { value: "novo", label: "Novo" },
-  { value: "em_contato", label: "Em contato" },
-  { value: "orcado", label: "Orçado" },
-  { value: "fechado", label: "Fechado" },
-  { value: "perdido", label: "Perdido" },
-] as const;
-
-export type StatusLead = (typeof STATUS_LEAD)[number]["value"];
-
-export const isStatus = (v: string): v is StatusLead => STATUS_LEAD.some((s) => s.value === v);
-
-export const statusLabel = (v: string) => STATUS_LEAD.find((s) => s.value === v)?.label ?? v;
+// Taxonomia de status vem de PIPELINES (adminUi) — reexportada para compat com os imports atuais.
+export { isStatus, statusLabel } from "./adminUi.ts";
+export type { Pipeline } from "./adminUi.ts";
+export const STATUS_LEAD = PIPELINES.inbound.stages; // compat: consumidores antigos = inbound
+export type StatusLead = string;
 
 export interface Lead {
   id: number;
-  nome: string;
+  nome: string | null;
   empresa: string;
   email: string;
   telefone: string;
   cnpj: string | null;
-  tipo_fita: string;
-  quantidade: string;
+  tipo_fita: string | null;
+  quantidade: string | null;
   mensagem: string | null;
   origem: string | null;
-  status: StatusLead;
+  status: string;
   proximo_contato: Date | null;
   nicho: string | null;
+  pipeline: Pipeline;
+  dados_import: Record<string, string> | null;
   criado_em: Date;
 }
 
@@ -83,13 +86,31 @@ function conectar() {
 // Chave arbitrária do lock consultivo que serializa o bootstrap do schema.
 const SCHEMA_LOCK_KEY = 827413;
 
+/**
+ * Sentinela barata (sem lock em `leads`): se a última coluna adicionada existe, o schema já está
+ * aplicado. Evita re-rodar o DDL a cada bootstrap — o DDL tranca `leads` em ACCESS EXCLUSIVE por
+ * toda a transação de bootstrap e deadlockaria com escritas normais (FK em `leads`) de outro
+ * processo que já subiu. Atualizar a coluna-sentinela quando uma nova migração for adicionada.
+ */
+async function schemaAtual(sql: postgres.ISql) {
+  const [row] = await sql<{ ok: number }[]>`
+    select 1 as ok from information_schema.columns
+    where table_name = 'leads' and column_name = 'import_ref' limit 1`;
+  return !!row;
+}
+
 async function aplicarSchema(sql: postgres.Sql) {
+  // Steady state (todo processo depois do 1º): schema já existe → não toca em `leads`, sem lock.
+  if (await schemaAtual(sql)) return;
   // Numa 1ª subida com o banco pristino, dois processos (ex.: testes em paralelo, ou réplicas
   // de servidor) podem aplicar o schema ao mesmo tempo — CREATE TABLE IF NOT EXISTS concorrente
   // conflita no catálogo do Postgres. O lock consultivo por transação serializa: quem chega
-  // depois espera, e ao entrar já encontra tudo criado (os IF NOT EXISTS viram no-op).
+  // depois espera, e ao entrar já encontra tudo criado.
   await sql.begin(async (tx) => {
     await tx`select pg_advisory_xact_lock(${SCHEMA_LOCK_KEY})`;
+    // Reconfere após pegar o lock: se outro processo aplicou enquanto esperávamos, não re-rodar o
+    // DDL (que travaria `leads` e poderia deadlockar com escritas concorrentes).
+    if (await schemaAtual(tx)) return;
     await tx`
       create table if not exists usuarios (
         id serial primary key,
@@ -122,6 +143,14 @@ async function aplicarSchema(sql: postgres.Sql) {
       )`;
     // CRM de vendas (003): nicho no lead, cadência, carteira e log de transições do funil.
     await tx`alter table leads add column if not exists nicho text`;
+    // Multi-pipeline (004): discriminador + linha crua da planilha + chave de idempotência.
+    await tx`alter table leads add column if not exists pipeline text not null default 'inbound'`;
+    await tx`alter table leads add column if not exists dados_import jsonb`;
+    await tx`alter table leads add column if not exists import_ref text`;
+    // Só o inbound preenche pessoa/produto — recuperação não tem. Afrouxa os NOT NULL.
+    await tx`alter table leads alter column nome drop not null`;
+    await tx`alter table leads alter column tipo_fita drop not null`;
+    await tx`alter table leads alter column quantidade drop not null`;
     await tx`
       create table if not exists tentativas (
         id serial primary key,
@@ -149,6 +178,8 @@ async function aplicarSchema(sql: postgres.Sql) {
         criado_em timestamptz not null default now()
       )`;
     await tx`create index if not exists leads_criado_em_idx on leads (criado_em desc)`;
+    await tx`create index if not exists leads_pipeline_idx on leads (pipeline)`;
+    await tx`create unique index if not exists leads_import_ref_uk on leads (import_ref) where import_ref is not null`;
     await tx`create index if not exists tentativas_lead_idx on tentativas (lead_id)`;
     await tx`create index if not exists pedidos_lead_idx on pedidos (lead_id)`;
     await tx`create index if not exists transicoes_lead_idx on transicoes (lead_id)`;
@@ -217,35 +248,48 @@ export async function inserirLead(lead: NovoLead) {
   return row.id;
 }
 
-/** Lista com filtro opcional de status, nicho e busca livre por nome/empresa/e-mail. */
-export async function listarLeads(filtro: { status?: string; busca?: string; nicho?: string } = {}) {
+/** Lista com filtro opcional de status, nicho e busca livre por empresa/nome/e-mail, escopada por pipeline.
+ *  Ordena por "tem canal" → confiança alta → mais recente. No inbound (telefone/email sempre
+ *  preenchidos, dados_import nulo) degrada exatamente para `order by criado_em desc` de antes. */
+export async function listarLeads(
+  filtro: { status?: string; busca?: string; nicho?: string; pipeline?: Pipeline } = {},
+) {
   const sql = await db();
-  const status = filtro.status && isStatus(filtro.status) ? filtro.status : null;
+  const pipeline = filtro.pipeline ?? "inbound";
+  const status = filtro.status && isStatus(filtro.status, pipeline) ? filtro.status : null;
   const nicho = filtro.nicho && isNicho(filtro.nicho) ? filtro.nicho : null;
   const busca = filtro.busca?.trim() ? `%${filtro.busca.trim()}%` : null;
   return sql<Lead[]>`
     select * from leads
-    where (${status}::text is null or status = ${status})
+    where pipeline = ${pipeline}
+      and (${status}::text is null or status = ${status})
       and (${nicho}::text is null or nicho = ${nicho})
-      and (${busca}::text is null or nome ilike ${busca} or empresa ilike ${busca} or email ilike ${busca})
-    order by criado_em desc
+      and (${busca}::text is null or empresa ilike ${busca} or nome ilike ${busca} or email ilike ${busca})
+    order by
+      (case when coalesce(telefone,'') <> '' or coalesce(email,'') <> ''
+            or coalesce(dados_import->>'instagram','') <> '' then 0 else 1 end),
+      (dados_import->>'confianca' = 'alta') desc nulls last,
+      criado_em desc
     limit 300`;
 }
 
-export async function contarPorStatus() {
+export async function contarPorStatus(pipeline: Pipeline = "inbound") {
   const sql = await db();
   const linhas = await sql<{ status: string; total: string }[]>`
-    select status, count(*) as total from leads group by status`;
+    select status, count(*) as total from leads where pipeline = ${pipeline} group by status`;
   return Object.fromEntries(linhas.map((l) => [l.status, Number(l.total)])) as Record<string, number>;
 }
 
-/** Leads com follow-up marcado para hoje ou antes — o que não pode ser esquecido. */
-export async function contarAtrasados() {
+/** Leads com follow-up marcado para hoje ou antes — o que não pode ser esquecido.
+ *  Exclui os terminais (ganho/perdido) da pipeline, via papéis (não literais). */
+export async function contarAtrasados(pipeline: Pipeline = "inbound") {
   const sql = await db();
+  const { ganho, perdido } = rolesDaPipeline(pipeline);
   const [row] = await sql<{ total: string }[]>`
     select count(*) as total from leads
-    where proximo_contato is not null and proximo_contato <= current_date
-      and status not in ('fechado', 'perdido')`;
+    where pipeline = ${pipeline}
+      and proximo_contato is not null and proximo_contato <= current_date
+      and status not in (${ganho}, ${perdido})`;
   return Number(row.total);
 }
 
@@ -271,6 +315,28 @@ export async function atualizarLead(id: number, status: StatusLead, proximoConta
   if (atual && atual.status !== status) await registrarTransicao(id, atual.status, status);
 }
 
+/**
+ * Grava dados_import (linha crua editada no detalhe da recuperação) e ressincroniza as colunas
+ * espelhadas que a busca/lista/WhatsApp usam. Faz merge sobre o dados_import atual — as chaves de
+ * proveniência (`arquivo`/`confianca`), que não vêm do form, são preservadas.
+ */
+export async function salvarDadosImport(id: number, dados: Record<string, string>) {
+  const sql = await db();
+  await sql.begin(async (tx) => {
+    const [atual] = await tx<{ dados_import: Record<string, string> | null }[]>`
+      select dados_import from leads where id = ${id}`;
+    const merged = { ...(atual?.dados_import ?? {}), ...dados };
+    await tx`
+      update leads set
+        dados_import = ${tx.json(merged)},
+        empresa = ${merged.empresa ?? ""},
+        telefone = ${merged.whatsapp || merged.telefone || ""},
+        email = ${merged.email ?? ""},
+        cnpj = ${merged.cnpj || null}
+      where id = ${id}`;
+  });
+}
+
 export async function adicionarNota(leadId: number, texto: string) {
   const sql = await db();
   await sql`insert into notas (lead_id, texto) values (${leadId}, ${texto})`;
@@ -280,8 +346,8 @@ export async function adicionarNota(leadId: number, texto: string) {
 
 /**
  * Registra um toque da cadência. Se `proximoContato` vier, atualiza a data do lead.
- * O 1º toque num lead ainda 'novo' o promove a 'em_contato' (com transição), tudo numa
- * transação para não deixar estado intermediário.
+ * O 1º toque num lead no estado inicial da sua pipeline o promove ao primeiro-toque
+ * (com transição), tudo numa transação para não deixar estado intermediário.
  */
 export async function registrarTentativa(
   leadId: number,
@@ -298,10 +364,15 @@ export async function registrarTentativa(
     if (proximoContato !== undefined) {
       await tx`update leads set proximo_contato = ${proximoContato} where id = ${leadId}`;
     }
-    const [l] = await tx<{ status: string }[]>`select status from leads where id = ${leadId}`;
-    if (l && l.status === "novo") {
-      await tx`update leads set status = 'em_contato' where id = ${leadId}`;
-      await registrarTransicao(leadId, "novo", "em_contato", tx);
+    const [l] = await tx<{ status: string; pipeline: Pipeline }[]>`
+      select status, pipeline from leads where id = ${leadId}`;
+    if (l) {
+      // 1º toque promove do estado inicial ao primeiro-toque da pipeline do lead (papel, não literal).
+      const { inicial, primeiro_toque } = rolesDaPipeline(l.pipeline);
+      if (l.status === inicial) {
+        await tx`update leads set status = ${primeiro_toque} where id = ${leadId}`;
+        await registrarTransicao(leadId, inicial, primeiro_toque, tx);
+      }
     }
   });
 }
@@ -315,8 +386,8 @@ export async function contarTentativas(leadId: number) {
 /* ── Carteira pós-venda / pedidos (US2) ──────────────────────────────────── */
 
 /**
- * Registra um pedido em transação. 1º pedido do lead → status 'fechado' (+transição) e
- * `proximo_contato = data + 30`. Pedidos seguintes só reagendam a partir da última compra.
+ * Registra um pedido em transação. 1º pedido do lead → estado de ganho da pipeline (fechado |
+ * recuperado, +transição) e `proximo_contato = data + 30`. Pedidos seguintes só reagendam pela última compra.
  */
 export async function inserirPedido(
   leadId: number,
@@ -332,12 +403,15 @@ export async function inserirPedido(
     const [{ n }] = await tx<{ n: number }[]>`select count(*)::int as n from pedidos where lead_id = ${leadId}`;
     // Recontato sempre a partir da compra mais recente (inclui a que acabou de entrar).
     if (n === 1) {
-      const [l] = await tx<{ status: string }[]>`select status from leads where id = ${leadId}`;
+      const [l] = await tx<{ status: string; pipeline: Pipeline }[]>`
+        select status, pipeline from leads where id = ${leadId}`;
+      // 1º pedido leva ao estado de ganho da pipeline do lead (fechado | recuperado).
+      const ganho = l ? rolesDaPipeline(l.pipeline).ganho : "fechado";
       await tx`
-        update leads set status = 'fechado',
+        update leads set status = ${ganho},
           proximo_contato = (select max(data) + ${RECONTATO_CARTEIRA_DIAS}::int from pedidos where lead_id = ${leadId})
         where id = ${leadId}`;
-      if (l && l.status !== "fechado") await registrarTransicao(leadId, l.status, "fechado", tx);
+      if (l && l.status !== ganho) await registrarTransicao(leadId, l.status, ganho, tx);
     } else {
       await tx`
         update leads set
@@ -352,22 +426,25 @@ export async function listarPedidos(leadId: number) {
   return sql<Pedido[]>`select * from pedidos where lead_id = ${leadId} order by data desc, id desc`;
 }
 
-/** Clientes (têm pedido), ordenados por próximo recontato — vencidos primeiro; pausados no fim. */
-export async function listarCarteira(filtro: { nicho?: string } = {}) {
+/** Clientes (têm pedido) da pipeline, ordenados por próximo recontato — vencidos primeiro; pausados no fim. */
+export async function listarCarteira(filtro: { nicho?: string; pipeline?: Pipeline } = {}) {
   const sql = await db();
+  const pipeline = filtro.pipeline ?? "inbound";
   const nicho = filtro.nicho && isNicho(filtro.nicho) ? filtro.nicho : null;
   return sql<Lead[]>`
     select l.* from leads l
-    where exists (select 1 from pedidos p where p.lead_id = l.id)
+    where l.pipeline = ${pipeline}
+      and exists (select 1 from pedidos p where p.lead_id = l.id)
       and (${nicho}::text is null or l.nicho = ${nicho})
     order by l.proximo_contato asc nulls last`;
 }
 
-export async function contarCarteiraVencida() {
+export async function contarCarteiraVencida(pipeline: Pipeline = "inbound") {
   const sql = await db();
   const [r] = await sql<{ n: number }[]>`
     select count(*)::int as n from leads l
-    where exists (select 1 from pedidos p where p.lead_id = l.id)
+    where l.pipeline = ${pipeline}
+      and exists (select 1 from pedidos p where p.lead_id = l.id)
       and l.proximo_contato is not null and l.proximo_contato <= current_date`;
   return r.n;
 }
@@ -389,14 +466,17 @@ export async function reagendarCarteira(leadId: number) {
  * cai no período. "Chegou à etapa X" = existe transição para X (via `transicoes`), então o
  * funil enxerga histórico mesmo em leads que já mudaram de status. `nicho` opcional recorta.
  */
-export async function funilCoorte(periodo: string, nicho?: string) {
+export async function funilCoorte(periodo: string, pipeline: Pipeline = "inbound", nicho?: string) {
   const sql = await db();
   const desde = inicioPeriodo(periodo);
   const n = nicho && isNicho(nicho) ? nicho : null;
+  // "Chegou à etapa" é por papel: primeiro_toque / meio / ganho da pipeline (não literais).
+  const { primeiro_toque, meio, ganho } = rolesDaPipeline(pipeline);
 
   const porEtapaRows = await sql<{ status: string; total: number }[]>`
     select status, count(*)::int as total from leads
-    where (${desde}::timestamptz is null or criado_em >= ${desde})
+    where pipeline = ${pipeline}
+      and (${desde}::timestamptz is null or criado_em >= ${desde})
       and (${n}::text is null or nicho = ${n})
     group by status`;
 
@@ -412,19 +492,20 @@ export async function funilCoorte(periodo: string, nicho?: string) {
   >`
     select
       count(*)::int as total_leads,
-      count(*) filter (where has_em_contato)::int as chegaram_em_contato,
-      count(*) filter (where has_orcado)::int as chegaram_orcado,
-      count(*) filter (where has_fechado)::int as chegaram_fechado,
-      count(*) filter (where has_fechado and has_em_contato)::int as fechado_desde_em_contato,
-      count(*) filter (where has_fechado and has_orcado)::int as fechado_desde_orcado
+      count(*) filter (where has_primeiro_toque)::int as chegaram_em_contato,
+      count(*) filter (where has_meio)::int as chegaram_orcado,
+      count(*) filter (where has_ganho)::int as chegaram_fechado,
+      count(*) filter (where has_ganho and has_primeiro_toque)::int as fechado_desde_em_contato,
+      count(*) filter (where has_ganho and has_meio)::int as fechado_desde_orcado
     from (
       select l.id,
-        bool_or(t.para_status = 'em_contato') as has_em_contato,
-        bool_or(t.para_status = 'orcado') as has_orcado,
-        bool_or(t.para_status = 'fechado') as has_fechado
+        bool_or(t.para_status = ${primeiro_toque}) as has_primeiro_toque,
+        bool_or(t.para_status = ${meio}) as has_meio,
+        bool_or(t.para_status = ${ganho}) as has_ganho
       from leads l
       left join transicoes t on t.lead_id = l.id
-      where (${desde}::timestamptz is null or l.criado_em >= ${desde})
+      where l.pipeline = ${pipeline}
+        and (${desde}::timestamptz is null or l.criado_em >= ${desde})
         and (${n}::text is null or l.nicho = ${n})
       group by l.id
     ) s`;
@@ -449,12 +530,13 @@ export async function definirNicho(leadId: number, nicho: string | null) {
   await sql`update leads set nicho = ${v} where id = ${leadId}`;
 }
 
-export async function distribuicaoPorNicho(periodo?: string) {
+export async function distribuicaoPorNicho(periodo?: string, pipeline: Pipeline = "inbound") {
   const sql = await db();
   const desde = periodo ? inicioPeriodo(periodo) : null;
   return sql<{ nicho: string | null; total: number }[]>`
     select nicho, count(*)::int as total from leads
-    where (${desde}::timestamptz is null or criado_em >= ${desde})
+    where pipeline = ${pipeline}
+      and (${desde}::timestamptz is null or criado_em >= ${desde})
     group by nicho order by total desc`;
 }
 

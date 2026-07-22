@@ -10,14 +10,26 @@ import {
   distribuicaoPorNicho,
   listarCarteira,
   listarLeads,
-  STATUS_LEAD,
   statusLabel,
 } from "../../lib/crm";
 import { tipoFitaLabel } from "../../lib/quoteForm";
-import { CLS_STATUS, dataBR, estaAtrasado, hojeISO, NICHOS, nichoLabel, vencidoCarteira } from "../../lib/adminUi";
+import {
+  CLS_STATUS,
+  dataBR,
+  estaAtrasado,
+  hojeISO,
+  isPipeline,
+  NICHOS,
+  nichoLabel,
+  statusesDaPipeline,
+  vencidoCarteira,
+} from "../../lib/adminUi";
 
 if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
 
+const pipelineParam = Astro.url.searchParams.get("pipeline") ?? "";
+const pipeline = isPipeline(pipelineParam) ? pipelineParam : "inbound";
+const recuperacao = pipeline === "recuperacao";
 const visao = Astro.url.searchParams.get("visao") === "carteira" ? "carteira" : "leads";
 const status = Astro.url.searchParams.get("status") ?? "";
 const busca = Astro.url.searchParams.get("q") ?? "";
@@ -33,16 +45,16 @@ let erro = "";
 try {
   if (visao === "carteira") {
     [leads, distribuicao, carteiraVencida] = await Promise.all([
-      listarCarteira({ nicho }),
-      distribuicaoPorNicho(),
-      contarCarteiraVencida(),
+      listarCarteira({ nicho, pipeline }),
+      distribuicaoPorNicho(undefined, pipeline),
+      contarCarteiraVencida(pipeline),
     ]);
   } else {
     [leads, porStatus, atrasados, distribuicao] = await Promise.all([
-      listarLeads({ status, busca, nicho }),
-      contarPorStatus(),
-      contarAtrasados(),
-      distribuicaoPorNicho(),
+      listarLeads({ status, busca, nicho, pipeline }),
+      contarPorStatus(pipeline),
+      contarAtrasados(pipeline),
+      distribuicaoPorNicho(undefined, pipeline),
     ]);
   }
 } catch (e) {
@@ -57,6 +69,7 @@ const distMap = Object.fromEntries(distribuicao.map((d) => [d.nicho ?? "sem", d.
 /** Constrói /admin preservando os filtros ativos e trocando só os que vierem em `over`. */
 const linkAdmin = (over: Record<string, string> = {}) => {
   const p = new URLSearchParams();
+  if (recuperacao) p.set("pipeline", pipeline);
   if (visao === "carteira") p.set("visao", "carteira");
   if (status) p.set("status", status);
   if (busca) p.set("q", busca);
@@ -91,13 +104,14 @@ const chip = (ativo: boolean) =>
     {
       visao === "leads" && (
         <form method="GET" class="flex flex-wrap items-center gap-2">
+          {recuperacao && <input type="hidden" name="pipeline" value={pipeline} />}
           {nicho && <input type="hidden" name="nicho" value={nicho} />}
           <label for="q" class="sr-only">Buscar</label>
           <input id="q" type="search" name="q" value={busca} placeholder="nome, empresa ou e-mail" class={inputCls} />
           <label for="status" class="sr-only">Status</label>
           <select id="status" name="status" class={inputCls}>
             <option value="">Todos os status</option>
-            {STATUS_LEAD.map((s) => (
+            {statusesDaPipeline(pipeline).map((s) => (
               <option value={s.value} selected={s.value === status}>{s.label}</option>
             ))}
           </select>
@@ -123,7 +137,7 @@ const chip = (ativo: boolean) =>
   {
     visao === "leads" && (
       <ul class="mt-6 flex flex-wrap gap-2">
-        {STATUS_LEAD.map((s) => (
+        {statusesDaPipeline(pipeline).map((s) => (
           <li>
             <a href={linkAdmin({ status: s.value })} class={chip(status === s.value)}>
               {s.label}
@@ -163,7 +177,7 @@ const chip = (ativo: boolean) =>
             <tr class="border-b border-kraft/60 font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">
               <th scope="col" class="py-3 pr-4 font-medium">Recebido</th>
               <th scope="col" class="py-3 pr-4 font-medium">Empresa / contato</th>
-              <th scope="col" class="py-3 pr-4 font-medium">Interesse</th>
+              <th scope="col" class="py-3 pr-4 font-medium">{recuperacao ? "Ramo / cidade" : "Interesse"}</th>
               <th scope="col" class="py-3 pr-4 font-medium">Nicho</th>
               <th scope="col" class="py-3 pr-4 font-medium">Status</th>
               <th scope="col" class="py-3 font-medium">{visao === "carteira" ? "Próximo recontato" : "Próximo contato"}</th>
@@ -185,8 +199,17 @@ const chip = (ativo: boolean) =>
                     <p class="font-body text-xs text-ink/70">{l.nome}</p>
                   </td>
                   <td class="py-4 pr-4 font-body text-sm text-ink/75">
-                    {tipoFitaLabel(l.tipo_fita)}
-                    <p class="font-mono text-xs tabular-nums text-steel">{l.quantidade}</p>
+                    {recuperacao ? (
+                      <>
+                        {l.dados_import?.ramo || "—"}
+                        <p class="font-mono text-xs tabular-nums text-steel">{l.dados_import?.cidade_uf || ""}</p>
+                      </>
+                    ) : (
+                      <>
+                        {tipoFitaLabel(l.tipo_fita ?? "")}
+                        <p class="font-mono text-xs tabular-nums text-steel">{l.quantidade}</p>
+                      </>
+                    )}
                   </td>
                   <td class="py-4 pr-4 font-body text-xs text-ink/70">{nichoLabel(l.nicho)}</td>
                   <td class="py-4 pr-4">

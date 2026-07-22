@@ -1,5 +1,6 @@
 ---
 import "../styles/global.css";
+import { isPipeline, PIPELINES } from "../lib/adminUi";
 
 interface Props {
   title: string;
@@ -7,6 +8,12 @@ interface Props {
   logado?: boolean;
 }
 const { title, logado = true } = Astro.props;
+
+// Pipeline ativa vem da querystring; ausente = inbound. Preservada nos links de nav.
+const pipelineParam = Astro.url.searchParams.get("pipeline") ?? "";
+const pipeline = isPipeline(pipelineParam) ? pipelineParam : "inbound";
+const comPipeline = (base: string) =>
+  pipeline === "recuperacao" ? `${base}${base.includes("?") ? "&" : "?"}pipeline=recuperacao` : base;
 ---
 
 <!doctype html>
@@ -29,18 +36,34 @@ const { title, logado = true } = Astro.props;
           {
             logado && (
               <nav class="flex items-center gap-4 font-body text-sm font-medium text-steel">
-                <a href="/admin" class="hover:text-navy">Leads</a>
-                <a href="/admin?visao=carteira" class="hover:text-navy">Carteira</a>
-                <a href="/admin/funil" class="hover:text-navy">Funil</a>
+                <a href={comPipeline("/admin")} class="hover:text-navy">Leads</a>
+                <a href={comPipeline("/admin?visao=carteira")} class="hover:text-navy">Carteira</a>
+                <a href={comPipeline("/admin/funil")} class="hover:text-navy">Funil</a>
               </nav>
             )
           }
         </div>
         {
           logado && (
-            <form method="POST" action="/admin/sair">
-              <button class="font-body text-sm font-medium text-steel hover:text-navy">Sair</button>
-            </form>
+            <div class="flex items-center gap-4">
+              <nav aria-label="Pipeline" class="flex items-center rounded-full border border-kraft/60 bg-paper p-0.5">
+                {Object.entries(PIPELINES).map(([value, cfg]) => (
+                  <a
+                    href={value === "recuperacao" ? "/admin?pipeline=recuperacao" : "/admin"}
+                    aria-current={pipeline === value ? "page" : undefined}
+                    class:list={[
+                      "rounded-full px-3 py-1 font-body text-xs font-semibold",
+                      pipeline === value ? "bg-navy text-white" : "text-steel hover:text-navy",
+                    ]}
+                  >
+                    {cfg.label}
+                  </a>
+                ))}
+              </nav>
+              <form method="POST" action="/admin/sair">
+                <button class="font-body text-sm font-medium text-steel hover:text-navy">Sair</button>
+              </form>
+            </div>
           )
         }
       </div>
