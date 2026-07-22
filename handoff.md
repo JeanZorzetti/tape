@@ -226,6 +226,7 @@ Sem esse bloco no `astro.config.mjs`, o Astro **descarta o header `Host`**, mont
 6. **Operação** ← *agora*: Search Console (verificar domínio + submeter sitemap), `EMAIL_CONTATO` real, Rich Results Test, compressão no proxy do Easypanel.
 7. **Qualidade (opcional)**: T016 (UI base Card/Eyebrow/SpecTable/Figure — o padrão está repetido inline entre `/produtos/[slug]`, `/segmentos/[slug]` e `/blog/[slug]`; extrair só se aparecer uma quarta página igual), T021 (pipeline de imagem). **Testes não existem** — T024/T025/T026/T030/T037/T043. **Não há test runner instalado**; ESLint/Prettier (T004) também não. Instalar Playwright uma vez e escrever os de Playwright juntos — `scripts/verificar-seo.mjs` já cobre o estrutural e serve de espec.
 8. **Placeholders restantes**: `EMAIL_CONTATO` (`constants.ts`), favicon e OG definitivos. ✅ Domínio já é **`https://tapepro.roilabs.com.br`** em `constants.ts`, `astro.config.mjs` e `robots.txt`.
+9. **Multi-pipeline (próxima feature)** — pipeline outbound de **recuperação** a partir de [`docs/leads-bruto.csv`](docs/leads-bruto.csv) (503 empresas), separada do funil inbound; modal do lead com todas as colunas da planilha como campo. Plano completo em [`handoff-multi-pipeline.md`](handoff-multi-pipeline.md) → implementar via Spec Kit.
 
 Progresso com `[x]` em `specs/001-site-institucional-seo/tasks.md`. O projeto tem `.specify/` → **usar fluxo Spec Kit** (`/speckit-implement`), não superpowers, conforme regra global.
 
