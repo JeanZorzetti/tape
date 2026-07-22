@@ -1,0 +1,131 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { sessaoAtual } from "../../lib/auth";
+import { distribuicaoPorNicho, funilCoorte, STATUS_LEAD, statusLabel } from "../../lib/crm";
+import { isNicho, NICHOS, nichoLabel } from "../../lib/adminUi";
+
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+
+const PERIODOS = [
+  { value: "mes", label: "Este mês" },
+  { value: "ano", label: "Este ano" },
+  { value: "tudo", label: "Tudo" },
+] as const;
+
+const periodoParam = Astro.url.searchParams.get("periodo") ?? "mes";
+const periodo = PERIODOS.some((p) => p.value === periodoParam) ? periodoParam : "mes";
+const nichoParam = Astro.url.searchParams.get("nicho") ?? "";
+const nicho = isNicho(nichoParam) ? nichoParam : "";
+
+let funil: Awaited<ReturnType<typeof funilCoorte>> | null = null;
+let distribuicao: { nicho: string | null; total: number }[] = [];
+let erro = "";
+
+try {
+  [funil, distribuicao] = await Promise.all([
+    funilCoorte(periodo, nicho || undefined),
+    distribuicaoPorNicho(periodo),
+  ]);
+} catch (e) {
+  console.error("[funil] falha ao carregar", e);
+  erro = "Não consegui ler o banco. Confira a DATABASE_URL.";
+}
+
+/** Fração 0–1 → "42%"; null (sem base na coorte) → "—", nunca NaN. */
+const pct = (v: number | null | undefined) =>
+  v == null ? "—" : `${(v * 100).toLocaleString("pt-BR", { maximumFractionDigits: 1 })}%`;
+
+const linkFunil = (over: Record<string, string> = {}) => {
+  const p = new URLSearchParams();
+  if (periodo !== "mes") p.set("periodo", periodo);
+  if (nicho) p.set("nicho", nicho);
+  for (const [k, v] of Object.entries(over)) v ? p.set(k, v) : p.delete(k);
+  const s = p.toString();
+  return s ? `/admin/funil?${s}` : "/admin/funil";
+};
+
+const taxas = funil
+  ? [
+      { label: "Lead → fechado", valor: funil.taxaLeadFechado, base: `${funil.chegaramFechado} de ${funil.totalLeads} leads` },
+      { label: "Em contato → fechado", valor: funil.taxaEmContatoFechado, base: `${funil.fechadoDesdeEmContato} de ${funil.chegaramEmContato} contatados` },
+      { label: "Orçado → fechado", valor: funil.taxaOrcadoFechado, base: `${funil.fechadoDesdeOrcado} de ${funil.chegaramOrcado} orçados` },
+    ]
+  : [];
+
+const distMap = Object.fromEntries(distribuicao.map((d) => [d.nicho ?? "sem", d.total])) as Record<string, number>;
+
+const chip = (ativo: boolean) =>
+  `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-body text-xs font-medium ${
+    ativo ? "border-navy bg-navy text-white" : "border-kraft/60 bg-white text-ink/75 hover:border-navy"
+  }`;
+const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
+---
+
+<AdminLayout title="Funil">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-extrabold text-navy">Funil de conversão</h1>
+      <p class="mt-1 font-body text-sm text-steel">
+        Coorte por data de entrada do lead{nicho && <> · nicho <strong class="text-navy">{nichoLabel(nicho)}</strong></>}.
+      </p>
+    </div>
+    <ul class="flex flex-wrap gap-2">
+      {PERIODOS.map((p) => (
+        <li>
+          <a href={linkFunil({ periodo: p.value })} class={chip(periodo === p.value)}>{p.label}</a>
+        </li>
+      ))}
+    </ul>
+  </div>
+
+  <ul class="mt-4 flex flex-wrap gap-2">
+    <li><a href={linkFunil({ nicho: "" })} class={chip(!nicho)}>Todos os nichos</a></li>
+    {
+      NICHOS.map((n) => (
+        <li>
+          <a href={linkFunil({ nicho: n.value })} class={chip(nicho === n.value)}>
+            {n.label}
+            <span class="font-mono tabular-nums opacity-70">{distMap[n.value] ?? 0}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+
+  {erro && <p role="alert" class="mt-6 rounded-lg border border-[#b42318]/30 bg-[#b42318]/5 px-4 py-3 font-body text-sm text-[#b42318]">{erro}</p>}
+
+  {
+    funil && funil.totalLeads === 0 && !erro ? (
+      <p class="mt-10 rounded-xl border border-dashed border-kraft py-12 text-center font-body text-sm text-steel">
+        Nenhum lead nesta coorte. Troque o período ou o nicho.
+      </p>
+    ) : (
+      funil && (
+        <>
+          <h2 class="mt-8 font-display text-base font-bold text-navy">Contagem por etapa</h2>
+          <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {STATUS_LEAD.map((s) => (
+              <div class="rounded-xl border border-kraft/60 bg-white px-4 py-4">
+                <p class={carimbo}>{statusLabel(s.value)}</p>
+                <p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-navy">{funil.porEtapa[s.value] ?? 0}</p>
+              </div>
+            ))}
+          </div>
+
+          <h2 class="mt-10 font-display text-base font-bold text-navy">Taxas de conversão</h2>
+          <div class="mt-4 grid gap-3 sm:grid-cols-3">
+            {taxas.map((t) => (
+              <div class="rounded-xl border border-kraft/60 bg-kraft-100/50 px-5 py-5">
+                <p class={carimbo}>{t.label}</p>
+                <p class="mt-1 font-display text-4xl font-extrabold tabular-nums text-navy">{pct(t.valor)}</p>
+                <p class="mt-1 font-body text-xs text-steel">{t.base}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )
+    )
+  }
+</AdminLayout>

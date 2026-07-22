@@ -198,18 +198,24 @@ O site **não é 100% estático**. Continua SSG nas páginas públicas; `/admin/
 **Variáveis de ambiente** (ver `.env.example`): `DATABASE_URL`, `SESSION_SECRET` (≥32 chars), `ADMIN_EMAIL`, `ADMIN_SENHA`.
 
 **Arquivos:**
-- `src/lib/crm.ts` — conexão `postgres` (sem ORM), schema aplicado sozinho no primeiro uso (`create table if not exists`: `usuarios`, `leads`, `notas`), status e consultas.
+- `src/lib/crm.ts` — conexão `postgres` (sem ORM), schema aplicado sozinho no primeiro uso (`create table if not exists`: `usuarios`, `leads`, `notas`, **`tentativas`**, **`pedidos`**, **`transicoes`** + coluna **`leads.nicho`**), status e consultas. O bootstrap do schema roda sob **lock consultivo por transação** (`pg_advisory_xact_lock`) — dois processos aplicando o schema num banco pristino (testes em paralelo, réplicas) não colidem mais no catálogo.
 - `src/lib/auth.ts` — scrypt + cookie assinado com HMAC, tudo em `node:crypto`. Throttle de login **em memória** (8 tentativas / 15 min).
-- `src/lib/adminUi.ts` — datas pt-BR e a regra de follow-up vencido.
-- `src/pages/api/lead.ts` — POST público do formulário (valida, honeypot, limita tamanho).
-- `src/pages/admin/{login,index,[id],sair}` + `src/layouts/AdminLayout.astro` (`noindex`).
+- `src/lib/adminUi.ts` — datas pt-BR, follow-up vencido, e os helpers **puros** do CRM de vendas: `NICHOS`/`CANAIS`/`RESULTADOS`, `CADENCIA_DIAS = [0,1,3,7,14,21]`, `proximaDataCadencia`/`cadenciaEsgotada`, `vencidoCarteira`, `taxasFunil`, `formatarBRL`/`reaisParaCentavos` (money path em centavos inteiros).
+- `src/pages/api/lead.ts` — POST público do formulário (valida, honeypot, limita tamanho). `inserirLead` já grava a transição inicial `null → novo`.
+- `src/pages/admin/{login,index,[id],funil,sair}` + `src/layouts/AdminLayout.astro` (`noindex`, header com **Leads / Carteira / Funil**).
 
-**Como funciona na prática:** primeiro login com `ADMIN_EMAIL`/`ADMIN_SENHA` **cria a conta** (só enquanto a tabela `usuarios` estiver vazia) — sem script, sem shell na VPS. Lista com filtro por status e busca, contadores, badge de follow-up vencido; detalhe com ficha, botão de WhatsApp já com saudação, status, data do próximo contato e histórico de anotações. **Zero JavaScript no client** — tudo form POST + redirect (PRG).
+**Como funciona na prática:** primeiro login com `ADMIN_EMAIL`/`ADMIN_SENHA` **cria a conta** (só enquanto a tabela `usuarios` estiver vazia) — sem script, sem shell na VPS. Lista com filtro por status/**nicho** e busca, contadores, badge de follow-up vencido; detalhe com ficha, botão de WhatsApp já com saudação, status, próximo contato e anotações. **Zero JavaScript no client** — tudo form POST + redirect (PRG).
+
+**CRM de vendas (feature 003):** o detalhe do lead (`/admin/[id]`) ganhou três frentes, todas por form POST:
+- **Cadência de 1ª venda (US1):** régua de 6 toques (`tentativas`); o 1º toque promove `novo → em_contato`; o próximo contato vem **sugerido e editável**; após o 6º, aviso de "cadência esgotada" (não marca Perdido sozinho).
+- **Carteira / pedidos (US2):** registrar pedido (`pedidos`, data + R$→centavos + volume) em **transação**; o 1º pedido fecha o lead e agenda recontato **+30d**; pedidos seguintes reagendam por `max(data)+30`; botões **registrar recontato** e **pausar carteira**. Visão `/admin?visao=carteira` lista clientes por próximo recontato.
+- **Funil por coorte (US3)** em `/admin/funil`: contagem por etapa + 3 taxas (lead→fechado, em contato→fechado, orçado→fechado) via `transicoes`, com `?periodo=mes|ano|tudo` e `?nicho=`. Backfill idempotente semeia `transicoes` de leads pré-existentes no 1º start.
+- **Nicho (US4):** coluna `leads.nicho` (indústria/distribuidor/e-commerce/lojas/outro), filtro na lista, distribuição e recorte do funil por nicho.
 
 ### ⚠️ Armadilha que já custou tempo: `security.allowedDomains`
 Sem esse bloco no `astro.config.mjs`, o Astro **descarta o header `Host`**, monta a URL como `http://localhost` e responde **403 "Cross-site POST form submissions are forbidden"** em *todo* POST atrás do proxy do Easypanel — form e admin quebrados. O domínio de produção precisa estar na lista. Ao trocar de domínio, **atualizar lá também**.
 
-**Verificado ponta a ponta** contra um Postgres 16 em Docker: lead válido grava (`{"ok":true,"id":1}`), obrigatórios/CNPJ/e-mail barrados, honeypot descartado em silêncio, `/admin` sem sessão redireciona, senha errada nega, primeiro login cria o usuário, cookie adulterado é rejeitado, status + follow-up + nota persistem, filtro e busca funcionam, logout limpa a sessão.
+**Verificado ponta a ponta** contra um Postgres 16 em Docker: lead válido grava (`{"ok":true,"id":1}`), obrigatórios/CNPJ/e-mail barrados, honeypot descartado em silêncio, `/admin` sem sessão redireciona, senha errada nega, primeiro login cria o usuário, cookie adulterado é rejeitado, status + follow-up + nota persistem, filtro e busca funcionam, logout limpa a sessão. **CRM de vendas (003):** suíte `npm test` verde (58 testes) — unit de cadência/funil/dinheiro + integração `crm-vendas.test.mjs` (1º pedido fecha + agenda +30d, 2º só reagenda, backfill idempotente) — e smoke autenticado por HTTP: login → lead → tentativa (vira "Em contato") → pedido (vira "Fechado", entra na carteira) → funil.
 
 ## Pendências (ordem sugerida)
 1. ~~Rework visual da home~~ ✅ hero cinematográfico aprovado.

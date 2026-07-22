@@ -3,75 +3,148 @@ export const prerender = false;
 
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { sessaoAtual } from "../../lib/auth";
-import { contarAtrasados, contarPorStatus, listarLeads, STATUS_LEAD, statusLabel } from "../../lib/crm";
+import {
+  contarAtrasados,
+  contarCarteiraVencida,
+  contarPorStatus,
+  distribuicaoPorNicho,
+  listarCarteira,
+  listarLeads,
+  STATUS_LEAD,
+  statusLabel,
+} from "../../lib/crm";
 import { tipoFitaLabel } from "../../lib/quoteForm";
-import { dataBR, hojeISO, isoDe, estaAtrasado, CLS_STATUS } from "../../lib/adminUi";
+import { CLS_STATUS, dataBR, estaAtrasado, hojeISO, NICHOS, nichoLabel, vencidoCarteira } from "../../lib/adminUi";
 
 if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
 
+const visao = Astro.url.searchParams.get("visao") === "carteira" ? "carteira" : "leads";
 const status = Astro.url.searchParams.get("status") ?? "";
 const busca = Astro.url.searchParams.get("q") ?? "";
+const nicho = Astro.url.searchParams.get("nicho") ?? "";
 
 let leads: Awaited<ReturnType<typeof listarLeads>> = [];
 let porStatus: Record<string, number> = {};
+let distribuicao: { nicho: string | null; total: number }[] = [];
 let atrasados = 0;
+let carteiraVencida = 0;
 let erro = "";
 
 try {
-  [leads, porStatus, atrasados] = await Promise.all([
-    listarLeads({ status, busca }),
-    contarPorStatus(),
-    contarAtrasados(),
-  ]);
+  if (visao === "carteira") {
+    [leads, distribuicao, carteiraVencida] = await Promise.all([
+      listarCarteira({ nicho }),
+      distribuicaoPorNicho(),
+      contarCarteiraVencida(),
+    ]);
+  } else {
+    [leads, porStatus, atrasados, distribuicao] = await Promise.all([
+      listarLeads({ status, busca, nicho }),
+      contarPorStatus(),
+      contarAtrasados(),
+      distribuicaoPorNicho(),
+    ]);
+  }
 } catch (e) {
   console.error("[admin] falha ao carregar leads", e);
   erro = "Não consegui ler o banco. Confira a DATABASE_URL.";
 }
 
 const hoje = hojeISO();
-const total = Object.values(porStatus).reduce((a, b) => a + b, 0);
+const total = leads.length;
+const distMap = Object.fromEntries(distribuicao.map((d) => [d.nicho ?? "sem", d.total])) as Record<string, number>;
+
+/** Constrói /admin preservando os filtros ativos e trocando só os que vierem em `over`. */
+const linkAdmin = (over: Record<string, string> = {}) => {
+  const p = new URLSearchParams();
+  if (visao === "carteira") p.set("visao", "carteira");
+  if (status) p.set("status", status);
+  if (busca) p.set("q", busca);
+  if (nicho) p.set("nicho", nicho);
+  for (const [k, v] of Object.entries(over)) v ? p.set(k, v) : p.delete(k);
+  const s = p.toString();
+  return s ? `/admin?${s}` : "/admin";
+};
+
 const inputCls =
   "rounded-lg border border-kraft/60 bg-white px-3 py-2 font-body text-sm text-ink focus:border-navy focus:outline-none";
+const chip = (ativo: boolean) =>
+  `inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-body text-xs font-medium ${
+    ativo ? "border-navy bg-navy text-white" : "border-kraft/60 bg-white text-ink/75 hover:border-navy"
+  }`;
 ---
 
-<AdminLayout title="Leads">
+<AdminLayout title={visao === "carteira" ? "Carteira" : "Leads"}>
   <div class="flex flex-wrap items-end justify-between gap-4">
     <div>
-      <h1 class="font-display text-2xl font-extrabold text-navy">Leads</h1>
+      <h1 class="font-display text-2xl font-extrabold text-navy">{visao === "carteira" ? "Carteira" : "Leads"}</h1>
       <p class="mt-1 font-body text-sm text-steel">
-        {total} no total{atrasados > 0 && <span class="font-semibold text-[#b42318]"> · {atrasados} com follow-up vencido</span>}
+        {total} {visao === "carteira" ? "cliente(s)" : "no total"}
+        {
+          visao === "carteira"
+            ? carteiraVencida > 0 && <span class="font-semibold text-[#b42318]"> · {carteiraVencida} para recontatar</span>
+            : atrasados > 0 && <span class="font-semibold text-[#b42318]"> · {atrasados} com follow-up vencido</span>
+        }
       </p>
     </div>
 
-    <form method="GET" class="flex flex-wrap items-center gap-2">
-      <label for="q" class="sr-only">Buscar</label>
-      <input id="q" type="search" name="q" value={busca} placeholder="nome, empresa ou e-mail" class={inputCls} />
-      <label for="status" class="sr-only">Status</label>
-      <select id="status" name="status" class={inputCls}>
-        <option value="">Todos os status</option>
-        {STATUS_LEAD.map((s) => <option value={s.value} selected={s.value === status}>{s.label}</option>)}
-      </select>
-      <button class="rounded-lg bg-navy px-4 py-2 font-body text-sm font-semibold text-white hover:bg-navy-800">
-        Filtrar
-      </button>
-    </form>
+    {
+      visao === "leads" && (
+        <form method="GET" class="flex flex-wrap items-center gap-2">
+          {nicho && <input type="hidden" name="nicho" value={nicho} />}
+          <label for="q" class="sr-only">Buscar</label>
+          <input id="q" type="search" name="q" value={busca} placeholder="nome, empresa ou e-mail" class={inputCls} />
+          <label for="status" class="sr-only">Status</label>
+          <select id="status" name="status" class={inputCls}>
+            <option value="">Todos os status</option>
+            {STATUS_LEAD.map((s) => (
+              <option value={s.value} selected={s.value === status}>{s.label}</option>
+            ))}
+          </select>
+          <button class="rounded-lg bg-navy px-4 py-2 font-body text-sm font-semibold text-white hover:bg-navy-800">
+            Filtrar
+          </button>
+        </form>
+      )
+    }
+  </div>
+
+  <div class="mt-5 flex gap-2 border-b border-kraft/50">
+    <a href={linkAdmin({ visao: "", status: "", q: "" })} class:list={["-mb-px border-b-2 px-1 pb-2 font-body text-sm font-semibold", visao === "leads" ? "border-navy text-navy" : "border-transparent text-steel hover:text-navy"]}>
+      Leads
+    </a>
+    <a href={linkAdmin({ visao: "carteira", status: "", q: "" })} class:list={["-mb-px border-b-2 px-1 pb-2 font-body text-sm font-semibold", visao === "carteira" ? "border-navy text-navy" : "border-transparent text-steel hover:text-navy"]}>
+      Carteira
+    </a>
   </div>
 
   {erro && <p role="alert" class="mt-6 rounded-lg border border-[#b42318]/30 bg-[#b42318]/5 px-4 py-3 font-body text-sm text-[#b42318]">{erro}</p>}
 
-  <ul class="mt-6 flex flex-wrap gap-2">
+  {
+    visao === "leads" && (
+      <ul class="mt-6 flex flex-wrap gap-2">
+        {STATUS_LEAD.map((s) => (
+          <li>
+            <a href={linkAdmin({ status: s.value })} class={chip(status === s.value)}>
+              {s.label}
+              <span class="font-mono tabular-nums opacity-70">{porStatus[s.value] ?? 0}</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    )
+  }
+
+  <ul class="mt-3 flex flex-wrap gap-2">
+    <li>
+      <a href={linkAdmin({ nicho: "" })} class={chip(!nicho)}>Todos os nichos</a>
+    </li>
     {
-      STATUS_LEAD.map((s) => (
+      NICHOS.map((n) => (
         <li>
-          <a
-            href={`/admin?status=${s.value}`}
-            class:list={[
-              "inline-flex items-center gap-2 rounded-full border px-3 py-1.5 font-body text-xs font-medium",
-              status === s.value ? "border-navy bg-navy text-white" : "border-kraft/60 bg-white text-ink/75 hover:border-navy",
-            ]}
-          >
-            {s.label}
-            <span class="font-mono tabular-nums opacity-70">{porStatus[s.value] ?? 0}</span>
+          <a href={linkAdmin({ nicho: n.value })} class={chip(nicho === n.value)}>
+            {n.label}
+            <span class="font-mono tabular-nums opacity-70">{distMap[n.value] ?? 0}</span>
           </a>
         </li>
       ))
@@ -81,51 +154,59 @@ const inputCls =
   {
     leads.length === 0 && !erro ? (
       <p class="mt-10 rounded-xl border border-dashed border-kraft py-12 text-center font-body text-sm text-steel">
-        Nenhum lead {status || busca ? "com esse filtro" : "ainda"}.
+        {visao === "carteira" ? "Nenhum cliente na carteira ainda." : `Nenhum lead ${status || busca || nicho ? "com esse filtro" : "ainda"}.`}
       </p>
     ) : (
       <div class="mt-6 overflow-x-auto">
-        <table class="w-full min-w-[46rem] border-collapse text-left">
+        <table class="w-full min-w-[52rem] border-collapse text-left">
           <thead>
             <tr class="border-b border-kraft/60 font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">
               <th scope="col" class="py-3 pr-4 font-medium">Recebido</th>
               <th scope="col" class="py-3 pr-4 font-medium">Empresa / contato</th>
               <th scope="col" class="py-3 pr-4 font-medium">Interesse</th>
+              <th scope="col" class="py-3 pr-4 font-medium">Nicho</th>
               <th scope="col" class="py-3 pr-4 font-medium">Status</th>
-              <th scope="col" class="py-3 font-medium">Próximo contato</th>
+              <th scope="col" class="py-3 font-medium">{visao === "carteira" ? "Próximo recontato" : "Próximo contato"}</th>
             </tr>
           </thead>
           <tbody>
-            {leads.map((l) => (
-              <tr class="border-b border-kraft/40 align-top hover:bg-kraft-100/50">
-                <td class="py-4 pr-4 font-mono text-xs tabular-nums text-steel">{dataBR(l.criado_em)}</td>
-                <td class="py-4 pr-4">
-                  <a href={`/admin/${l.id}`} class="font-display text-sm font-bold text-navy hover:text-orange-800">
-                    {l.empresa}
-                  </a>
-                  <p class="font-body text-xs text-ink/70">{l.nome}</p>
-                </td>
-                <td class="py-4 pr-4 font-body text-sm text-ink/75">
-                  {tipoFitaLabel(l.tipo_fita)}
-                  <p class="font-mono text-xs tabular-nums text-steel">{l.quantidade}</p>
-                </td>
-                <td class="py-4 pr-4">
-                  <span class:list={["inline-block rounded-full px-2.5 py-1 font-body text-xs font-medium", CLS_STATUS[l.status]]}>
-                    {statusLabel(l.status)}
-                  </span>
-                </td>
-                <td class="py-4 font-mono text-xs tabular-nums">
-                  {l.proximo_contato ? (
-                    <span class={estaAtrasado(l.proximo_contato, l.status, hoje) ? "font-semibold text-[#b42318]" : "text-steel"}>
-                      {dataBR(l.proximo_contato, "UTC")}
-                      {estaAtrasado(l.proximo_contato, l.status, hoje) && " · vencido"}
+            {leads.map((l) => {
+              const vencido =
+                visao === "carteira"
+                  ? vencidoCarteira(l.proximo_contato, true, hoje)
+                  : estaAtrasado(l.proximo_contato, l.status, hoje);
+              return (
+                <tr class="border-b border-kraft/40 align-top hover:bg-kraft-100/50">
+                  <td class="py-4 pr-4 font-mono text-xs tabular-nums text-steel">{dataBR(l.criado_em)}</td>
+                  <td class="py-4 pr-4">
+                    <a href={`/admin/${l.id}`} class="font-display text-sm font-bold text-navy hover:text-orange-800">
+                      {l.empresa}
+                    </a>
+                    <p class="font-body text-xs text-ink/70">{l.nome}</p>
+                  </td>
+                  <td class="py-4 pr-4 font-body text-sm text-ink/75">
+                    {tipoFitaLabel(l.tipo_fita)}
+                    <p class="font-mono text-xs tabular-nums text-steel">{l.quantidade}</p>
+                  </td>
+                  <td class="py-4 pr-4 font-body text-xs text-ink/70">{nichoLabel(l.nicho)}</td>
+                  <td class="py-4 pr-4">
+                    <span class:list={["inline-block rounded-full px-2.5 py-1 font-body text-xs font-medium", CLS_STATUS[l.status]]}>
+                      {statusLabel(l.status)}
                     </span>
-                  ) : (
-                    <span class="text-steel/60">—</span>
-                  )}
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td class="py-4 font-mono text-xs tabular-nums">
+                    {l.proximo_contato ? (
+                      <span class={vencido ? "font-semibold text-[#b42318]" : "text-steel"}>
+                        {dataBR(l.proximo_contato, "UTC")}
+                        {vencido && (visao === "carteira" ? " · recontatar" : " · vencido")}
+                      </span>
+                    ) : (
+                      <span class="text-steel/60">{visao === "carteira" ? "pausado" : "—"}</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

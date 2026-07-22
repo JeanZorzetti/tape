@@ -21,10 +21,21 @@ const { title, logado = true } = Astro.props;
   <body class="flex min-h-screen flex-col bg-paper">
     <header class="border-b border-kraft/50 bg-white">
       <div class="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3">
-        <a href="/admin" class="font-display text-sm font-extrabold tracking-tight text-navy">
-          TAPE<span class="text-orange">PRO</span>
-          <span class="ml-2 font-mono text-[0.65rem] font-medium uppercase tracking-[0.2em] text-steel">CRM</span>
-        </a>
+        <div class="flex items-center gap-6">
+          <a href="/admin" class="font-display text-sm font-extrabold tracking-tight text-navy">
+            TAPE<span class="text-orange">PRO</span>
+            <span class="ml-2 font-mono text-[0.65rem] font-medium uppercase tracking-[0.2em] text-steel">CRM</span>
+          </a>
+          {
+            logado && (
+              <nav class="flex items-center gap-4 font-body text-sm font-medium text-steel">
+                <a href="/admin" class="hover:text-navy">Leads</a>
+                <a href="/admin?visao=carteira" class="hover:text-navy">Carteira</a>
+                <a href="/admin/funil" class="hover:text-navy">Funil</a>
+              </nav>
+            )
+          }
+        </div>
         {
           logado && (
             <form method="POST" action="/admin/sair">

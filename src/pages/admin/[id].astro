@@ -3,10 +3,40 @@ export const prerender = false;
 
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { sessaoAtual } from "../../lib/auth";
-import { adicionarNota, atualizarLead, buscarLead, isStatus, STATUS_LEAD, statusLabel } from "../../lib/crm";
+import {
+  adicionarNota,
+  atualizarLead,
+  buscarLead,
+  definirNicho,
+  inserirPedido,
+  isStatus,
+  pausarCarteira,
+  reagendarCarteira,
+  registrarTentativa,
+  STATUS_LEAD,
+  statusLabel,
+} from "../../lib/crm";
 import { tipoFitaLabel } from "../../lib/quoteForm";
 import { whatsappParaNumero } from "../../lib/whatsapp";
-import { CLS_STATUS, dataBR, estaAtrasado, hojeISO, isoDe } from "../../lib/adminUi";
+import {
+  cadenciaEsgotada,
+  CANAIS,
+  CLS_STATUS,
+  dataBR,
+  estaAtrasado,
+  formatarBRL,
+  hojeISO,
+  isCanal,
+  isNicho,
+  isoDe,
+  isResultado,
+  NICHOS,
+  nichoLabel,
+  proximaDataCadencia,
+  reaisParaCentavos,
+  RECONTATO_CARTEIRA_DIAS,
+  RESULTADOS,
+} from "../../lib/adminUi";
 
 if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
 
@@ -20,7 +50,27 @@ if (Astro.request.method === "POST") {
   if (acao === "salvar") {
     const status = String(form.get("status") ?? "");
     const proximo = String(form.get("proximoContato") ?? "").trim();
+    const nicho = String(form.get("nicho") ?? "").trim();
     if (isStatus(status)) await atualizarLead(id, status, proximo || null);
+    await definirNicho(id, isNicho(nicho) ? nicho : null);
+  } else if (acao === "tentativa") {
+    const canal = String(form.get("canal") ?? "");
+    const resultado = String(form.get("resultado") ?? "");
+    const observacao = String(form.get("observacao") ?? "").trim().slice(0, 500) || null;
+    const proximo = String(form.get("proximoContato") ?? "").trim();
+    if (isCanal(canal) && isResultado(resultado)) {
+      await registrarTentativa(id, canal, resultado, observacao, proximo || null);
+    }
+  } else if (acao === "pedido") {
+    const data = String(form.get("data") ?? "").trim();
+    const valor = reaisParaCentavos(String(form.get("valor") ?? ""));
+    const digitosVolume = String(form.get("volume") ?? "").replace(/\D/g, "");
+    const volume = digitosVolume ? Number(digitosVolume) : null;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(data)) await inserirPedido(id, data, valor, volume);
+  } else if (acao === "recontato-carteira") {
+    await reagendarCarteira(id);
+  } else if (acao === "pausar-carteira") {
+    await pausarCarteira(id);
   } else if (acao === "nota") {
     const texto = String(form.get("texto") ?? "").trim().slice(0, 2000);
     if (texto) await adicionarNota(id, texto);
@@ -31,11 +81,19 @@ if (Astro.request.method === "POST") {
 
 const dados = await buscarLead(id);
 if (!dados) return Astro.redirect("/admin");
-const { lead, notas } = dados;
+const { lead, notas, tentativas, pedidos } = dados;
 
 const hoje = hojeISO();
 const atrasado = estaAtrasado(lead.proximo_contato, lead.status, hoje);
 const saudacao = `Olá ${lead.nome}, aqui é da TapePro sobre o seu orçamento de ${tipoFitaLabel(lead.tipo_fita)}.`;
+
+const temPedido = pedidos.length > 0;
+const nToques = tentativas.length;
+const esgotada = cadenciaEsgotada(nToques);
+// Sugestão para o próximo toque (o que vem DEPOIS do que será registrado agora), ancorada em hoje.
+const sugestaoProximo = proximaDataCadencia(nToques + 1, hoje) ?? "";
+const ultimaCompra = pedidos[0]?.data ?? null; // pedidos vem desc por data
+const carteiraPausada = temPedido && lead.proximo_contato === null;
 
 const ficha = [
   { label: "Contato", valor: lead.nome },
@@ -44,12 +102,21 @@ const ficha = [
   { label: "CNPJ", valor: lead.cnpj ?? "—" },
   { label: "Tipo de fita", valor: tipoFitaLabel(lead.tipo_fita) },
   { label: "Quantidade", valor: lead.quantidade },
+  { label: "Nicho", valor: nichoLabel(lead.nicho) },
   { label: "Recebido em", valor: dataBR(lead.criado_em) },
   { label: "Origem", valor: lead.origem ?? "—" },
 ];
 
+const labelDe = (lista: readonly { value: string; label: string }[], v: string) =>
+  lista.find((o) => o.value === v)?.label ?? v;
+
 const inputCls =
   "w-full rounded-lg border border-kraft/60 bg-white px-3 py-2 font-body text-sm text-ink focus:border-navy focus:outline-none";
+const btnPrimario =
+  "rounded-full bg-navy px-5 py-2.5 font-body text-sm font-semibold text-white hover:bg-navy-800";
+const btnSecundario =
+  "rounded-full border border-kraft/70 bg-white px-4 py-2 font-body text-sm font-semibold text-navy hover:border-navy";
+const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
 ---
 
 <AdminLayout title={lead.empresa}>
@@ -92,7 +159,7 @@ const inputCls =
         {
           ficha.map((f) => (
             <div class="flex items-baseline justify-between gap-4 py-3">
-              <dt class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">{f.label}</dt>
+              <dt class={carimbo}>{f.label}</dt>
               <dd class="text-right font-body text-sm text-ink/85">
                 {f.href ? (
                   <a href={f.href} target="_blank" rel="noopener" class="text-navy underline-offset-2 hover:underline">
@@ -129,6 +196,13 @@ const inputCls =
             </select>
           </div>
           <div>
+            <label for="nicho" class="mb-1.5 block font-body text-sm font-medium text-navy">Nicho</label>
+            <select id="nicho" name="nicho" class={inputCls}>
+              <option value="" selected={!lead.nicho}>Sem nicho</option>
+              {NICHOS.map((n) => <option value={n.value} selected={n.value === lead.nicho}>{n.label}</option>)}
+            </select>
+          </div>
+          <div>
             <label for="proximoContato" class="mb-1.5 block font-body text-sm font-medium text-navy">
               Próximo contato
             </label>
@@ -140,47 +214,232 @@ const inputCls =
               class={inputCls}
             />
           </div>
-          <button class="rounded-full bg-navy px-5 py-2.5 font-body text-sm font-semibold text-white hover:bg-navy-800">
-            Salvar
-          </button>
+          <button class={btnPrimario}>Salvar</button>
         </div>
       </form>
     </section>
 
-    <section class="md:col-span-7">
-      <h2 class="font-display text-base font-bold text-navy">Anotações</h2>
-
-      <form method="POST" class="mt-4">
-        <input type="hidden" name="acao" value="nota" />
-        <label for="texto" class="sr-only">Nova anotação</label>
-        <textarea
-          id="texto"
-          name="texto"
-          rows="3"
-          required
-          placeholder="O que foi conversado, o que ficou combinado…"
-          class={inputCls}></textarea>
-        <button class="mt-3 rounded-full bg-orange px-5 py-2.5 font-body text-sm font-semibold text-navy hover:bg-orange-400">
-          Adicionar anotação
-        </button>
-      </form>
-
+    <section class="md:col-span-7 space-y-8">
+      {/* ── Cadência de 1ª venda (US1) ── */}
       {
-        notas.length === 0 ? (
-          <p class="mt-8 font-body text-sm text-steel">Nenhuma anotação ainda.</p>
-        ) : (
-          <ol class="mt-8 space-y-5">
-            {notas.map((n) => (
-              <li class="border-l-2 border-kraft pl-4">
-                <p class="font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel">
-                  {n.criado_em.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}
-                </p>
-                <p class="mt-1.5 whitespace-pre-line font-body text-sm leading-relaxed text-ink/85">{n.texto}</p>
-              </li>
-            ))}
-          </ol>
+        !temPedido && (
+          <div>
+            <div class="flex items-baseline justify-between gap-3">
+              <h2 class="font-display text-base font-bold text-navy">Cadência de contato</h2>
+              <span class={carimbo}>toque {Math.min(nToques + 1, 6)} de 6</span>
+            </div>
+
+            {esgotada && (
+              <p class="mt-3 rounded-lg border border-orange/40 bg-orange/10 px-4 py-3 font-body text-sm text-orange-800">
+                Cadência esgotada — os 6 toques foram dados sem venda. Considere marcar o lead como{" "}
+                <strong>Perdido</strong> em “Situação”. (O sistema não marca sozinho.)
+              </p>
+            )}
+
+            <form method="POST" class="mt-4 rounded-xl border border-kraft/60 bg-white p-5">
+              <input type="hidden" name="acao" value="tentativa" />
+              <div class="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label for="canal" class="mb-1.5 block font-body text-sm font-medium text-navy">Canal</label>
+                  <select id="canal" name="canal" class={inputCls}>
+                    {CANAIS.map((c) => (
+                      <option value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label for="resultado" class="mb-1.5 block font-body text-sm font-medium text-navy">Resultado</label>
+                  <select id="resultado" name="resultado" class={inputCls}>
+                    {RESULTADOS.map((r) => (
+                      <option value={r.value}>{r.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div class="mt-4">
+                <label for="observacao" class="mb-1.5 block font-body text-sm font-medium text-navy">
+                  Observação <span class="font-normal text-steel">(opcional)</span>
+                </label>
+                <textarea
+                  id="observacao"
+                  name="observacao"
+                  rows="2"
+                  maxlength="500"
+                  placeholder="Como foi o toque, o que ficou combinado…"
+                  class={inputCls}></textarea>
+              </div>
+              <div class="mt-4">
+                <label for="proximoTentativa" class="mb-1.5 block font-body text-sm font-medium text-navy">
+                  Próximo contato <span class="font-normal text-steel">(sugerido, ajustável)</span>
+                </label>
+                <input
+                  id="proximoTentativa"
+                  name="proximoContato"
+                  type="date"
+                  value={sugestaoProximo}
+                  class={inputCls}
+                />
+              </div>
+              <button class="mt-4 rounded-full bg-orange px-5 py-2.5 font-body text-sm font-semibold text-navy hover:bg-orange-400">
+                Registrar toque
+              </button>
+            </form>
+          </div>
         )
       }
+
+      {/* Histórico de toques — visível também depois de virar cliente. */}
+      {
+        tentativas.length > 0 && (
+          <div>
+            <h2 class="font-display text-base font-bold text-navy">
+              Histórico de contato {temPedido && <span class="font-body text-xs font-normal text-steel">· cadência encerrada</span>}
+            </h2>
+            <ol class="mt-4 space-y-4">
+              {tentativas.map((t) => (
+                <li class="border-l-2 border-kraft pl-4">
+                  <p class={carimbo}>
+                    {t.criado_em.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })} · {labelDe(CANAIS, t.canal)} ·{" "}
+                    {labelDe(RESULTADOS, t.resultado)}
+                  </p>
+                  {t.observacao && (
+                    <p class="mt-1.5 whitespace-pre-line font-body text-sm leading-relaxed text-ink/85">{t.observacao}</p>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </div>
+        )
+      }
+
+      {/* ── Pedidos / carteira (US2) ── */}
+      <div>
+        <h2 class="font-display text-base font-bold text-navy">Pedidos</h2>
+
+        {
+          temPedido && (
+            <div class="mt-4 flex flex-wrap items-center gap-x-8 gap-y-3 rounded-xl border border-kraft/60 bg-kraft-100/60 p-5">
+              <div>
+                <p class={carimbo}>Última compra</p>
+                <p class="mt-1 font-display text-lg font-bold text-navy">{dataBR(ultimaCompra, "UTC")}</p>
+              </div>
+              <div>
+                <p class={carimbo}>Próximo recontato</p>
+                <p
+                  class:list={[
+                    "mt-1 font-display text-lg font-bold",
+                    carteiraPausada ? "text-steel" : atrasado ? "text-[#b42318]" : "text-navy",
+                  ]}
+                >
+                  {carteiraPausada ? "Pausado" : dataBR(lead.proximo_contato, "UTC")}
+                </p>
+              </div>
+              <div class="flex flex-wrap gap-2">
+                <form method="POST">
+                  <input type="hidden" name="acao" value="recontato-carteira" />
+                  <button class={btnSecundario}>Registrar recontato (+{RECONTATO_CARTEIRA_DIAS}d)</button>
+                </form>
+                {!carteiraPausada && (
+                  <form method="POST">
+                    <input type="hidden" name="acao" value="pausar-carteira" />
+                    <button class={btnSecundario}>Pausar carteira</button>
+                  </form>
+                )}
+              </div>
+            </div>
+          )
+        }
+
+        <form method="POST" class="mt-4 rounded-xl border border-kraft/60 bg-white p-5">
+          <input type="hidden" name="acao" value="pedido" />
+          <p class="font-body text-sm font-medium text-navy">
+            {temPedido ? "Registrar novo pedido" : "Registrar 1º pedido — fecha o lead e abre a carteira"}
+          </p>
+          <div class="mt-4 grid gap-4 sm:grid-cols-3">
+            <div>
+              <label for="data" class="mb-1.5 block font-body text-sm font-medium text-navy">Data da compra</label>
+              <input id="data" name="data" type="date" value={hoje} required class={inputCls} />
+            </div>
+            <div>
+              <label for="valor" class="mb-1.5 block font-body text-sm font-medium text-navy">
+                Valor <span class="font-normal text-steel">(R$, opcional)</span>
+              </label>
+              <input id="valor" name="valor" type="text" inputmode="decimal" placeholder="1.234,50" class={inputCls} />
+            </div>
+            <div>
+              <label for="volume" class="mb-1.5 block font-body text-sm font-medium text-navy">
+                Volume <span class="font-normal text-steel">(rolos, opcional)</span>
+              </label>
+              <input id="volume" name="volume" type="number" min="0" step="1" placeholder="200" class={inputCls} />
+            </div>
+          </div>
+          <button class="mt-4 rounded-full bg-orange px-5 py-2.5 font-body text-sm font-semibold text-navy hover:bg-orange-400">
+            Registrar pedido
+          </button>
+        </form>
+
+        {
+          pedidos.length > 0 && (
+            <div class="mt-6 overflow-x-auto">
+              <table class="w-full min-w-[24rem] border-collapse text-left">
+                <thead>
+                  <tr class={`border-b border-kraft/60 ${carimbo}`}>
+                    <th scope="col" class="py-2 pr-4 font-medium">Data</th>
+                    <th scope="col" class="py-2 pr-4 font-medium">Valor</th>
+                    <th scope="col" class="py-2 font-medium">Volume</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pedidos.map((p) => (
+                    <tr class="border-b border-kraft/40">
+                      <td class="py-2.5 pr-4 font-mono text-xs tabular-nums text-ink/85">{dataBR(p.data, "UTC")}</td>
+                      <td class="py-2.5 pr-4 font-mono text-xs tabular-nums text-ink/85">{formatarBRL(p.valor_centavos)}</td>
+                      <td class="py-2.5 font-mono text-xs tabular-nums text-steel">
+                        {p.volume_rolos != null ? `${p.volume_rolos} rolos` : "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )
+        }
+      </div>
+
+      {/* ── Anotações (existente) ── */}
+      <div>
+        <h2 class="font-display text-base font-bold text-navy">Anotações</h2>
+
+        <form method="POST" class="mt-4">
+          <input type="hidden" name="acao" value="nota" />
+          <label for="texto" class="sr-only">Nova anotação</label>
+          <textarea
+            id="texto"
+            name="texto"
+            rows="3"
+            required
+            placeholder="O que foi conversado, o que ficou combinado…"
+            class={inputCls}></textarea>
+          <button class="mt-3 rounded-full bg-orange px-5 py-2.5 font-body text-sm font-semibold text-navy hover:bg-orange-400">
+            Adicionar anotação
+          </button>
+        </form>
+
+        {
+          notas.length === 0 ? (
+            <p class="mt-8 font-body text-sm text-steel">Nenhuma anotação ainda.</p>
+          ) : (
+            <ol class="mt-8 space-y-5">
+              {notas.map((n) => (
+                <li class="border-l-2 border-kraft pl-4">
+                  <p class={carimbo}>{n.criado_em.toLocaleString("pt-BR", { timeZone: "America/Sao_Paulo" })}</p>
+                  <p class="mt-1.5 whitespace-pre-line font-body text-sm leading-relaxed text-ink/85">{n.texto}</p>
+                </li>
+              ))}
+            </ol>
+          )
+        }
+      </div>
     </section>
   </div>
 </AdminLayout>
