@@ -36,20 +36,20 @@ const ABERTURAS: Record<string, string> = {
     "Quer um orçamento rápido pro volume que vocês giram por mês?",
   ecommerce:
     "Oi, [nome]! Vi a [empresa] aqui e queria te mostrar uma coisa rápida. Vocês despacham em caixa pardo " +
-    "comum? A gente faz fita personalizada com a marca de vocês impressa — a caixa vira embalagem de marca " +
+    "comum? A gente faz fita personalizada com a marca de vocês impressa. A caixa vira embalagem de marca " +
     "sem trocar de caixa, e o lacre ainda protege contra extravio na entrega. Posso te mandar uma prévia " +
     "da logo de vocês na fita, sem compromisso?",
   lojas:
     "Oi, [nome]! A [empresa] tem mais de uma unidade ou entrega em casa? A fita personalizada é o jeito " +
-    "mais barato de padronizar o pacote em todas as unidades — a matriz compra em lote e distribui, o " +
+    "mais barato de padronizar o pacote em todas as unidades: a matriz compra em lote e distribui, o " +
     "gerente não escolhe nada. E na entrega local, identifica de qual loja veio. Posso te mostrar uma " +
     "prévia com a marca de vocês?",
 };
 
 // Fallback (Fila C — descobrir): lead sem nicho / nicho "outro". Abre descobrindo o perfil.
 const ABERTURA_GENERICA =
-  "Oi, [nome]! Trabalho com fita personalizada e de lacre e vi a [empresa]. Como vocês despacham hoje — " +
-  "caixa pardo comum, e a fita aguenta o transporte? Dependendo do que vocês enviam, dá pra puxar a marca " +
+  "Oi, [nome]! Trabalho com fita personalizada e de lacre e vi a [empresa]. Como vocês despacham hoje, em " +
+  "caixa pardo comum? E a fita aguenta o transporte? Dependendo do que vocês enviam, dá pra puxar a marca " +
   "de vocês impressa na fita ou uma gomada reforçada pro volume. Posso te mandar uma prévia da sua marca " +
   "na fita pra ver como fica?";
 
@@ -114,7 +114,7 @@ export const OBJECOES: readonly { pergunta: string; resposta: string }[] = [
   {
     pergunta: "É caro personalizar",
     resposta:
-      "“A arte tem um custo único (o clichê, a partir de R$80) que fica guardado — do 2º pedido em diante " +
+      "“A arte tem um custo único (o clichê, a partir de R$80) que fica guardado. Do 2º pedido em diante " +
       "você paga só a fita. Some rápido no volume.”",
   },
   {
