@@ -1,0 +1,262 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { sessaoAtual } from "../../lib/auth";
+import { contarBase } from "../../lib/crm";
+import {
+  CENARIOS_PROJECAO,
+  RECOMPRAS_ANO1,
+  formatarBRL,
+  isPipeline,
+  projetarCenario,
+} from "../../lib/adminUi";
+
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+
+const pipelineParam = Astro.url.searchParams.get("pipeline") ?? "";
+const pipeline = isPipeline(pipelineParam) ? pipelineParam : "inbound";
+
+let base = { total: 0, contataveis: 0 };
+let erro = "";
+try {
+  base = await contarBase(pipeline);
+} catch (e) {
+  console.error("[projecao] falha ao ler a base", e);
+  erro = "Não consegui ler o banco. Confira a DATABASE_URL.";
+}
+
+const semCanal = Math.max(0, base.total - base.contataveis);
+const pctContataveis = base.total > 0 ? Math.round((base.contataveis / base.total) * 100) : 0;
+
+const cenarios = CENARIOS_PROJECAO.map((cfg) => ({ cfg, proj: projetarCenario(base.contataveis, cfg) }));
+const realista = cenarios.find((c) => c.cfg.id === "realista")!;
+
+const int = (n: number) => Math.round(n).toLocaleString("pt-BR");
+const pct = (f: number) => `${Math.round(f * 100)}%`;
+const larguraFunil = (valor: number) => (base.contataveis > 0 ? (valor / base.contataveis) * 100 : 0);
+
+// Funil projetado do cenário realista, sobre a base contatável real.
+const funil = [
+  { label: "Contatáveis", valor: base.contataveis, taxa: null as string | null },
+  { label: "Respostas", valor: realista.proj.respostas, taxa: `${pct(realista.cfg.resposta)} respondem` },
+  { label: "Orçamentos", valor: realista.proj.orcamentos, taxa: `${pct(realista.cfg.respOrcamento)} pedem orçamento` },
+  { label: "Vendas", valor: realista.proj.vendas, taxa: `${pct(realista.cfg.orcFechado)} fecham` },
+];
+
+// Receita acumulada por trimestre (realista): 1º pedido em T1, +1 recompra por trimestre seguinte.
+const trimestres = Array.from({ length: 1 + RECOMPRAS_ANO1 }, (_, i) => ({
+  q: i + 1,
+  valor: realista.proj.receitaPrimeiroPedido * (i + 1),
+  rotulo: i === 0 ? "prospecção" : `${i}ª recompra`,
+}));
+const maxRec = realista.proj.receitaAno1 || 1;
+
+const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
+
+// Tickets reais (goiania.roilabs.com.br) — 1º pedido inclui clichê R$80 na personalizada.
+const tabelaFitas = [
+  { produto: "Personalizada", spec: "48×100 · até 2 cores · R$16,20→10,10/rolo", minimo: "R$404 · 20 rolos", m50: "R$775", m100: "R$1.130", cheio: "R$2.100" },
+  { produto: "Gomada reforçada", spec: "kraft+nylon 70×150 · R$37,20→32,20/rolo", minimo: "R$558 · 15 rolos", m50: "R$1.860", m100: "R$3.720", cheio: "R$3.220+" },
+  { produto: "Transparente comum", spec: "48×100 · sem arte · commodity", minimo: "R$7,90 · 1 rolo", m50: "R$395", m100: "R$790", cheio: "por volume" },
+];
+---
+
+<AdminLayout title="Projeção">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-extrabold text-navy">Projeção de vendas — prospecção ativa</h1>
+      <p class="mt-1 font-body text-sm text-steel">
+        Funil e receita modelados sobre a base contatável real, com preços do site e benchmarks de outbound B2B.
+      </p>
+    </div>
+    <p class={carimbo}>Cenário-âncora · Realista</p>
+  </div>
+
+  {erro && <p role="alert" class="mt-6 rounded-lg border border-[#b42318]/30 bg-[#b42318]/5 px-4 py-3 font-body text-sm text-[#b42318]">{erro}</p>}
+
+  {
+    !erro && base.total === 0 ? (
+      <p class="mt-10 rounded-xl border border-dashed border-kraft py-12 text-center font-body text-sm text-steel">
+        Nenhum lead nesta pipeline ainda. Importe a lista de prospecção para projetar as vendas.
+      </p>
+    ) : (
+      !erro && (
+        <>
+          {/* ── Base real ────────────────────────────────────────────── */}
+          <div class="mt-6 rounded-xl border border-kraft/60 bg-white p-5">
+            <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+              <h2 class="font-display text-base font-bold text-navy">A base prospectável são {int(base.contataveis)} leads</h2>
+              <span class="font-body text-xs text-steel">
+                {pct(base.contataveis / (base.total || 1))} dos {int(base.total)} têm canal de contato; o resto exige enriquecimento
+              </span>
+            </div>
+            <div class="mt-4 flex h-10 overflow-hidden rounded-lg border border-kraft/60" role="img"
+                 aria-label={`${int(base.contataveis)} contatáveis (${pctContataveis}%) e ${int(semCanal)} sem canal`}>
+              <div class="flex items-center bg-orange px-3 font-body text-xs font-semibold text-white" style={`width:${pctContataveis}%`}>
+                {int(base.contataveis)} contatáveis
+              </div>
+              <div class="flex flex-1 items-center bg-kraft-100 px-3 font-body text-xs font-medium text-ink/75">
+                {int(semCanal)} sem canal
+              </div>
+            </div>
+          </div>
+
+          {/* ── KPIs (realista) ──────────────────────────────────────── */}
+          <h2 class="mt-10 font-display text-base font-bold text-navy">Resultado esperado <span class="font-body text-xs font-normal text-steel">· realista · 90 dias / 1 ciclo</span></h2>
+          <div class="mt-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <div class="rounded-xl border border-kraft/60 bg-white px-4 py-4">
+              <p class={carimbo}>Clientes novos</p>
+              <p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-navy">~{int(realista.proj.vendas)}</p>
+              <p class="mt-1 font-body text-xs text-steel">{int(realista.proj.vendasBase)} da base + enriquecimento</p>
+            </div>
+            <div class="rounded-xl border border-kraft/60 bg-white px-4 py-4">
+              <p class={carimbo}>Receita 1º pedido</p>
+              <p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-navy">{formatarBRL(realista.proj.receitaPrimeiroPedido)}</p>
+              <p class="mt-1 font-body text-xs text-steel">nos primeiros 90 dias</p>
+            </div>
+            <div class="rounded-xl border border-kraft/60 bg-white px-4 py-4">
+              <p class={carimbo}>Ticket médio</p>
+              <p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-navy">{formatarBRL(realista.cfg.ticketCentavos)}</p>
+              <p class="mt-1 font-body text-xs text-steel">blended por mix de produto</p>
+            </div>
+            <div class="rounded-xl border border-orange/40 bg-orange/5 px-4 py-4">
+              <p class={carimbo}>Receita ano 1</p>
+              <p class="mt-1 font-display text-3xl font-extrabold tabular-nums text-orange-800">{formatarBRL(realista.proj.receitaAno1)}</p>
+              <p class="mt-1 font-body text-xs text-steel">com a carteira recomprando</p>
+            </div>
+          </div>
+
+          {/* ── Funil + Cenários ─────────────────────────────────────── */}
+          <div class="mt-10 grid gap-6 lg:grid-cols-2">
+            <section class="rounded-xl border border-kraft/60 bg-white p-5">
+              <h2 class="font-display text-base font-bold text-navy">Funil de conversão</h2>
+              <p class="mt-0.5 font-body text-xs text-steel">Sobre os {int(base.contataveis)} contatáveis — taxas do realista</p>
+              <div class="mt-4 space-y-1">
+                {funil.map((f) => (
+                  <>
+                    {f.taxa && <p class="pl-1 font-body text-[0.7rem] font-semibold text-orange-800">↓ {f.taxa}</p>}
+                    <div class="flex items-center gap-3">
+                      <span class="w-24 shrink-0 text-right font-body text-xs font-medium text-steel">{f.label}</span>
+                      <div class="h-7 min-w-[6px] rounded bg-orange" style={`width:${larguraFunil(f.valor)}%`}></div>
+                      <span class="font-display text-lg font-extrabold tabular-nums text-navy">{int(f.valor)}</span>
+                    </div>
+                  </>
+                ))}
+              </div>
+              <p class="mt-4 border-t border-dashed border-kraft pt-3 font-body text-xs text-steel">
+                O mínimo de <strong class="text-orange-800">R$404</strong> (20 rolos) derruba a fricção e tende a puxar o fechamento acima dos {pct(realista.cfg.orcFechado)}.
+              </p>
+            </section>
+
+            <section class="rounded-xl border border-kraft/60 bg-white p-5">
+              <h2 class="font-display text-base font-bold text-navy">Três cenários</h2>
+              <p class="mt-0.5 font-body text-xs text-steel">Clientes e receita de 1º pedido em 90 dias</p>
+              <div class="mt-4 space-y-2.5">
+                {cenarios.map(({ cfg, proj }) => {
+                  const destaque = cfg.id === "realista";
+                  return (
+                    <div class:list={[
+                      "flex items-center justify-between gap-3 rounded-lg border px-4 py-3",
+                      destaque ? "border-orange/40 bg-orange/5" : "border-kraft/60 bg-kraft-100/40",
+                    ]}>
+                      <div>
+                        <p class="font-body text-sm font-bold text-navy">
+                          {cfg.label}
+                          {destaque && <span class="ml-2 rounded-full bg-orange px-2 py-0.5 align-[1px] font-mono text-[0.6rem] uppercase tracking-wider text-white">âncora</span>}
+                        </p>
+                        <p class="mt-0.5 font-body text-xs text-steel">
+                          ~{int(proj.vendas)} clientes · resposta {pct(cfg.resposta)} · ticket {formatarBRL(cfg.ticketCentavos)}
+                        </p>
+                      </div>
+                      <div class="text-right">
+                        <p class:list={["font-display text-lg font-extrabold tabular-nums", destaque ? "text-orange-800" : "text-navy"]}>
+                          {formatarBRL(proj.receitaPrimeiroPedido)}
+                        </p>
+                        <p class={carimbo}>1º pedido / 90d</p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              <p class="mt-4 border-t border-dashed border-kraft pt-3 font-body text-xs text-steel">
+                A alavanca nº 1 é a <strong class="text-navy">taxa de resposta</strong>: de 25% → 35% no WhatsApp, as vendas sobem ~40% sem tocar no preço.
+              </p>
+            </section>
+          </div>
+
+          {/* ── Recompra ─────────────────────────────────────────────── */}
+          <section class="mt-10 rounded-xl border border-kraft/60 bg-white p-5">
+            <h2 class="font-display text-base font-bold text-navy">Onde o modelo paga — recompra</h2>
+            <p class="mt-0.5 font-body text-xs text-steel">
+              Receita acumulada no ano 1 (realista). Ticket baixo, mas fita é consumível de alto giro: o valor está na 2ª, 3ª e 4ª compra.
+            </p>
+            <div class="mt-5 space-y-3">
+              {trimestres.map((t) => (
+                <div class="flex items-center gap-3">
+                  <span class="w-16 shrink-0 font-body text-xs font-medium text-steel">Trim. {t.q}</span>
+                  <div class="flex h-9 min-w-[8px] items-center justify-end rounded bg-orange px-2.5" style={`width:${(t.valor / maxRec) * 100}%`}>
+                    <span class="font-display text-xs font-extrabold tabular-nums text-white">{formatarBRL(t.valor)}</span>
+                  </div>
+                  <span class="font-body text-[0.7rem] text-steel">{t.rotulo}</span>
+                </div>
+              ))}
+            </div>
+            <p class="mt-4 border-t border-dashed border-kraft pt-3 font-body text-xs text-steel">
+              O custo (seu tempo) é <strong class="text-navy">único</strong>; a receita <strong class="text-navy">recorre</strong>. Carteira recontatada a cada 30 dias no CRM.
+            </p>
+          </section>
+
+          {/* ── Tickets reais ────────────────────────────────────────── */}
+          <section class="mt-10 rounded-xl border border-kraft/60 bg-white p-5">
+            <h2 class="font-display text-base font-bold text-navy">Tickets reais — suas condições comerciais</h2>
+            <p class="mt-0.5 font-body text-xs text-steel">1º pedido inclui clichê R$80 na personalizada; recompra não.</p>
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full min-w-[560px] border-collapse font-body text-sm">
+                <thead>
+                  <tr class="border-b border-kraft text-left font-mono text-[0.6rem] uppercase tracking-[0.12em] text-steel">
+                    <th class="pb-2 pr-4 font-medium">Produto</th>
+                    <th class="pb-2 pr-4 text-right font-medium">Mínimo</th>
+                    <th class="pb-2 pr-4 text-right font-medium">50 rolos</th>
+                    <th class="pb-2 pr-4 text-right font-medium">100 rolos</th>
+                    <th class="pb-2 text-right font-medium">Pedido cheio</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tabelaFitas.map((r) => (
+                    <tr class="border-b border-kraft/50">
+                      <td class="py-3 pr-4">
+                        <span class="font-semibold text-navy">{r.produto}</span>
+                        <span class="mt-0.5 block text-xs text-steel">{r.spec}</span>
+                      </td>
+                      <td class="py-3 pr-4 text-right tabular-nums text-ink">{r.minimo}</td>
+                      <td class="py-3 pr-4 text-right tabular-nums text-ink">{r.m50}</td>
+                      <td class="py-3 pr-4 text-right tabular-nums text-ink">{r.m100}</td>
+                      <td class="py-3 text-right font-bold tabular-nums text-orange-800">{r.cheio}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <p class="mt-4 border-t border-dashed border-kraft pt-3 font-body text-xs text-steel">
+              Priorize <strong class="text-navy">gomada</strong> em quem envia volume (e-commerce, distribuidor, indústria): ticket 2–4× o da personalizada básica. A personalizada de R$404 é a isca de entrada.
+            </p>
+          </section>
+
+          {/* ── Premissas ────────────────────────────────────────────── */}
+          <details class="mt-8 rounded-xl border border-kraft/60 bg-kraft-100/40 px-5 py-4">
+            <summary class="cursor-pointer font-body text-sm font-semibold text-navy">Premissas do modelo</summary>
+            <ul class="mt-3 list-disc space-y-1.5 pl-5 font-body text-xs text-steel">
+              <li><strong class="text-ink">Base:</strong> {int(base.contataveis)} de {int(base.total)} leads têm canal (telefone/WhatsApp, e-mail ou Instagram); {int(semCanal)} exigem enriquecimento.</li>
+              <li><strong class="text-ink">Funil (cons./real./otim.):</strong> resposta 15/25/40% · resposta→orçamento 30/40/50% · orçamento→fechado 20/30/40%.</li>
+              <li><strong class="text-ink">Ticket blended:</strong> R$700 / R$1.100 / R$1.900 — mix de personalizada, gomada e comum, pedidos de 50–100 rolos.</li>
+              <li><strong class="text-ink">Enriquecimento:</strong> +30% de vendas ao recuperar contato dos leads sem canal (fase 2).</li>
+              <li><strong class="text-ink">Recompra:</strong> 1º pedido + {RECOMPRAS_ANO1} recompras no ano 1 (consumível de alto giro).</li>
+              <li><strong class="text-ink">Fontes:</strong> preços de goiania.roilabs.com.br; benchmarks de outbound B2B 2025–26 (Apollo, SalesHive, Salesmotion). WhatsApp no Brasil é canal quente, mas lista fria + cadência de 6 toques seguram o realista em 25%.</li>
+            </ul>
+          </details>
+        </>
+      )
+    )
+  }
+</AdminLayout>

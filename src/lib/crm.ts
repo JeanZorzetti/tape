@@ -273,6 +273,22 @@ export async function listarLeads(
     limit 300`;
 }
 
+/** Base da pipeline para a projeção: total de leads e quantos têm ao menos um canal de contato
+ *  (telefone/whatsapp espelhado em `telefone`, e-mail ou instagram) — mesma regra do order-by de
+ *  listarLeads. Só quem tem canal é prospectável de imediato; o resto exige enriquecimento. */
+export async function contarBase(pipeline: Pipeline = "inbound") {
+  const sql = await db();
+  const [r] = await sql<{ total: number; contataveis: number }[]>`
+    select
+      count(*)::int as total,
+      count(*) filter (
+        where coalesce(telefone, '') <> '' or coalesce(email, '') <> ''
+           or coalesce(dados_import->>'instagram', '') <> ''
+      )::int as contataveis
+    from leads where pipeline = ${pipeline}`;
+  return { total: r.total, contataveis: r.contataveis };
+}
+
 export async function contarPorStatus(pipeline: Pipeline = "inbound") {
   const sql = await db();
   const linhas = await sql<{ status: string; total: string }[]>`
