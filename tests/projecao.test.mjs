@@ -11,6 +11,7 @@ import {
   RECOMPRAS_ANO1,
   UPLIFT_ENRIQUECIMENTO,
   projetarCenario,
+  taxasMetaFunil,
 } from "../src/lib/adminUi.ts";
 
 const realista = CENARIOS_PROJECAO.find((c) => c.id === "realista");
@@ -42,4 +43,14 @@ test("base zero → tudo zero, sem NaN (import ainda não rodado)", () => {
   assert.equal(p.vendas, 0);
   assert.equal(p.receitaPrimeiroPedido, 0);
   assert.equal(p.receitaAno1, 0);
+});
+
+test("taxasMetaFunil compõe as três taxas rumo ao ganho — casa com o funil real", () => {
+  const t = taxasMetaFunil(realista);
+  // meio → ganho é a última etapa; primeiro_toque → ganho tira a resposta; lead → ganho é tudo.
+  assert.equal(t.taxaOrcadoFechado, realista.orcFechado);
+  assert.equal(t.taxaEmContatoFechado, realista.respOrcamento * realista.orcFechado);
+  assert.equal(t.taxaLeadFechado, realista.resposta * realista.respOrcamento * realista.orcFechado);
+  // A composta é a taxa lead→venda que projetarCenario usa na base (sem uplift).
+  assert.equal(t.taxaLeadFechado, projetarCenario(1000, realista).vendasBase / 1000);
 });

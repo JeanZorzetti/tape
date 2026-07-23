@@ -289,6 +289,17 @@ export async function contarBase(pipeline: Pipeline = "inbound") {
   return { total: r.total, contataveis: r.contataveis };
 }
 
+/** Receita já materializada da pipeline: soma dos pedidos dos seus leads (centavos). O placar
+ *  "realizado" da projeção compara isto com a meta. Sem pedidos → 0 (nunca null). */
+export async function receitaRealizada(pipeline: Pipeline = "inbound") {
+  const sql = await db();
+  const [r] = await sql<{ total: string }[]>`
+    select coalesce(sum(p.valor_centavos), 0)::bigint as total
+    from pedidos p join leads l on l.id = p.lead_id
+    where l.pipeline = ${pipeline}`;
+  return Number(r.total);
+}
+
 export async function contarPorStatus(pipeline: Pipeline = "inbound") {
   const sql = await db();
   const linhas = await sql<{ status: string; total: string }[]>`

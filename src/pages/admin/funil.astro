@@ -67,6 +67,7 @@ const chip = (ativo: boolean) =>
     ativo ? "border-navy bg-navy text-white" : "border-kraft/60 bg-white text-ink/75 hover:border-navy"
   }`;
 const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
+const linkProjecao = pipeline === "recuperacao" ? "/admin/projecao?pipeline=recuperacao" : "/admin/projecao";
 ---
 
 <AdminLayout title="Funil">
@@ -75,6 +76,7 @@ const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel
       <h1 class="font-display text-2xl font-extrabold text-navy">Funil de conversão</h1>
       <p class="mt-1 font-body text-sm text-steel">
         Coorte por data de entrada do lead{nicho && <> · nicho <strong class="text-navy">{nichoLabel(nicho)}</strong></>}.
+        <a href={linkProjecao} class="font-semibold text-orange-800 underline decoration-orange/40 underline-offset-2 hover:decoration-orange">Ver projeção →</a>
       </p>
     </div>
     <ul class="flex flex-wrap gap-2">

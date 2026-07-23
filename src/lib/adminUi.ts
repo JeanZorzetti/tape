@@ -239,3 +239,14 @@ export function projetarCenario(contataveis: number, c: CenarioProjecao): Projec
   const receitaAno1 = receitaPrimeiroPedido * (1 + RECOMPRAS_ANO1);
   return { respostas, orcamentos, vendasBase, vendas, receitaPrimeiroPedido, receitaAno1 };
 }
+
+/** As MESMAS três taxas que o funil real (`taxasFunil`) expõe — todas rumo ao ganho — mas derivadas
+ *  das premissas do cenário. Faz a projeção falar a língua do funil: a meta encaixa ao lado do medido.
+ *  Lead→ganho é a composição das três etapas; primeiro_toque→ganho tira a 1ª; meio→ganho é a última. */
+export function taxasMetaFunil(c: CenarioProjecao) {
+  return {
+    taxaLeadFechado: c.resposta * c.respOrcamento * c.orcFechado,
+    taxaEmContatoFechado: c.respOrcamento * c.orcFechado,
+    taxaOrcadoFechado: c.orcFechado,
+  };
+}
