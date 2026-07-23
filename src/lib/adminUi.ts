@@ -124,6 +124,27 @@ export const CADENCIA_DIAS = [0, 1, 3, 7, 14, 21] as const;
 /** ponytail: intervalo fixo; vira campo por cliente se a carteira exigir cadências diferentes. */
 export const RECONTATO_CARTEIRA_DIAS = 30;
 
+/** Meta diária de toques (FR-010): default 20, override por env `META_TOQUES_DIA`. Sempre > 0
+ *  (evita divisão por zero na UI). `import.meta.env` é undefined fora do Astro (ex.: node --test). */
+const META_ENV = Number(import.meta.env?.META_TOQUES_DIA);
+export const META_TOQUES_DIA = Number.isFinite(META_ENV) && META_ENV > 0 ? Math.floor(META_ENV) : 20;
+
+/** Handle de Instagram cru (`@x` | `x` | `instagram.com/x` | link) → URL do perfil; `null` se
+ *  não render um usuário plausível. Os dados vêm de fotos (spec 004) em formatos mistos. */
+export function instagramUrl(bruto: string | null): string | null {
+  if (!bruto) return null;
+  const usuario = bruto
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/^instagram\.com\//, "")
+    .replace(/^@/, "")
+    .split(/[/?#]/)[0]
+    .trim();
+  return /^[a-z0-9._]{1,30}$/.test(usuario) ? `https://instagram.com/${usuario}` : null;
+}
+
 export const isCanal = (v: string) => CANAIS.some((c) => c.value === v);
 export const isResultado = (v: string) => RESULTADOS.some((r) => r.value === v);
 export const isNicho = (v: string) => NICHOS.some((n) => n.value === v);

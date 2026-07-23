@@ -410,6 +410,19 @@ export async function contarTentativas(leadId: number) {
   return r.n;
 }
 
+/** Toques registrados HOJE (America/Sao_Paulo) na pipeline dada — o ritmo do dia vs. a meta.
+ *  Converte no `where` para não depender do fuso do servidor Postgres; escopa por `join leads`. */
+export async function contarToquesHoje(pipeline: Pipeline = "inbound") {
+  const sql = await db();
+  const [row] = await sql<{ n: number }[]>`
+    select count(*)::int as n from tentativas t
+    join leads l on l.id = t.lead_id
+    where l.pipeline = ${pipeline}
+      and (t.criado_em at time zone 'America/Sao_Paulo')::date
+        = (now() at time zone 'America/Sao_Paulo')::date`;
+  return row.n;
+}
+
 /* ── Carteira pós-venda / pedidos (US2) ──────────────────────────────────── */
 
 /**

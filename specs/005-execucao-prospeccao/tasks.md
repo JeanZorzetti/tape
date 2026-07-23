@@ -31,7 +31,7 @@ Single-project Astro: `src/lib/`, `src/pages/admin/`, `tests/` na raiz. Caminhos
 
 **Purpose**: Âncora de regressão antes de tocar qualquer arquivo.
 
-- [ ] T001 Rodar `npm test` e `npm run build` e confirmar verdes; confirmar que **nenhuma dependência nova**
+- [X] T001 Rodar `npm test` e `npm run build` e confirmar verdes; confirmar que **nenhuma dependência nova**
   e **nenhuma mudança de schema** são necessárias (a feature reusa `tentativas`).
 
 ---
@@ -43,7 +43,7 @@ evitar conflito entre as fases.
 
 **⚠️ CRITICAL**: US1 usa `instagramUrl`; US2 usa `META_TOQUES_DIA`. Fazer antes das duas.
 
-- [ ] T002 Adicionar em `src/lib/adminUi.ts`: `META_TOQUES_DIA` (default **20**, override por env
+- [X] T002 Adicionar em `src/lib/adminUi.ts`: `META_TOQUES_DIA` (default **20**, override por env
   `META_TOQUES_DIA`, garantido `> 0`) e o helper puro `instagramUrl(bruto: string | null): string | null`
   (normaliza `@x` / `x` / `instagram.com/x` / link → `https://instagram.com/x`; `null` se implausível).
 
@@ -61,23 +61,23 @@ preenchida e WhatsApp pronto; registrar 1 tentativa → o script vira o follow-u
 
 ### Tests for User Story 1
 
-- [ ] T003 [P] [US1] Criar `tests/scripts.test.mjs`: `passoDoLead` (0→0, 1→1, 6→5, 99→5); `montarScript` não
+- [X] T003 [P] [US1] Criar `tests/scripts.test.mjs`: `passoDoLead` (0→0, 1→1, 6→5, 99→5); `montarScript` não
   deixa `[placeholder]` cru (com e sem `nome`); `scriptDoLead` retorna texto não-vazio para **todo** valor de
   `NICHOS` + `null` + `"outro"`; `instagramUrl` cobre formatos mistos → URL / `null`. Devem falhar antes de T004.
 
 ### Implementation for User Story 1
 
-- [ ] T004 [US1] Criar `src/lib/scripts.ts`: `passoDoLead(nToques)`, `montarScript(template, {empresa, nome?})`
+- [X] T004 [US1] Criar `src/lib/scripts.ts`: `passoDoLead(nToques)`, `montarScript(template, {empresa, nome?})`
   (degradação sem placeholder cru), `scriptDoLead(nicho, nToques)` (mapa por nicho × 6 passos + `generico`),
   `OBJECOES`. Textos derivados de [`docs/estrategia-prospeccao.md`](../../docs/estrategia-prospeccao.md) §4.
   Faz T003 passar.
-- [ ] T005 [US1] Em `src/pages/admin/[id].astro`, renderizar o bloco **"Script de abordagem"** só quando
+- [X] T005 [US1] Em `src/pages/admin/[id].astro`, renderizar o bloco **"Script de abordagem"** só quando
   `lead.pipeline === "recuperacao"`: `montarScript(scriptDoLead(lead.nicho, nToques), { empresa: lead.empresa,
   nome: lead.nome ?? undefined })`, com rótulo do passo (1º toque … despedida) coerente com "toque N de 6".
-- [ ] T006 [US1] Na mesma seção, a **ação de contato** na ordem: `lead.telefone` → botão WhatsApp
+- [X] T006 [US1] Na mesma seção, a **ação de contato** na ordem: `lead.telefone` → botão WhatsApp
   `whatsappParaNumero(lead.telefone, <script>)`; senão `instagramUrl(lead.dados_import?.instagram)` → link
   "Abrir Instagram" + texto de DM copiável; senão só o texto copiável. Sem erro em nenhum caso.
-- [ ] T007 [US1] Exibir as `OBJECOES` como referência na mesma seção (`<details>`, zero-JS); garantir que o
+- [X] T007 [US1] Exibir as `OBJECOES` como referência na mesma seção (`<details>`, zero-JS); garantir que o
   bloco **não** aparece para inbound e não altera nenhum form/ação existente da página.
 
 **Checkpoint**: US1 funcional e testável sozinha — é o MVP; pode ser demonstrada/entregue.
@@ -93,19 +93,19 @@ número (escopo); virada do dia → volta a 0.
 
 ### Tests for User Story 2
 
-- [ ] T008 [P] [US2] Criar `tests/execucao-prospeccao.test.mjs` (integração; pula sem `DATABASE_URL`):
+- [X] T008 [P] [US2] Criar `tests/execucao-prospeccao.test.mjs` (integração; pula sem `DATABASE_URL`):
   `contarToquesHoje` conta só tentativas de **hoje** (America/Sao_Paulo) e só da **pipeline** dada; tentativa
   de ontem no fuso local e de outra pipeline não contam. Deve falhar antes de T009.
 
 ### Implementation for User Story 2
 
-- [ ] T009 [US2] Adicionar `contarToquesHoje(pipeline?: Pipeline): Promise<number>` em `src/lib/crm.ts` —
+- [X] T009 [US2] Adicionar `contarToquesHoje(pipeline?: Pipeline): Promise<number>` em `src/lib/crm.ts` —
   `count` em `tentativas` com `join leads`, filtro `(criado_em at time zone 'America/Sao_Paulo')::date =
   (now() at time zone 'America/Sao_Paulo')::date` e `pipeline`. Padrão de `contarAtrasados`. Faz T008 passar.
-- [ ] T010 [US2] Em `src/pages/admin/index.astro`, ler `contarToquesHoje(pipelineSelecionada)` e exibir
+- [X] T010 [US2] Em `src/pages/admin/index.astro`, ler `contarToquesHoje(pipelineSelecionada)` e exibir
   **"N / META_TOQUES_DIA toques hoje"** no cabeçalho da lista, escopado à pipeline já selecionada; sem divisão
   por zero.
-- [ ] T011 [US2] Comunicar o estado **"meta batida"** (`N >= META_TOQUES_DIA`) por rótulo/ícone além de cor
+- [X] T011 [US2] Comunicar o estado **"meta batida"** (`N >= META_TOQUES_DIA`) por rótulo/ícone além de cor
   (FR-012, acessibilidade).
 
 **Checkpoint**: US1 e US2 funcionam independentes.
@@ -114,11 +114,11 @@ número (escopo); virada do dia → volta a 0.
 
 ## Phase 5: Polish & Cross-Cutting Concerns
 
-- [ ] T012 Rodar o roteiro de [quickstart.md](quickstart.md) (US1: 9 checagens; US2: 5) e confirmar
+- [X] T012 Rodar o roteiro de [quickstart.md](quickstart.md) (US1: 9 checagens; US2: 5) e confirmar
   **regressão zero** em cadência, funil, carteira, ordenação, notas e "Dados da prospecção".
-- [ ] T013 [P] Verificação visual via Playwright em 1440 e 390 (bloco de scripts e contador): sem overflow
+- [X] T013 [P] Verificação visual via Playwright em 1440 e 390 (bloco de scripts e contador): sem overflow
   horizontal, foco visível, contraste AA, `<details>` das objeções abre sem JS.
-- [ ] T014 [P] Atualizar [`docs/handoffs/handoff.md`](../../docs/handoffs/handoff.md) (seção CRM `/admin`) com
+- [X] T014 [P] Atualizar [`docs/handoffs/handoff.md`](../../docs/handoffs/handoff.md) (seção CRM `/admin`) com
   a feature 005 e apontar o `/admin/estrategia` como o playbook irmão.
 
 ---

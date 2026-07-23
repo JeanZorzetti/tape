@@ -7,6 +7,7 @@ import {
   contarAtrasados,
   contarCarteiraVencida,
   contarPorStatus,
+  contarToquesHoje,
   distribuicaoPorNicho,
   listarCarteira,
   listarLeads,
@@ -19,6 +20,7 @@ import {
   estaAtrasado,
   hojeISO,
   isPipeline,
+  META_TOQUES_DIA,
   NICHOS,
   nichoLabel,
   statusesDaPipeline,
@@ -40,9 +42,11 @@ let porStatus: Record<string, number> = {};
 let distribuicao: { nicho: string | null; total: number }[] = [];
 let atrasados = 0;
 let carteiraVencida = 0;
+let toquesHoje = 0;
 let erro = "";
 
 try {
+  toquesHoje = await contarToquesHoje(pipeline);
   if (visao === "carteira") {
     [leads, distribuicao, carteiraVencida] = await Promise.all([
       listarCarteira({ nicho, pipeline }),
@@ -64,6 +68,7 @@ try {
 
 const hoje = hojeISO();
 const total = leads.length;
+const metaBatida = toquesHoje >= META_TOQUES_DIA;
 const distMap = Object.fromEntries(distribuicao.map((d) => [d.nicho ?? "sem", d.total])) as Record<string, number>;
 
 /** Constrói /admin preservando os filtros ativos e trocando só os que vierem em `over`. */
@@ -97,6 +102,19 @@ const chip = (ativo: boolean) =>
           visao === "carteira"
             ? carteiraVencida > 0 && <span class="font-semibold text-[#b42318]"> · {carteiraVencida} para recontatar</span>
             : atrasados > 0 && <span class="font-semibold text-[#b42318]"> · {atrasados} com follow-up vencido</span>
+        }
+      </p>
+      <p class="mt-2 font-body text-sm">
+        <span class:list={["font-mono text-base font-bold tabular-nums", metaBatida ? "text-[#1b7f4b]" : "text-navy"]}>
+          {toquesHoje}
+        </span>
+        <span class="text-steel"> / {META_TOQUES_DIA} toques hoje</span>
+        {
+          metaBatida && (
+            <span class="ml-2 inline-flex items-center gap-1 rounded-full bg-[#1b7f4b]/12 px-2 py-0.5 font-body text-xs font-semibold text-[#1b7f4b]">
+              <span aria-hidden="true">✓</span> meta batida
+            </span>
+          )
         }
       </p>
     </div>
