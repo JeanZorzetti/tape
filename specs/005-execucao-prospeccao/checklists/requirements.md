@@ -32,6 +32,6 @@
 ## Notes
 
 - Items marked incomplete require spec updates before `/speckit-clarify` or `/speckit-plan`.
-- One assumption is flagged as a candidate for `/speckit-clarify`: the **source of truth for the scripts**
-  (app-structured content vs. the `docs/` playbook, kept in parallel). A reasonable default is documented,
-  so no [NEEDS CLARIFICATION] marker was raised, but the user may want to lock this decision before planning.
+- `/speckit-clarify` (Session 2026-07-23) resolved three decisions: **source of truth for scripts**
+  (app-structured content, docs/ playbook stays narrative in parallel), **daily counter scope** (selected
+  pipeline), and **Instagram-only leads** (profile link + copiável DM text). All checklist items pass.

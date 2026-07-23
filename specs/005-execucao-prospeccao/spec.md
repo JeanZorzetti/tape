@@ -21,6 +21,20 @@ execução**: hoje o representante lê o script no documento e monta a mensagem 
 script certo — do nicho e do toque atual daquele lead — dentro da própria ficha, e mostra o ritmo do dia
 na lista. É **adição** sobre o CRM existente; não altera cadência, funil, carteira nem a ordenação da lista.
 
+## Clarifications
+
+### Session 2026-07-23
+
+- Q: Onde vive a fonte de verdade dos scripts (o texto que a tela mostra e pré-preenche)? → A: Conteúdo
+  **estruturado no app** é a fonte da tela; o playbook em `docs/` segue como documento narrativo, mantidos
+  em paralelo, sem sincronização automática. (Conferência contra o doc fica como upgrade futuro, só se a
+  divergência virar dor real.)
+- Q: O que o contador de "toques do dia" conta? → A: As tentativas de **hoje da pipeline selecionada**,
+  coerente com os demais contadores do `/admin`, que já são por pipeline.
+- Q: Como tratar os ~100 leads que só têm Instagram (sem WhatsApp)? → A: Botão de WhatsApp quando há
+  número; para lead **só com Instagram**, exibir o texto de DM copiável **e um link que abre o perfil do
+  Instagram** (do `dados_import`) para mandar a DM à mão.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Script certo na ficha do lead, pronto para enviar (Priority: P1)
@@ -53,6 +67,9 @@ registrar uma tentativa e conferir que o script exibido passa a ser o follow-up 
    script **genérico** utilizável e um convite para classificar o nicho (sem bloquear nada).
 5. **Given** um lead **sem número de WhatsApp/telefone**, **When** o representante abre a ficha, **Then**
    o **texto do script** continua visível e copiável, mas o botão de WhatsApp não é oferecido.
+5a. **Given** um lead **só com Instagram** (sem número, com handle no `dados_import`), **When** o
+   representante abre a ficha, **Then** vê o texto de DM copiável **e um link que abre o perfil do
+   Instagram** do lead.
 6. **Given** a ficha de um lead de recuperação, **When** o representante procura como responder a "quanto
    custa?" ou "já tenho fornecedor", **Then** encontra as **respostas a objeções** disponíveis na própria tela.
 7. **Given** um lead da pipeline **inbound**, **When** o representante abre a ficha, **Then** o bloco de
@@ -118,6 +135,9 @@ no dia seguinte, conferir que voltou a 0.
   **mensagem do script atual pré-preenchida**, reutilizando o mecanismo de link do WhatsApp já existente.
 - **FR-005**: Quando o lead **não tem número** de WhatsApp/telefone, o sistema MUST ainda exibir o texto do
   script (copiável) e MUST omitir o botão de WhatsApp, sem erro.
+- **FR-005a**: Quando o lead **não tem número mas tem Instagram** (handle no `dados_import`), o sistema MUST
+  exibir o texto de DM copiável e **um link que abre o perfil do Instagram** do lead, para o representante
+  mandar a DM manualmente. Sem número e sem Instagram → apenas o texto copiável.
 - **FR-006**: O sistema MUST cobrir todos os nichos usados no CRM (indústria, distribuidor, e-commerce,
   lojas) e MUST prover um **script genérico** para lead sem nicho ou com nicho "outro"/não mapeado,
   convidando à classificação sem bloquear a tela.
@@ -128,8 +148,8 @@ no dia seguinte, conferir que voltou a 0.
 
 **Ritmo do dia (US2)**
 
-- **FR-009**: Na lista do `/admin`, o sistema MUST exibir a **contagem de tentativas registradas hoje** e a
-  **meta diária**, no fuso de operação (America/Sao_Paulo).
+- **FR-009**: Na lista do `/admin`, o sistema MUST exibir a **contagem de tentativas registradas hoje na
+  pipeline selecionada** e a **meta diária**, no fuso de operação (America/Sao_Paulo).
 - **FR-010**: A **meta diária** MUST ser configurável, com um valor **padrão** definido; o sistema nunca
   MUST exibir estado inválido (ex.: divisão por zero) quando a meta não estiver configurada.
 - **FR-011**: O contador MUST refletir novas tentativas assim que registradas e MUST **reiniciar** na virada
@@ -147,9 +167,10 @@ no dia seguinte, conferir que voltou a 0.
 
 ### Key Entities *(include if feature involves data)*
 
-- **Script de abordagem**: conteúdo textual associado a um **nicho** e a um **passo da cadência** (1º toque
-  + 5 follow-ups), mais um conjunto de **respostas a objeções** e um **script genérico** de fallback. É a
-  origem do texto exibido e da mensagem pré-montada do WhatsApp.
+- **Script de abordagem**: **conteúdo estruturado no app** (chaveado por **nicho** e **passo da cadência** —
+  1º toque + 5 follow-ups), mais um conjunto de **respostas a objeções** e um **script genérico** de
+  fallback. É a fonte de verdade do texto exibido e da mensagem pré-montada do WhatsApp/DM. O playbook em
+  `docs/` é o documento narrativo paralelo, não a fonte que a tela lê.
 - **Meta diária de toques**: alvo numérico configurável de tentativas por dia, com valor padrão.
 - **Tentativa** (existente, spec 003): cada toque registrado num lead — sua **contagem por lead** dirige qual
   script exibir, e sua **contagem por dia** dirige o contador de ritmo. Reusada, não redefinida.
@@ -177,11 +198,14 @@ no dia seguinte, conferir que voltou a 0.
 - **Recuperação-first**: os scripts são de **abordagem fria** e, portanto, específicos da pipeline de
   recuperação; a pipeline inbound (o lead já procurou a empresa) não recebe este bloco. Pode ser estendida
   depois se surgir demanda.
-- **Fonte dos scripts**: o conteúdo dos scripts vira **conteúdo estruturado do aplicativo** (chaveado por
-  nicho e passo), servindo a tela; o playbook em `docs/` continua o **documento narrativo**. Os dois são
-  mantidos em paralelo — mudar um não muda o outro automaticamente. (Ponto candidato a `/speckit-clarify`.)
-- **Contador escopado à pipeline selecionada**, coerente com todos os outros contadores do `/admin` que já
-  são por pipeline; a meta padrão (~20) reflete o ritmo outbound do playbook.
+- **Fonte dos scripts** (travado): o conteúdo dos scripts é **conteúdo estruturado do aplicativo** (chaveado
+  por nicho e passo), servindo a tela; o playbook em `docs/` continua o **documento narrativo** paralelo.
+  Mudar um não muda o outro automaticamente; conferência contra o doc fica como upgrade futuro (só se a
+  divergência virar dor real).
+- **Contador escopado à pipeline selecionada** (travado), coerente com todos os outros contadores do
+  `/admin` que já são por pipeline; a meta padrão (~20) reflete o ritmo outbound do playbook.
+- **Leads só com Instagram**: recebem o texto de DM copiável + link para o perfil do Instagram (do
+  `dados_import`); não há envio pré-montado por Instagram (a plataforma não suporta DM pré-preenchida por URL).
 - **Meta configurável por valor único** (não há, nesta feature, tela de configuração por usuário nem por
   pipeline); multiusuário e papéis seguem fora de escopo, como no restante do CRM.
 - **Fuso de operação**: America/Sao_Paulo, como o CRM atual.
