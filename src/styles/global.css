@@ -75,6 +75,21 @@
   color: color-mix(in srgb, var(--color-ink) 78%, transparent);
 }
 .prosa > * + * { margin-top: 1.25em; }
+.prosa h1 {
+  font-family: var(--font-display);
+  font-size: 1.875rem;
+  font-weight: 800;
+  color: var(--color-navy);
+  line-height: 1.15;
+}
+.prosa code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: color-mix(in srgb, var(--color-navy) 7%, transparent);
+  color: var(--color-navy);
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+}
 .prosa h2 {
   margin-top: 2.75em;
   font-size: 1.5rem;

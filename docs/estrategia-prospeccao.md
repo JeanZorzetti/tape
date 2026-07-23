@@ -178,7 +178,7 @@ entra na **carteira** e agenda recontato **+30 dias** automaticamente.
 
 ## 6. Metas e leitura do funil
 
-Não invente meta — **use o cenário `realista`** já modelado em [`/admin/projecao`](../src/pages/admin/projecao.astro),
+Não invente meta — **use o cenário `realista`** já modelado em [`/admin/projecao`](/admin/projecao?pipeline=recuperacao),
 e compare **meta × real** semanalmente no mesmo painel (ele já cruza com o funil por coorte).
 
 Premissas do cenário realista (sobre a base contatável):

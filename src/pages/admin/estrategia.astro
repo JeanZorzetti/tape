@@ -1,0 +1,16 @@
+---
+export const prerender = false;
+
+import AdminLayout from "../../layouts/AdminLayout.astro";
+import { sessaoAtual } from "../../lib/auth";
+// Fonte única: renderiza o próprio playbook de docs/, não uma cópia.
+import { Content } from "../../../docs/estrategia-prospeccao.md";
+
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+---
+
+<AdminLayout title="Estratégia">
+  <article class="prosa max-w-3xl">
+    <Content />
+  </article>
+</AdminLayout>
