@@ -7,13 +7,13 @@ import { PRODUTOS } from "../../lib/produtos";
 
 const ano = new Date().getFullYear();
 const links = [
-  { href: "/produtos", label: "Produtos" },
-  { href: "/segmentos", label: "Segmentos" },
-  { href: "/blog", label: "Blog" },
-  { href: "/perguntas-frequentes", label: "Perguntas frequentes" },
+  { href: "/produtos/", label: "Produtos" },
+  { href: "/segmentos/", label: "Segmentos" },
+  { href: "/blog/", label: "Blog" },
+  { href: "/perguntas-frequentes/", label: "Perguntas frequentes" },
   { href: "/#portfolio", label: "Portfólio" },
-  { href: "/sobre", label: "Sobre" },
-  { href: "/orcamento", label: "Orçamento" },
+  { href: "/sobre/", label: "Sobre" },
+  { href: "/orcamento/", label: "Orçamento" },
 ];
 ---
 
@@ -39,7 +39,7 @@ const links = [
         {
           PRODUTOS.map((p) => (
             <li>
-              <a href={`/produtos/${p.slug}`} class="text-white/75 hover:text-white">
+              <a href={`/produtos/${p.slug}/`} class="text-white/75 hover:text-white">
                 {p.nome}
               </a>
             </li>

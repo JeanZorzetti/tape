@@ -17,7 +17,7 @@ const { post } = Astro.props;
 const { data } = post;
 const { Content } = await render(post);
 
-const url = `${SITE_URL}/blog/${post.id}`;
+const url = `${SITE_URL}/blog/${post.id}/`;
 const produtos = data.produtosRelacionados.map(getProduto).filter((p) => p !== undefined);
 const relacionados = postsRelacionados(await postsPublicados(), post);
 
@@ -44,7 +44,7 @@ const breadcrumb = {
   "@type": "BreadcrumbList",
   itemListElement: [
     { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
-    { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog` },
+    { "@type": "ListItem", position: 2, name: "Blog", item: `${SITE_URL}/blog/` },
     { "@type": "ListItem", position: 3, name: data.titulo, item: url },
   ],
 };
@@ -60,7 +60,7 @@ const breadcrumb = {
       <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-steel">
         <a href="/" class="hover:text-orange-800">Início</a>
         <span class="px-2" aria-hidden="true">/</span>
-        <a href="/blog" class="hover:text-orange-800">Blog</a>
+        <a href="/blog/" class="hover:text-orange-800">Blog</a>
       </nav>
 
       <div class="mt-8 max-w-3xl">
@@ -104,7 +104,7 @@ const breadcrumb = {
                 <div class="mt-5 space-y-3">
                   {produtos.map((p) => (
                     <a
-                      href={`/produtos/${p.slug}`}
+                      href={`/produtos/${p.slug}/`}
                       class="flex items-center gap-4 rounded-xl border border-kraft/50 bg-white p-4 transition hover:border-orange"
                     >
                       <div class="flex h-14 w-14 flex-none items-center justify-center rounded-lg bg-white">
@@ -129,7 +129,7 @@ const breadcrumb = {
                   {segmentos.map((s) => (
                     <li>
                       <a
-                        href={`/segmentos/${s.id}`}
+                        href={`/segmentos/${s.id}/`}
                         class="font-body text-sm font-semibold text-navy underline-offset-4 hover:text-orange-800 hover:underline"
                       >
                         {s.data.titulo} →
@@ -163,7 +163,7 @@ const breadcrumb = {
           <div class="mt-8 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
             {relacionados.map((p) => (
               <article>
-                <a href={`/blog/${p.id}`} class="group block">
+                <a href={`/blog/${p.id}/`} class="group block">
                   <Image
                     src={p.data.imagem}
                     alt=""
@@ -197,7 +197,7 @@ const breadcrumb = {
       </div>
       <div class="flex flex-wrap items-center gap-4">
         <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`Blog · ${data.titulo} · CTA final`} variant="light" />
-        <a href="/orcamento" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+        <a href="/orcamento/" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
           Ou preencher o formulário →
         </a>
       </div>

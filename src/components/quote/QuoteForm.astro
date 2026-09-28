@@ -117,7 +117,7 @@ const reqMark = '<span class="text-orange-800" aria-hidden="true">*</span>';
       submitBtn.disabled = true;
       setStatus("Enviando…", "info");
       try {
-        const res = await fetch("/api/lead", { method: "POST", body: new FormData(form) });
+        const res = await fetch("/api/lead/", { method: "POST", body: new FormData(form) });
         const json = await res.json();
         if (!json.ok) throw new Error(json.erro || "falha");
         setStatus("Recebemos seu pedido de orçamento. Retornamos em breve.", "ok");

@@ -14,7 +14,7 @@ const breadcrumb = {
   "@type": "BreadcrumbList",
   itemListElement: [
     { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
-    { "@type": "ListItem", position: 2, name: "Sobre", item: `${SITE_URL}/sobre` },
+    { "@type": "ListItem", position: 2, name: "Sobre", item: `${SITE_URL}/sobre/` },
   ],
 };
 
@@ -133,7 +133,7 @@ const compromissos = [
       {
         PRODUTOS.map((p) => (
           <li>
-            <a href={`/produtos/${p.slug}`} class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 py-5 group">
+            <a href={`/produtos/${p.slug}/`} class="flex flex-wrap items-baseline justify-between gap-x-8 gap-y-1 py-5 group">
               <span class="font-display text-lg font-bold text-navy group-hover:text-orange-800">{p.nome}</span>
               <span class="font-body text-sm text-ink/70">{p.chamada}</span>
               <span class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">{p.eyebrow}</span>

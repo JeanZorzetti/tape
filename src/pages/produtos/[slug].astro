@@ -15,7 +15,7 @@ export function getStaticPaths() {
 }
 
 const { produto } = Astro.props;
-const url = `${SITE_URL}/produtos/${produto.slug}`;
+const url = `${SITE_URL}/produtos/${produto.slug}/`;
 const outros = PRODUTOS.filter((p) => p.slug !== produto.slug);
 
 // Contrapartida dos links conteúdo → produto: nenhuma página fica órfã.
@@ -49,7 +49,7 @@ const breadcrumb = {
   "@type": "BreadcrumbList",
   itemListElement: [
     { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
-    { "@type": "ListItem", position: 2, name: "Produtos", item: `${SITE_URL}/produtos` },
+    { "@type": "ListItem", position: 2, name: "Produtos", item: `${SITE_URL}/produtos/` },
     { "@type": "ListItem", position: 3, name: produto.nome, item: url },
   ],
 };
@@ -88,7 +88,7 @@ const perguntasCliche = [
       <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/55">
         <a href="/" class="hover:text-orange">Início</a>
         <span class="px-2" aria-hidden="true">/</span>
-        <a href="/produtos" class="hover:text-orange">Produtos</a>
+        <a href="/produtos/" class="hover:text-orange">Produtos</a>
         <span class="px-2" aria-hidden="true">/</span>
         <span class="text-white/80">{produto.nome}</span>
       </nav>
@@ -198,14 +198,14 @@ const perguntasCliche = [
 
           <p class="mt-8 font-body text-sm text-ink/70">
             <a
-              href="/perguntas-frequentes"
+              href="/perguntas-frequentes/"
               class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
             >
               Ver todas as perguntas frequentes
             </a>
             {": prazo, mínimos, entrega e como preparar a arte. Ou entenda a matriz por dentro em "}
             <a
-              href="/blog/o-que-e-cliche-flexografico"
+              href="/blog/o-que-e-cliche-flexografico/"
               class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
             >
               o que é clichê flexográfico
@@ -227,7 +227,7 @@ const perguntasCliche = [
             <ul class="mt-6 divide-y divide-navy/10 border-y border-navy/10">
               {segmentos.map((s) => (
                 <li class="py-4">
-                  <a href={`/segmentos/${s.id}`} class="group block">
+                  <a href={`/segmentos/${s.id}/`} class="group block">
                     <span class="font-display text-base font-bold text-navy group-hover:text-orange-800">
                       {s.data.titulo}
                     </span>
@@ -245,7 +245,7 @@ const perguntasCliche = [
             <ul class="mt-6 divide-y divide-navy/10 border-y border-navy/10">
               {posts.map((p) => (
                 <li class="py-4">
-                  <a href={`/blog/${p.id}`} class="group block">
+                  <a href={`/blog/${p.id}/`} class="group block">
                     <span class="font-display text-base font-bold text-navy group-hover:text-orange-800">
                       {p.data.titulo}
                     </span>
@@ -269,7 +269,7 @@ const perguntasCliche = [
       {
         outros.map((o) => (
           <a
-            href={`/produtos/${o.slug}`}
+            href={`/produtos/${o.slug}/`}
             class="flex items-center gap-5 rounded-2xl border border-kraft/50 bg-white p-5 transition hover:border-orange"
           >
             <div class="flex h-20 w-20 flex-none items-center justify-center rounded-xl border border-kraft/40 bg-white p-2">
@@ -301,7 +301,7 @@ const perguntasCliche = [
           paginaOrigem={`${produto.nome} · CTA final`}
           variant="light"
         />
-        <a href="/orcamento" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+        <a href="/orcamento/" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
           Ou preencher o formulário →
         </a>
       </div>

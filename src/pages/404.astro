@@ -13,9 +13,9 @@ const posts = (await postsPublicados()).slice(0, 3);
 
 // O site tem 21 páginas: listar tudo resolve melhor que um campo de busca com JS.
 const atalhos = [
-  { href: "/blog", titulo: "Blog", texto: "Como escolher, quanto pedir, por que a fita descola." },
-  { href: "/perguntas-frequentes", titulo: "Perguntas frequentes", texto: "Prazo, mínimo, cores, clichê e entrega." },
-  { href: "/orcamento", titulo: "Orçamento", texto: "Formulário com o que a gente precisa saber para orçar." },
+  { href: "/blog/", titulo: "Blog", texto: "Como escolher, quanto pedir, por que a fita descola." },
+  { href: "/perguntas-frequentes/", titulo: "Perguntas frequentes", texto: "Prazo, mínimo, cores, clichê e entrega." },
+  { href: "/orcamento/", titulo: "Orçamento", texto: "Formulário com o que a gente precisa saber para orçar." },
 ];
 ---
 
@@ -45,7 +45,7 @@ const atalhos = [
         {
           PRODUTOS.map((p) => (
             <li class="py-5">
-              <a href={`/produtos/${p.slug}`} class="group block">
+              <a href={`/produtos/${p.slug}/`} class="group block">
                 <span class="font-display text-lg font-bold text-navy group-hover:text-orange-800">{p.nome}</span>
                 <span class="mt-1 block font-body text-sm text-ink/75">{p.chamada}</span>
               </a>
@@ -54,7 +54,7 @@ const atalhos = [
         }
       </ul>
       <p class="mt-6">
-        <a href="/produtos" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+        <a href="/produtos/" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
           Ver a comparação das três fitas →
         </a>
       </p>
@@ -64,7 +64,7 @@ const atalhos = [
         {
           posts.map((post) => (
             <li>
-              <a href={`/blog/${post.id}`} class="font-body font-semibold text-navy underline-offset-4 hover:text-orange-800 hover:underline">
+              <a href={`/blog/${post.id}/`} class="font-body font-semibold text-navy underline-offset-4 hover:text-orange-800 hover:underline">
                 {post.data.titulo}
               </a>
             </li>
@@ -80,7 +80,7 @@ const atalhos = [
           {
             segmentos.map((s) => (
               <li>
-                <a href={`/segmentos/${s.id}`} class="font-semibold text-navy underline-offset-4 hover:text-orange-800 hover:underline">
+                <a href={`/segmentos/${s.id}/`} class="font-semibold text-navy underline-offset-4 hover:text-orange-800 hover:underline">
                   {s.data.titulo}
                 </a>
               </li>

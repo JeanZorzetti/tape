@@ -100,7 +100,7 @@ const posts = (await postsPublicados()).slice(0, 3);
               {p.specs[0].valor} × {p.specs[1].valor} · {p.eyebrow}
             </p>
             <h3 class="mt-3 text-xl text-navy">
-              <a href={`/produtos/${p.slug}`} class="hover:text-orange-800">
+              <a href={`/produtos/${p.slug}/`} class="hover:text-orange-800">
                 {p.nome}
               </a>
             </h3>
@@ -108,7 +108,7 @@ const posts = (await postsPublicados()).slice(0, 3);
             <div class="mt-6 flex flex-wrap items-center gap-4">
               <WhatsAppCta label="Pedir orçamento" contexto={p.contexto} paginaOrigem={ORIGEM} variant="light" compact />
               <a
-                href={`/produtos/${p.slug}`}
+                href={`/produtos/${p.slug}/`}
                 class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline"
               >
                 Ver ficha →
@@ -193,7 +193,7 @@ const posts = (await postsPublicados()).slice(0, 3);
     <div class="mt-10 grid gap-px overflow-hidden rounded-2xl border border-kraft/50 bg-kraft/40 sm:grid-cols-2 lg:grid-cols-4">
       {
         segmentos.map((s) => (
-          <a href={`/segmentos/${s.id}`} class="group flex flex-col bg-paper p-6 transition hover:bg-white">
+          <a href={`/segmentos/${s.id}/`} class="group flex flex-col bg-paper p-6 transition hover:bg-white">
             <p class="font-mono text-[0.65rem] uppercase tracking-[0.18em] text-steel">{s.data.eyebrow}</p>
             <h3 class="mt-3 font-display text-lg font-bold text-navy group-hover:text-orange-800">{s.data.titulo}</h3>
             <p class="mt-2 flex-1 font-body text-sm leading-relaxed text-ink/70">{s.data.chamada}</p>
@@ -212,7 +212,7 @@ const posts = (await postsPublicados()).slice(0, 3);
           <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Conteúdo técnico</p>
           <h2 class="mt-3 max-w-2xl text-3xl md:text-4xl">O que ninguém explica sobre fita.</h2>
         </div>
-        <a href="/blog" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+        <a href="/blog/" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
           Ver todos os artigos →
         </a>
       </div>
@@ -221,7 +221,7 @@ const posts = (await postsPublicados()).slice(0, 3);
         {
           posts.map((p) => (
             <article>
-              <a href={`/blog/${p.id}`} class="group block">
+              <a href={`/blog/${p.id}/`} class="group block">
                 <Image
                   src={p.data.imagem}
                   alt={p.data.imagemAlt}
@@ -242,7 +242,7 @@ const posts = (await postsPublicados()).slice(0, 3);
 
       <p class="mt-12 font-body text-ink/70">
         Dúvidas de pedido, prazo, clichê e cores estão em
-        <a href="/perguntas-frequentes" class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800">
+        <a href="/perguntas-frequentes/" class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800">
           perguntas frequentes</a>.
       </p>
     </div>

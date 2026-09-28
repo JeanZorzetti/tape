@@ -4,7 +4,7 @@ export const prerender = false;
 import AdminLayout from "../../layouts/AdminLayout.astro";
 import { autenticar, bloqueado, criarSessao, sessaoAtual } from "../../lib/auth";
 
-if (sessaoAtual(Astro.cookies)) return Astro.redirect("/admin");
+if (sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/");
 
 const ip = Astro.clientAddress ?? "desconhecido";
 let erro = "";
@@ -22,7 +22,7 @@ if (Astro.request.method === "POST") {
       const usuario = await autenticar(email, senha, ip);
       if (usuario) {
         criarSessao(Astro.cookies, usuario.id);
-        return Astro.redirect("/admin");
+        return Astro.redirect("/admin/");
       }
       erro = "E-mail ou senha incorretos.";
     } catch (e) {

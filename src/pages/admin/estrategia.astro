@@ -6,7 +6,7 @@ import { sessaoAtual } from "../../lib/auth";
 // Fonte única: renderiza o próprio playbook de docs/, não uma cópia.
 import { Content } from "../../../docs/estrategia-prospeccao.md";
 
-if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login/");
 ---
 
 <AdminLayout title="Estratégia">

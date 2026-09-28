@@ -15,7 +15,7 @@ import {
   taxasMetaFunil,
 } from "../../lib/adminUi";
 
-if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login/");
 
 const pipelineParam = Astro.url.searchParams.get("pipeline") ?? "";
 const pipeline = isPipeline(pipelineParam) ? pipelineParam : "inbound";
@@ -78,7 +78,7 @@ const trimestres = Array.from({ length: 1 + RECOMPRAS_ANO1 }, (_, i) => ({
 const maxRec = realista.proj.receitaAno1 || 1;
 
 const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
-const linkFunil = pipeline === "recuperacao" ? "/admin/funil?pipeline=recuperacao&periodo=tudo" : "/admin/funil?periodo=tudo";
+const linkFunil = pipeline === "recuperacao" ? "/admin/funil/?pipeline=recuperacao&periodo=tudo" : "/admin/funil/?periodo=tudo";
 
 // Tickets reais (goiania.roilabs.com.br) — 1º pedido inclui clichê R$80 na personalizada.
 const tabelaFitas = [

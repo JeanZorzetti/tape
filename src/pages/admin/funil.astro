@@ -6,7 +6,7 @@ import { sessaoAtual } from "../../lib/auth";
 import { distribuicaoPorNicho, funilCoorte, statusLabel } from "../../lib/crm";
 import { isNicho, isPipeline, NICHOS, nichoLabel, rolesDaPipeline, statusesDaPipeline } from "../../lib/adminUi";
 
-if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login");
+if (!sessaoAtual(Astro.cookies)) return Astro.redirect("/admin/login/");
 
 const PERIODOS = [
   { value: "mes", label: "Este mês" },
@@ -47,7 +47,7 @@ const linkFunil = (over: Record<string, string> = {}) => {
   if (nicho) p.set("nicho", nicho);
   for (const [k, v] of Object.entries(over)) v ? p.set(k, v) : p.delete(k);
   const s = p.toString();
-  return s ? `/admin/funil?${s}` : "/admin/funil";
+  return s ? `/admin/funil/?${s}` : "/admin/funil/";
 };
 
 // Rótulos das taxas derivam dos papéis da pipeline: primeiro_toque → meio → ganho.
@@ -67,7 +67,7 @@ const chip = (ativo: boolean) =>
     ativo ? "border-navy bg-navy text-white" : "border-kraft/60 bg-white text-ink/75 hover:border-navy"
   }`;
 const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
-const linkProjecao = pipeline === "recuperacao" ? "/admin/projecao?pipeline=recuperacao" : "/admin/projecao";
+const linkProjecao = pipeline === "recuperacao" ? "/admin/projecao/?pipeline=recuperacao" : "/admin/projecao/";
 ---
 
 <AdminLayout title="Funil">

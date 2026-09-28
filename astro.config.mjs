@@ -30,6 +30,9 @@ const LASTMOD_POR_SLUG = new Map(
 // `export const prerender = false` (/admin e /api) rodam no servidor Node.
 export default defineConfig({
   site: 'https://tapepro.roilabs.com.br',
+  // Uma URL por página: sem barra responde 301 para com barra (o adapter node faz o redirect).
+  // Com as duas em 200 o Google escolheu a sem barra como canônica, contra a tag e o sitemap.
+  trailingSlash: 'always',
   adapter: node({ mode: 'standalone' }),
   // Sem allowedDomains o Astro descarta o header Host, monta a URL como
   // http://localhost e recusa TODO POST de formulário com 403 atrás do proxy
@@ -44,7 +47,8 @@ export default defineConfig({
   integrations: [
     mdx(),
     sitemap({
-      filter: (page) => !page.includes('/admin'),
+      // /orcamento/ é formulário (150 palavras) e fica noindex: o sitemap só leva conteúdo que deve indexar.
+      filter: (page) => !page.includes('/admin') && !page.endsWith('/orcamento/'),
       serialize(item) {
         const slug = item.url.match(/\/blog\/([^/]+)\/?$/)?.[1];
         const data = slug && LASTMOD_POR_SLUG.get(slug);

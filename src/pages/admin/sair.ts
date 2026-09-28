@@ -5,5 +5,5 @@ export const prerender = false;
 
 export const POST: APIRoute = ({ cookies, redirect }) => {
   encerrarSessao(cookies);
-  return redirect("/admin/login");
+  return redirect("/admin/login/");
 };

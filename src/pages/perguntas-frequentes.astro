@@ -40,7 +40,7 @@ const breadcrumb = {
   "@type": "BreadcrumbList",
   itemListElement: [
     { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
-    { "@type": "ListItem", position: 2, name: "Perguntas frequentes", item: `${SITE_URL}/perguntas-frequentes` },
+    { "@type": "ListItem", position: 2, name: "Perguntas frequentes", item: `${SITE_URL}/perguntas-frequentes/` },
   ],
 };
 ---
@@ -135,7 +135,7 @@ const breadcrumb = {
           {
             PRODUTOS.map((p) => (
               <a
-                href={`/produtos/${p.slug}`}
+                href={`/produtos/${p.slug}/`}
                 class="rounded-xl border border-kraft/50 bg-white p-4 transition hover:border-orange"
               >
                 <p class="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-steel">{p.eyebrow}</p>
@@ -144,7 +144,7 @@ const breadcrumb = {
             ))
           }
           <a
-            href="/blog"
+            href="/blog/"
             class="rounded-xl border border-kraft/50 bg-white p-4 transition hover:border-orange"
           >
             <p class="font-mono text-[0.6rem] uppercase tracking-[0.18em] text-steel">Conteúdo técnico</p>
@@ -165,7 +165,7 @@ const breadcrumb = {
       </div>
       <div class="flex flex-wrap items-center gap-4">
         <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} · CTA final`} variant="light" />
-        <a href="/orcamento" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+        <a href="/orcamento/" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
           Ou preencher o formulário →
         </a>
       </div>
