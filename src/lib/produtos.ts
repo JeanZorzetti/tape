@@ -7,7 +7,8 @@ import fitaComum from "../assets/produtos/fita-transparente-comum.png";
 /**
  * Catálogo fechado: a TapePro só trabalha com estas 3 fitas (+ clichê, que é
  * custo de produção e vive dentro da página da fita personalizada).
- * Preço NÃO entra no site — o nicho inteiro vende por orçamento.
+ * Preço: só o "a partir de" por rolo (decisão do dono, 28/09/2026), porque o
+ * snippet de produto do Google exige `offers`. O fechado continua por orçamento.
  *
  * ponytail: dados em TS, não content collection. 3 itens estáticos não pagam
  * loader + zod; migrar para `src/content.config.ts` quando o blog (US4) chegar.
@@ -35,6 +36,8 @@ export interface Produto {
   /** Assunto injetado na mensagem do WhatsApp. */
   contexto: string;
   personalizavel: boolean;
+  /** Menor preço por rolo da tabela oficial da TapePro (20/07/2026) e quando ele vale. */
+  preco: { aPartirDe: number; condicao?: string };
 }
 
 export const PRODUTOS: Produto[] = [
@@ -83,6 +86,7 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita adesiva transparente com a marca TAPE PRO impressa em laranja e azul",
     contexto: "fita transparente personalizada (48mm × 100m)",
     personalizavel: true,
+    preco: { aPartirDe: 10.1, condicao: "em pedidos de 200 rolos ou mais" },
   },
   {
     slug: "fita-gomada",
@@ -131,6 +135,7 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita gomada de papel kraft reforçada com fios de nylon",
     contexto: "fita gomada kraft reforçada (70mm × 150m)",
     personalizavel: true,
+    preco: { aPartirDe: 32.2, condicao: "em pedidos acima de 100 rolos" },
   },
   {
     slug: "fita-transparente-comum",
@@ -174,6 +179,7 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita adesiva transparente comum, sem impressão",
     contexto: "fita transparente comum (48mm × 100m)",
     personalizavel: false,
+    preco: { aPartirDe: 7.9 },
   },
 ];
 

@@ -31,8 +31,8 @@
     "id": "tem-preco-no-site",
     "grupo": "pedido",
     "ordem": 5,
-    "pergunta": "Por que não tem preço no site?",
-    "resposta": "Porque cada pedido é produzido sob encomenda: o valor depende da quantidade, do material, do número de cores e de existir ou não um clichê anterior. Um preço fixo de prateleira seria errado para quase todo mundo. Mandando esses quatro dados, o orçamento fechado volta rápido."
+    "pergunta": "O site mostra o preço das fitas?",
+    "resposta": "Mostra o preço de tabela por rolo, no formato \"a partir de\", na página de cada fita. O valor fechado depende da quantidade, do material, do número de cores e de existir ou não um clichê anterior, porque cada pedido é produzido sob encomenda. Mandando esses quatro dados, o orçamento fechado volta rápido."
   },
   {
     "id": "posso-pedir-amostra",
