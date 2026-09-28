@@ -87,10 +87,10 @@ export const PRODUTOS: Produto[] = [
   {
     slug: "fita-gomada",
     nome: "Fita Gomada Reforçada",
-    h1: "Fita gomada kraft reforçada com fios de nylon",
-    seoTitle: "Fita Gomada Kraft Reforçada com Fios de Nylon 70mm | TapePro",
+    h1: "Fita gomada personalizada de papel kraft com reforço de nylon",
+    seoTitle: "Fita Gomada Personalizada de Papel Kraft com Reforço | TapePro",
     seoDescription:
-      "Fita gomada de papel kraft reforçada com fios de nylon, 70mm × 150m, ativada com água. Lacre inviolável para caixas pesadas, com personalização.",
+      "Fita gomada personalizada de papel kraft com reforço de fios de nylon, 70mm × 150m, ativada com água. Lacre inviolável para caixa pesada, a partir de 15 rolos.",
     eyebrow: "Kraft · fios de nylon",
     chamada: "Lacre inviolável para caixa pesada.",
     resumo:
@@ -110,20 +110,21 @@ export const PRODUTOS: Produto[] = [
       "Kits e presentes com acabamento premium",
     ],
     beneficios: [
+      // Um subtema buscado por bloco (plano SEO 057): cada texto se sustenta fora da página.
       {
-        titulo: "Vira parte da caixa",
+        titulo: "Fita gomada com reforço de fios de nylon",
         texto:
-          "A goma ativada por água penetra nas fibras do papelão. Para abrir é preciso rasgar: a violação fica evidente.",
+          "A fita gomada com reforço leva fios de nylon na estrutura do papel, que impedem a fita de rasgar sob tensão, mesmo em caixa cheia e empilhada. A TapePro trabalha só com a versão reforçada: é ela que segura volume pesado.",
       },
       {
-        titulo: "Aguenta peso",
+        titulo: "Fita gomada de papel kraft, ativada com água",
         texto:
-          "Os fios de nylon na estrutura do papel impedem que a fita rasgue sob tensão, mesmo em caixas cheias e empilhadas.",
+          "Na fita gomada de papel kraft, a goma ativada por água penetra nas fibras do papelão e vira parte da caixa. Para abrir é preciso rasgar, então a violação fica evidente. Kraft sobre papelão ainda deixa o pacote sem plástico à vista.",
       },
       {
-        titulo: "Papel com papel",
+        titulo: "Fita gomada personalizada com a sua marca",
         texto:
-          "Kraft sobre papelão dá um acabamento coerente e sem plástico aparente no pacote.",
+          "A fita gomada personalizada sai com a sua arte impressa ao longo do rolo, em até 2 cores, a partir de 15 rolos. A matriz de impressão (o clichê) é paga uma vez e fica guardada para as reposições.",
       },
     ],
     imagem: fitaGomada,
