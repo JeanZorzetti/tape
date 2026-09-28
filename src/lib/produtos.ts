@@ -88,7 +88,7 @@ export const PRODUTOS: Produto[] = [
     slug: "fita-gomada",
     nome: "Fita Gomada Reforçada",
     h1: "Fita gomada personalizada de papel kraft com reforço de nylon",
-    seoTitle: "Fita Gomada Personalizada de Papel Kraft com Reforço | TapePro",
+    seoTitle: "Fita Gomada Personalizada de Papel com Reforço | TapePro",
     seoDescription:
       "Fita gomada personalizada de papel kraft com reforço de fios de nylon, 70mm × 150m, ativada com água. Lacre inviolável para caixa pesada, a partir de 15 rolos.",
     eyebrow: "Kraft · fios de nylon",
