@@ -53,5 +53,35 @@ const organization = {
       <slot />
     </main>
     <Footer />
+    <script>
+      // A fonte é gravada na 1ª página da visita (o referrer das seguintes é o próprio site) e
+      // entra na mensagem do WhatsApp no clique, antes de o navegador seguir o link. Só nos links
+      // para o número da TapePro: link do CRM para chamar um lead não pode ganhar a frase.
+      import { fonteDaVisita, comFonte } from "../lib/whatsapp";
+      import { WHATSAPP_NUMERO } from "../lib/constants";
+      const CHAVE = "tp_fonte";
+      let fonte: string | null = null;
+      try {
+        fonte = sessionStorage.getItem(CHAVE);
+        if (fonte === null) {
+          fonte = fonteDaVisita(document.referrer, location.search, location.hostname) ?? "";
+          sessionStorage.setItem(CHAVE, fonte);
+        }
+      } catch {
+        fonte = fonteDaVisita(document.referrer, location.search, location.hostname);
+      }
+      if (fonte) {
+        document.addEventListener(
+          "click",
+          (e) => {
+            const a = (e.target as Element | null)?.closest?.<HTMLAnchorElement>(`a[href^="https://wa.me/${WHATSAPP_NUMERO}"]`);
+            if (!a || a.dataset.fonte) return;
+            a.href = comFonte(a.href, fonte!);
+            a.dataset.fonte = "1";
+          },
+          true,
+        );
+      }
+    </script>
   </body>
 </html>
