@@ -1,0 +1,30 @@
+[
+  {
+    "data": "2026-10-03",
+    "alvo": "home / — vitrine do portfólio + gates",
+    "direcao": "custom:galpao-com-veu + vitrine",
+    "eixos": { "materia": "foto", "motor": "ciclo-proprio", "banda": "media" },
+    "orcamento": { "js_kb": 0.8, "lcp_alvo": 2.5, "lcp_medido": 1.5, "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3; desktop no mesmo perfil 1,6 s local e 2,6 s no ar" },
+    "deps": [],
+    "recusadas": [],
+    "coreografia": {
+      "entrada": "ausente: o LCP é a foto do hero, nada pode atrasá-la",
+      "scroll": "ausente: a vitrine é estática, as fitas são o assunto e não precisam de gesto",
+      "ponteiro": "ausente: as fitas não são link; hover sem ação seria enfeite",
+      "transicao": "ausente: site estático, sem troca de rota no cliente",
+      "assinatura": "TapeStrip em loop, só na faixa de fita (palco); parada com prefers-reduced-motion"
+    },
+    "mudou": "Portfólio virou vitrine navy-800 com grão de feltro: 7 fitas reais em 2 colunas (≤536px, teto da fonte), sombra navy, título na 1ª casa. Segurança entrou na vitrine com os avisos como pedaços de fita serrilhados. Kraft-100 ganhou fibra (grao-kraft). Gates: G3 (h1 92px = 5,1×), G6 (breu/ok/erro em token), G7 (carimbo), G18 (sombras com matiz). Fio da tabela de preço cortado das 4 fotos de produto.",
+    "pendente": "G8 (navy/orange são nomes genéricos; renomear toca todas as páginas). G9 (+1.000 empresas e 'concorrentes exigem 100+' sem fonte registrada). Fotos de produto em 227px: esperando a TapePro."
+  },
+  {
+    "data": "2026-10-03",
+    "alvo": "site inteiro (home, /produtos/[slug], /blog) — diagnóstico, não construção",
+    "direcao": "custom:galpao-com-veu",
+    "eixos": { "materia": "foto", "motor": "ciclo-proprio", "banda": "media" },
+    "orcamento": { "js_kb": null, "lcp_alvo": null, "lcp_medido": null },
+    "deps": ["@fontsource/archivo", "@fontsource/ibm-plex-sans", "@fontsource/ibm-plex-mono"],
+    "recusadas": [],
+    "nota": "Direção de julho (handoff: 'hero cinematográfico aprovado'), sem carimbo nem orçamento. Hero = foto do galpão com véu navy à esquerda + h1 Archivo 800; único movimento = letreiro corrido da TapeStrip. Abaixo da dobra: seções chapadas paper/kraft-100/navy/laranja. Diagnóstico 03/10: hero passa em desejo; o resto, não. Dono mandou não trocar a foto do hero."
+  }
+]

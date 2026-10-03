@@ -26,17 +26,27 @@ const diferenciais = [
   { num: "100%", unidade: "nacional", texto: "Atendimento e entrega para todo o Brasil." },
 ];
 
+// Lyon abre a vitrine ao lado do título: é a marca que mais se lê no recorte.
 const portfolio = [
-  { img: natures, nome: "Nature's Prime", tipo: "Transparente" },
-  { img: halyee, nome: "Halyee", tipo: "Transparente" },
   { img: lyon, nome: "Lyon Peças", tipo: "Transparente" },
-  { img: finaart, nome: "Finaart", tipo: "Transparente" },
   { img: comando, nome: "Comando Auto Peças", tipo: "Transparente" },
+  { img: finaart, nome: "Finaart", tipo: "Transparente" },
+  { img: halyee, nome: "Halyee", tipo: "Transparente" },
+  { img: natures, nome: "Nature's Prime", tipo: "Transparente" },
   { img: yanmei, nome: "Yanmei", tipo: "Gomada kraft" },
   { img: quemed, nome: "Quemed", tipo: "Gomada kraft" },
 ];
 
 const selos = ["Cuidado, Frágil", "Volume conferido", "Selo de garantia de violação"];
+
+// Cada aviso é um pedaço de fita com as pontas serrilhadas pela lâmina do aplicador.
+const DENTES = 4;
+const DENTE = "6px";
+const passo = (i: number) => (i / (DENTES * 2)) * 100;
+const pontaDireita = Array.from({ length: DENTES * 2 + 1 }, (_, i) => `${i % 2 ? "100%" : `calc(100% - ${DENTE})`} ${passo(i)}%`);
+const pontaEsquerda = Array.from({ length: DENTES * 2 + 1 }, (_, i) => `${i % 2 ? "0" : DENTE} ${100 - passo(i)}%`);
+const SERRILHA = `polygon(${[...pontaDireita, ...pontaEsquerda].join(", ")})`;
+const GIROS = ["-1.5deg", "1deg", "-0.5deg"];
 
 const segmentos = (await getCollection("segmentos")).sort((a, b) => a.data.ordem - b.data.ordem);
 const posts = (await postsPublicados()).slice(0, 3);
@@ -58,14 +68,14 @@ const posts = (await postsPublicados()).slice(0, 3);
       sizes="100vw"
       class="absolute inset-0 -z-10 h-full w-full object-cover object-[68%_center]"
     />
-    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-[#080b20] via-[#080b20]/72 to-transparent" aria-hidden="true"></div>
-    <div class="absolute inset-0 -z-10 bg-gradient-to-t from-[#080b20] via-[#080b20]/20 to-transparent" aria-hidden="true"></div>
-    <div class="absolute inset-0 -z-10 bg-[#080b20]/25" aria-hidden="true"></div>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-breu via-breu/72 to-transparent" aria-hidden="true"></div>
+    <div class="absolute inset-0 -z-10 bg-gradient-to-t from-breu via-breu/20 to-transparent" aria-hidden="true"></div>
+    <div class="absolute inset-0 -z-10 bg-breu/25" aria-hidden="true"></div>
 
     <div class="mx-auto flex min-h-[86vh] max-w-6xl flex-col justify-end px-4 pb-16 pt-28 md:min-h-[90vh] md:pb-24">
       <div class="max-w-3xl">
         <p class="font-mono text-xs uppercase tracking-[0.3em] text-orange">Fitas adesivas personalizadas · B2B</p>
-        <h1 class="mt-5 font-display text-[clamp(2.75rem,7.5vw,5.5rem)] font-extrabold leading-[0.92] tracking-[-0.03em] text-white drop-shadow-[0_2px_24px_rgba(0,0,0,0.45)]">
+        <h1 class="mt-5 font-display text-[clamp(2.75rem,7.5vw,5.75rem)] font-extrabold leading-[0.92] tracking-[-0.03em] text-white drop-shadow-titulo">
           Sua marca sela<br class="hidden sm:block" /> cada caixa que sai.
         </h1>
         <p class="mt-6 max-w-xl font-body text-lg leading-relaxed text-white/85">
@@ -121,7 +131,7 @@ const posts = (await postsPublicados()).slice(0, 3);
   </section>
 
   <!-- DIFERENCIAIS -->
-  <section id="diferenciais" class="bg-kraft-100">
+  <section id="diferenciais" class="grao-kraft bg-kraft-100">
     <div class="mx-auto max-w-6xl px-4 py-20">
       <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {
@@ -138,51 +148,64 @@ const posts = (await postsPublicados()).slice(0, 3);
     </div>
   </section>
 
-  <!-- PORTFÓLIO -->
-  <section id="portfolio" class="mx-auto max-w-6xl px-4 py-20">
-    <div class="max-w-2xl">
-      <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Portfólio</p>
-      <h2 class="mt-3 text-3xl md:text-4xl">Marcas que já viajam em cada encomenda.</h2>
-      <p class="mt-4 font-body text-ink/70">Trabalhos reais impressos pela TapePro: do jeans ao autopeças, da farmácia ao alimentício.</p>
-    </div>
-    <ul class="mt-12 grid grid-cols-2 gap-5 sm:grid-cols-3 lg:grid-cols-4">
-      {
-        portfolio.map((c) => (
-          <li class="group rounded-2xl border border-kraft/40 bg-kraft-100 p-4">
-            <div class="flex min-h-28 items-center justify-center overflow-hidden rounded-lg bg-white p-3">
-              <Image
-                src={c.img}
-                alt={`Fita personalizada TapePro para ${c.nome}`}
-                loading="lazy"
-                widths={[240, 480]}
-                sizes="(min-width: 1024px) 220px, (min-width: 640px) 30vw, 45vw"
-                class="h-auto w-full object-contain transition group-hover:scale-[1.03]"
-              />
-            </div>
-            <div class="mt-3 flex items-center justify-between">
-              <span class="font-body text-sm font-semibold text-navy">{c.nome}</span>
-              <span class="font-mono text-[0.6rem] uppercase tracking-widest text-steel">{c.tipo}</span>
-            </div>
-          </li>
-        ))
-      }
-    </ul>
-  </section>
-
-  <!-- SEGURANÇA / VALOR -->
-  <section class="bg-navy text-white">
-    <div class="mx-auto grid max-w-6xl gap-8 px-4 py-16 md:grid-cols-2 md:items-center">
-      <div>
-        <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange">Fita que protege e comunica</p>
-        <h2 class="mt-3 text-3xl md:text-4xl">Mais que marca: segurança impressa.</h2>
-        <p class="mt-5 max-w-lg font-body leading-relaxed text-white/80">
-          Além do seu logo, imprimimos avisos que reduzem extravio e contestação, e mostram ao cliente que o pacote chegou
-          intacto.
-        </p>
+  <!-- PORTFÓLIO: a vitrine. As fitas reais dos clientes são o assunto da página. O título
+       ocupa a primeira casa da grade e as 7 fitas fecham 4 linhas de 2, gomadas juntas no fim.
+       ponytail: 2 colunas, não destaque em largura total: o recorte vem de foto de Instagram
+       ampliada e amolece acima de ~550px. Foto nova da TapePro libera o destaque. -->
+  <section id="portfolio" class="grao-noite bg-navy-800 text-white">
+    <div class="mx-auto max-w-6xl px-4 py-20 md:py-28">
+      <div class="grid gap-x-12 gap-y-14 md:grid-cols-2 md:gap-y-20">
+        <header class="self-end">
+          <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange">Portfólio</p>
+          <h2 class="mt-3 text-4xl md:text-5xl">Marcas que já viajam em cada encomenda.</h2>
+          <p class="mt-5 max-w-md font-body leading-relaxed text-white/75">
+            Trabalhos reais impressos pela TapePro: do jeans ao autopeças, da farmácia ao alimentício.
+          </p>
+        </header>
+        {
+          portfolio.map((c) => (
+            <figure>
+              <div class="aspect-[3/1]">
+                <Image
+                  src={c.img}
+                  alt={`Fita personalizada TapePro para ${c.nome}`}
+                  loading="lazy"
+                  widths={[480, 720, 1100]}
+                  sizes="(min-width: 1152px) 536px, (min-width: 768px) 46vw, 92vw"
+                  class="h-full w-full object-contain object-left-bottom drop-shadow-fita"
+                />
+              </div>
+              <figcaption class="mt-5 flex items-baseline justify-between gap-4 border-t border-white/15 pt-3">
+                <span class="font-display text-lg font-bold">{c.nome}</span>
+                <span class="font-mono text-[0.65rem] uppercase tracking-widest text-white/65">{c.tipo}</span>
+              </figcaption>
+            </figure>
+          ))
+        }
       </div>
-      <ul class="flex flex-wrap gap-3 md:justify-end">
-        {selos.map((s) => <li class="rounded-full border border-white/25 px-4 py-2 font-mono text-xs uppercase tracking-widest text-white/85">{s}</li>)}
-      </ul>
+
+      <div class="mt-20 grid gap-10 border-t border-white/15 pt-14 md:grid-cols-12 md:items-center">
+        <div class="md:col-span-7">
+          <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange">Fita que protege e comunica</p>
+          <h2 class="mt-3 text-3xl md:text-4xl">Mais que marca: segurança impressa.</h2>
+          <p class="mt-5 max-w-lg font-body leading-relaxed text-white/80">
+            Além do seu logo, imprimimos avisos que reduzem extravio e contestação, e mostram ao cliente que o pacote chegou
+            intacto.
+          </p>
+        </div>
+        <ul class="flex flex-wrap gap-4 md:col-span-5 md:justify-end">
+          {
+            selos.map((s, i) => (
+              <li
+                class="bg-orange px-6 py-2.5 font-mono text-xs font-medium uppercase tracking-[0.2em] text-navy"
+                style={`clip-path: ${SERRILHA}; rotate: ${GIROS[i % GIROS.length]}`}
+              >
+                {s}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
     </div>
   </section>
 
@@ -205,7 +228,7 @@ const posts = (await postsPublicados()).slice(0, 3);
   </section>
 
   <!-- BLOG -->
-  <section class="bg-kraft-100">
+  <section class="grao-kraft bg-kraft-100">
     <div class="mx-auto max-w-6xl px-4 py-20">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div>

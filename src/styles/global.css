@@ -1,3 +1,4 @@
+/* art-direction · galpão com véu + vitrine · eixos: foto/ciclo-próprio/média · orçamento: 1kb JS · LCP alvo 2,5s celular · 2026-10-03 */
 @import "tailwindcss";
 
 @import "@fontsource/archivo/500.css";
@@ -27,6 +28,16 @@
   --color-ink: #1b1b1e;
   /* Escurecido de #6e6b64: sobre kraft-100 dava 4.29:1 (AA exige 4.5). */
   --color-steel: #66635c;
+  /* Navy quase preto do véu do hero e das sombras: sombra herda a matiz da marca, nunca preto puro. */
+  --color-breu: #080b20;
+  --color-ok: #1b7f4b;
+  --color-erro: #b42318;
+
+  --shadow-botao: 0 1px 2px color-mix(in oklch, var(--color-orange-600) 45%, transparent);
+  --shadow-menu: 0 18px 40px -12px color-mix(in oklch, var(--color-navy) 35%, transparent);
+  --drop-shadow-titulo: 0 2px 24px color-mix(in oklch, var(--color-breu) 55%, transparent);
+  /* A fita deitada na vitrine: sombra curta e densa embaixo, como objeto apoiado. */
+  --drop-shadow-fita: 0 16px 14px color-mix(in oklch, var(--color-breu) 70%, transparent);
 
   --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
   --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
@@ -60,6 +71,17 @@
     *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
     html { scroll-behavior: auto; }
   }
+}
+
+/*
+ * Matéria das superfícies da home. O kraft é a fibra do papelão da caixa; a vitrine
+ * navy ganha um grão claro de feltro. Ruído SVG inline: zero requisição, zero JS.
+ */
+.grao-kraft {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85 .3' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .3 0 0 0 0 .15 .7 0 0 0 -.27'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
+}
+.grao-noite {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .95 0 0 0 0 .93 0 0 0 0 .9 .22 0 0 0 -.08'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23f)'/%3E%3C/svg%3E");
 }
 
 /*

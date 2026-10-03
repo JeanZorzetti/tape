@@ -66,7 +66,7 @@ const reqMark = '<span class="text-orange-800" aria-hidden="true">*</span>';
   <div class="flex flex-col gap-3">
     <button
       type="submit"
-      class="inline-flex items-center justify-center gap-2 rounded-full bg-orange px-6 py-3.5 font-body text-base font-semibold text-navy shadow-sm transition hover:bg-orange-400 focus-visible:outline disabled:opacity-60"
+      class="inline-flex items-center justify-center gap-2 rounded-full bg-orange px-6 py-3.5 font-body text-base font-semibold text-navy shadow-botao transition hover:bg-orange-400 focus-visible:outline disabled:opacity-60"
     >
       Enviar pedido de orçamento
     </button>
@@ -137,10 +137,10 @@ const reqMark = '<span class="text-orange-800" aria-hidden="true">*</span>';
 
 <style>
   #quote-status[data-tone="ok"] {
-    color: #1b7f4b;
+    color: var(--color-ok);
   }
   #quote-status[data-tone="err"] {
-    color: #b42318;
+    color: var(--color-erro);
   }
   #quote-status[data-tone="info"] {
     color: var(--color-steel);
