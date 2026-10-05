@@ -141,7 +141,7 @@ export const PRODUTOS: Produto[] = [
     slug: "fita-transparente-comum",
     nome: "Fita Transparente Comum",
     h1: "Fita adesiva transparente comum",
-    seoTitle: "Fita Adesiva Transparente Comum 48mm × 100m por Volume | TapePro",
+    seoTitle: "Fita Adesiva Transparente Comum 48mm: Preço | TapePro",
     seoDescription:
       "Fita adesiva transparente comum sem impressão, 48mm × 100m, em BOPP de alta adesão. Fornecimento por volume para expedição e indústria. Peça orçamento.",
     eyebrow: "BOPP cristal · sem impressão",
