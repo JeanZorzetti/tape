@@ -91,7 +91,7 @@ export const PRODUTOS: Produto[] = [
   {
     slug: "fita-gomada",
     nome: "Fita Gomada Reforçada",
-    h1: "Fita adesiva gomada personalizada e impressa, de papel kraft marrom com reforço de nylon, 70mm, para caixa de papelão",
+    h1: "Fábrica de fita adesiva gomada personalizada e impressa, de papel kraft marrom com reforço de nylon, 70mm, para caixa de papelão",
     seoTitle: "Fita Gomada Personalizada com Reforço: Preço | TapePro",
     seoDescription:
       "Fita adesiva gomada personalizada, de papel kraft com reforço de nylon, 70mm × 150m, ativada com água. Lacre inviolável para caixa pesada, mín. 15 rolos.",
