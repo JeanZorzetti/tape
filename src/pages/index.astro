@@ -19,6 +19,8 @@ import quemed from "../assets/portfolio/quemed.png";
 
 const ORIGEM = "Home";
 
+const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+
 const diferenciais = [
   { num: `${PEDIDO_MINIMO_ROLOS}`, unidade: "rolos", texto: "Pedido mínimo. Os concorrentes costumam exigir 100+." },
   { num: `+${(EMPRESAS_ATENDIDAS).toLocaleString("pt-BR")}`, unidade: "empresas", texto: "Já estampam suas caixas com a TapePro." },
@@ -53,7 +55,7 @@ const posts = (await postsPublicados()).slice(0, 3);
 ---
 
 <BaseLayout
-  title="Fitas Adesivas Personalizadas com a Sua Marca | TapePro"
+  title="Fitas Adesivas Personalizadas: Preço por Rolo | TapePro"
   description="Fitas adesivas personalizadas para empresas: transparente e kraft com a sua marca impressa. A partir de 20 rolos, até 2 cores, atendimento nacional."
 >
   <!-- HERO -->
@@ -115,7 +117,11 @@ const posts = (await postsPublicados()).slice(0, 3);
               </a>
             </h3>
             <p class="mt-3 flex-1 font-body text-sm leading-relaxed text-ink/75">{p.resumo}</p>
-            <div class="mt-6 flex flex-wrap items-center gap-4">
+            <p class="mt-4 font-body text-sm text-steel">
+              a partir de <strong class="font-display text-lg tabular-nums text-navy">{brl(p.preco.aPartirDe)}</strong> por rolo
+              {p.preco.condicao && <span class="block text-xs">{p.preco.condicao}</span>}
+            </p>
+            <div class="mt-4 flex flex-wrap items-center gap-4">
               <WhatsAppCta label="Pedir orçamento" contexto={p.contexto} paginaOrigem={ORIGEM} variant="light" compact />
               <a
                 href={`/produtos/${p.slug}/`}
