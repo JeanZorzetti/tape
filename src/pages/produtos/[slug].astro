@@ -23,9 +23,8 @@ const segmentos = (await getCollection("segmentos"))
   .filter((s) => s.data.produtosRelacionados.includes(produto.slug))
   .sort((a, b) => a.data.ordem - b.data.ordem);
 
-const posts = (await postsPublicados())
-  .filter((p) => p.data.produtosRelacionados.includes(produto.slug))
-  .slice(0, 3);
+// Todos, não os 3 mais novos: o corte por data deixava os posts antigos sem link de produto.
+const posts = (await postsPublicados()).filter((p) => p.data.produtosRelacionados.includes(produto.slug));
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -186,6 +185,21 @@ const perguntasCliche = [
                 que entra na impressora e carimba a marca ao longo da fita. Ela é feita uma vez, cobrada uma vez e fica
                 guardada para os próximos pedidos. O que muda de pedido para pedido é só a quantidade de fita.
               </p>
+              <p class="mt-4 max-w-xl font-body text-sm leading-relaxed text-ink/70">
+                Veja o resultado no
+                <a
+                  href="/#portfolio"
+                  class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+                >
+                  portfólio de fitas impressas</a
+                > e as
+                <a
+                  href="/sobre/"
+                  class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+                >
+                  marcas que já lacram com a TapePro</a
+                >.
+              </p>
             </div>
             <div class="md:col-span-5">
               <div class="flex items-center justify-center rounded-2xl bg-white p-8">
@@ -257,6 +271,12 @@ const perguntasCliche = [
                 </li>
               ))}
             </ul>
+            <a
+              href="/segmentos/"
+              class="mt-5 inline-block font-body text-sm font-semibold text-navy underline-offset-4 hover:underline"
+            >
+              Ver todos os segmentos atendidos →
+            </a>
           </div>
         )}
 
@@ -277,6 +297,12 @@ const perguntasCliche = [
                 </li>
               ))}
             </ul>
+            <a
+              href="/blog/"
+              class="mt-5 inline-block font-body text-sm font-semibold text-navy underline-offset-4 hover:underline"
+            >
+              Ver todos os guias de embalagem →
+            </a>
           </div>
         )}
       </section>
@@ -305,6 +331,9 @@ const perguntasCliche = [
         ))
       }
     </div>
+    <a href="/produtos/" class="mt-6 inline-block font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+      Comparar as três fitas lado a lado, com preço por rolo →
+    </a>
   </section>
 
   <section class="bg-orange text-navy">

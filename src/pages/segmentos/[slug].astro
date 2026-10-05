@@ -6,6 +6,7 @@ import JsonLd from "../../components/seo/JsonLd.astro";
 import WhatsAppCta from "../../components/quote/WhatsAppCta.astro";
 import TapeStrip from "../../components/ui/TapeStrip.astro";
 import { getProduto } from "../../lib/produtos";
+import { postsPublicados } from "../../lib/conteudo";
 import { SITE_URL, PEDIDO_MINIMO_ROLOS } from "../../lib/constants";
 
 export async function getStaticPaths() {
@@ -20,10 +21,8 @@ const { Content } = await render(segmento);
 const url = `${SITE_URL}/segmentos/${segmento.id}/`;
 const produtos = data.produtosRelacionados.map(getProduto).filter((p) => p !== undefined);
 
-const posts = (await getCollection("blog", ({ data: p }) => !p.rascunho))
-  .filter((p) => p.data.segmentosRelacionados.includes(segmento.id))
-  .sort((a, b) => b.data.publicadoEm.getTime() - a.data.publicadoEm.getTime())
-  .slice(0, 3);
+// Todos, não os 3 mais novos: o corte por data deixava os posts antigos sem link de segmento.
+const posts = (await postsPublicados()).filter((p) => p.data.segmentosRelacionados.includes(segmento.id));
 
 const breadcrumb = {
   "@context": "https://schema.org",
@@ -153,6 +152,15 @@ const breadcrumb = {
             </li>
           ))}
         </ul>
+        <p class="mt-6 font-body text-sm text-ink/70">
+          Pedido mínimo, prazo, cores e preparo da arte estão nas
+          <a
+            href="/perguntas-frequentes/"
+            class="font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+          >
+            perguntas frequentes sobre o pedido</a
+          >.
+        </p>
       </section>
     )
   }
