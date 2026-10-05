@@ -45,7 +45,7 @@ export const PRODUTOS: Produto[] = [
     slug: "fita-transparente-personalizada",
     nome: "Fita Transparente Personalizada",
     h1: "Fita adesiva transparente personalizada",
-    seoTitle: "Fita Adesiva Transparente Personalizada com Sua Marca | TapePro",
+    seoTitle: "Fita Adesiva Transparente Personalizada: Preço | TapePro",
     seoDescription:
       "Fita adesiva transparente personalizada em BOPP 48mm × 100m, impressão em até 2 cores, a partir de 20 rolos. Sua marca impressa em cada caixa.",
     eyebrow: "BOPP cristal · impressa",
