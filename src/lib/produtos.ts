@@ -44,7 +44,7 @@ export const PRODUTOS: Produto[] = [
   {
     slug: "fita-transparente-personalizada",
     nome: "Fita Transparente Personalizada",
-    h1: "Fita adesiva transparente personalizada",
+    h1: "Fita adesiva transparente personalizada com logomarca",
     seoTitle: "Fita Adesiva Transparente Personalizada: Preço | TapePro",
     seoDescription:
       "Fita adesiva transparente personalizada em BOPP 48mm × 100m, impressão em até 2 cores, a partir de 20 rolos. Sua marca impressa em cada caixa.",
@@ -91,7 +91,7 @@ export const PRODUTOS: Produto[] = [
   {
     slug: "fita-gomada",
     nome: "Fita Gomada Reforçada",
-    h1: "Fita adesiva gomada personalizada de papel kraft com reforço de nylon",
+    h1: "Fita adesiva gomada personalizada e impressa, de papel kraft marrom com reforço de nylon, 70mm, para caixa de papelão",
     seoTitle: "Fita Gomada Personalizada com Reforço: Preço | TapePro",
     seoDescription:
       "Fita adesiva gomada personalizada, de papel kraft com reforço de nylon, 70mm × 150m, ativada com água. Lacre inviolável para caixa pesada, mín. 15 rolos.",
@@ -123,7 +123,7 @@ export const PRODUTOS: Produto[] = [
       {
         titulo: "Fita gomada de papel kraft, ativada com água",
         texto:
-          "Na fita gomada de papel kraft, a goma ativada por água penetra nas fibras do papelão e vira parte da caixa. Para abrir é preciso rasgar, então a violação fica evidente. Kraft sobre papelão ainda deixa o pacote sem plástico à vista.",
+          "Na fita gomada de papel kraft, a goma ativada por água penetra nas fibras do papelão e vira parte da caixa. Para abrir é preciso rasgar, então a violação fica evidente. Kraft marrom sobre papelão ainda deixa o pacote sem plástico à vista.",
       },
       {
         titulo: "Fita gomada personalizada com a sua marca",
