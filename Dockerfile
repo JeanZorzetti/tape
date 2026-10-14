@@ -15,8 +15,8 @@ COPY --from=build /app/dist ./dist
 COPY --from=build /app/scripts ./scripts
 COPY --from=build /app/package.json ./
 EXPOSE 4321
-# O ping de indexação é na SUBIDA do container, não no build: no build o
-# conteúdo novo ainda não está no ar e o rastreador acharia a versão antiga
-# (research.md D1). Roda desanexado para não atrasar o health check, e o
-# `exec` mantém o servidor no PID 1 para receber o SIGTERM do orquestrador.
-CMD (sleep 15; node scripts/indexnow.mjs) & exec node ./dist/server/entry.mjs
+# Fora do ar desde 14/10/2026: o servidor sobe atrás de scripts/fora-do-ar.mjs
+# (503 no público, /admin de pé) e o ping do IndexNow fica desligado, porque
+# avisaria o rastreador de páginas que respondem 503. Voltar ao ar = reverter
+# este commit, que devolve o CMD com o ping na subida do container.
+CMD ["node", "scripts/fora-do-ar.mjs"]
