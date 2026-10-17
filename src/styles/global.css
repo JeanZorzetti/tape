@@ -58,6 +58,7 @@
     font-weight: 800;
     letter-spacing: -0.02em;
     line-height: 1.02;
+    text-wrap: balance;
   }
   /* Anel de duas cores: nenhuma cor sozinha passa 3:1 (SC 1.4.11) nos três
      fundos do site. O anel laranja aparece sobre navy (4.53:1); o anel de tinta

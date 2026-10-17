@@ -38,6 +38,8 @@ export interface Produto {
   personalizavel: boolean;
   /** Menor preço por rolo da tabela oficial da TapePro (20/07/2026) e quando ele vale. */
   preco: { aPartirDe: number; condicao?: string };
+  /** Preço por rolo no pedido mínimo, da mesma tabela: é o que paga quem compra pouco. */
+  precoNoMinimo?: { rolos: number; porRolo: number };
 }
 
 export const PRODUTOS: Produto[] = [
@@ -51,7 +53,7 @@ export const PRODUTOS: Produto[] = [
     eyebrow: "BOPP cristal · impressa",
     chamada: "Sua marca impressa e o lacre continua discreto.",
     resumo:
-      "A fita de lacre mais usada no Brasil, com a sua marca impressa ao longo de todo o rolo. O filme BOPP transparente mantém a caixa limpa e deixa a arte aparecer: logo, aviso de segurança ou os dois.",
+      "Fita de lacre em BOPP com a sua marca impressa ao longo de todo o rolo. O filme BOPP transparente mantém a caixa limpa e deixa a arte aparecer: logo, aviso de segurança ou os dois.",
     specs: [
       { label: "Largura", valor: "48 mm" },
       { label: "Comprimento", valor: "100 m" },
@@ -87,6 +89,7 @@ export const PRODUTOS: Produto[] = [
     contexto: "fita transparente personalizada (48mm × 100m)",
     personalizavel: true,
     preco: { aPartirDe: 10.1, condicao: "em pedidos de 200 rolos ou mais" },
+    precoNoMinimo: { rolos: 20, porRolo: 16.2 },
   },
   {
     slug: "fita-gomada",
@@ -136,6 +139,7 @@ export const PRODUTOS: Produto[] = [
     contexto: "fita gomada kraft reforçada (70mm × 150m)",
     personalizavel: true,
     preco: { aPartirDe: 32.2, condicao: "em pedidos acima de 100 rolos" },
+    precoNoMinimo: { rolos: 15, porRolo: 37.2 },
   },
   {
     slug: "fita-transparente-comum",

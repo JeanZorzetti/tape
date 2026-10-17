@@ -20,8 +20,9 @@ const opcoes = PRODUTOS.filter((p) => p.personalizavel).map((p) => ({
   material: p.slug === "fita-gomada" ? "kraft" : "bopp",
   larguraMm: parseInt(spec(p, "Largura"), 10),
   minimo: parseInt(spec(p, "Pedido mínimo"), 10),
-  preco: brl(p.preco.aPartirDe),
-  condicao: p.preco.condicao ?? "",
+  // Ao lado de "N rolos no mínimo" vai o preço desse mínimo; o de volume entra como condição.
+  preco: brl(p.precoNoMinimo?.porRolo ?? p.preco.aPartirDe),
+  condicao: p.precoNoMinimo ? `cai para ${brl(p.preco.aPartirDe)} ${p.preco.condicao ?? ""}`.trim() : p.preco.condicao ?? "",
   contexto: p.contexto,
   origem: `Prévia · ${p.nome}`,
   nome: p.nome,
@@ -37,6 +38,7 @@ const REPETICOES = 4;
 ---
 
 <section
+  id="previa"
   data-art="sua-marca"
   data-opcoes={JSON.stringify(opcoes)}
   data-logo-max-mb={LOGO_MAX_MB}
@@ -117,7 +119,7 @@ const REPETICOES = 4;
         <div>
           <dt class="sr-only">Preço por rolo</dt>
           <dd class="font-display text-[1.75rem] font-extrabold leading-none tabular-nums text-navy" data-preco>{atual.preco}</dd>
-          <dd class="mt-1 font-body text-sm text-steel">a partir de, por rolo <span class="block text-xs" data-condicao>{atual.condicao}</span></dd>
+          <dd class="mt-1 font-body text-sm text-steel">por rolo no pedido mínimo <span class="block text-xs" data-condicao>{atual.condicao}</span></dd>
         </div>
       </dl>
 

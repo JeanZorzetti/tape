@@ -39,10 +39,10 @@ const links = [
         </svg>
       </summary>
       <div class="absolute right-0 mt-3 w-56 rounded-xl border border-kraft/40 bg-paper p-4 shadow-menu">
-        <nav class="flex flex-col gap-3" aria-label="Principal (mobile)">
+        <nav class="flex flex-col gap-1" aria-label="Principal (mobile)">
           {
             links.map((l) => (
-              <a href={l.href} class="font-body text-sm font-medium text-ink/80 hover:text-navy">
+              <a href={l.href} class="flex min-h-11 items-center font-body text-sm font-medium text-ink/80 hover:text-navy">
                 {l.label}
               </a>
             ))
