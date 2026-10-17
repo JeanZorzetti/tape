@@ -5,7 +5,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { tintasDaLogo, separarTintas } from "../src/lib/duasTintas.ts";
+import { tintasDaLogo, chapasDaLogo, separarTintas } from "../src/lib/duasTintas.ts";
 import { vetorizarPixels } from "../src/lib/vetorizarLogo.ts";
 
 const BRANCO = [255, 255, 255, 255];
@@ -148,6 +148,106 @@ test("separação de PNG transparente: meia opacidade decide entre tinta e pelí
   const grade = separarTintas(dados, largura, altura, [{ r: 35, g: 44, b: 122 }], false, SEPARACAO);
   assert.equal(indiceEm(grade, 2, 5, 10), 0);
   assert.equal(indiceEm(grade, 2, 35, 10), 1);
+});
+
+/** Tom de cinza ao longo de faixas: [início, fim, tom no início, tom no fim], o tom em linha reta entre os dois. */
+function tomNasFaixas(faixas, y) {
+  for (const [y0, y1, t0, t1] of faixas) if (y >= y0 && y < y1) return Math.round(t0 + ((t1 - t0) * (y - y0)) / Math.max(1, y1 - y0));
+  return null;
+}
+// Letra cromada: prata, degradê até o preto, preto, degradê até o cinza, cinza. Degradê lento é plano.
+const CROMADO = [[0, 15, 245, 245], [15, 45, 245, 20], [45, 60, 20, 20], [60, 80, 20, 140], [80, 95, 140, 140]];
+const cinza = (t) => [t, t, t, 255];
+/** O X azul de uma logo cromada: degradê horizontal do marinho ao celeste. */
+const azulDoX = (x, x0, x1) => misturar([20, 170, 240, 255], [10, 60, 150, 255], (x - x0) / (x1 - x0)).map((c, k) => (k === 3 ? 255 : c));
+const croma = ({ r, g, b }) => Math.max(r, g, b) - Math.min(r, g, b);
+
+test("cromado: os cinzas do degradê viram uma chapa preta e o X azul fica com a outra", () => {
+  // PNG transparente: a letra cromada à esquerda e o X azul à direita (a versão anterior escolhia
+  // as 2 cores de maior área, prata e preto, e o azul sumia).
+  const logo = imagem(300, 110, (x, y) => {
+    const tom = tomNasFaixas(CROMADO, y - 8);
+    if (x >= 10 && x < 140 && tom !== null) return cinza(tom);
+    if (x >= 170 && x < 290 && y >= 10 && y < 100) return azulDoX(x, 170, 290);
+    return TRANSPARENTE;
+  });
+  const { chapas } = chapasDaLogo(logo.dados, logo.largura, logo.altura, false, 1);
+  assert.equal(chapas.length, 2, JSON.stringify(chapas));
+  const cromo = chapas.find((c) => c.cores.length > 1 && c.cores.every((t) => croma(t) < 20));
+  const azul = chapas.find((c) => c !== cromo);
+  assert.ok(cromo, `cromado numa chapa: ${JSON.stringify(chapas)}`);
+  // Prata não imprime: o designer refaz o cromado em preto.
+  assert.ok(perto(cromo.tinta, [30, 30, 30], 4), JSON.stringify(cromo.tinta));
+  // O tom mais vivo do degradê do X, não o marinho.
+  assert.ok(azul.tinta.b > 200 && azul.tinta.g > 120 && azul.tinta.r < 60, JSON.stringify(azul.tinta));
+  assert.deepEqual(tintasDaLogo(logo.dados, logo.largura, logo.altura, false, 1), chapas.map((c) => c.tinta));
+});
+
+test("fundo preto preso no cromado sai película; o preto que encosta na transparência fica", () => {
+  // Recorte do iPhone: a moldura cromada guarda um miolo preto opaco. À direita, uma barra preta
+  // solta no transparente (um nome preto ao lado do emblema).
+  const logo = imagem(300, 110, (x, y) => {
+    const tom = tomNasFaixas(CROMADO, y - 8);
+    const naMoldura = x >= 10 && x < 160 && tom !== null;
+    if (naMoldura && x >= 50 && x < 120 && y >= 30 && y < 80) return cinza(5);
+    if (naMoldura) return cinza(tom);
+    if (x >= 200 && x < 280 && y >= 30 && y < 80) return cinza(5);
+    return TRANSPARENTE;
+  });
+  const { pelicula } = chapasDaLogo(logo.dados, logo.largura, logo.altura, false, 1);
+  assert.ok(pelicula, "sem película");
+  assert.equal(pelicula[55 * 300 + 85], 1, "miolo preto cercado pelo cromado");
+  assert.equal(pelicula[55 * 300 + 240], 0, "barra preta solta");
+});
+
+test("o papel claro atrás do desenho não vira tinta", () => {
+  // Faixa de papel cinza-claro (a folha rasgada de um selo) com o nome preto em cima, e um desenho navy.
+  const papel = [218, 223, 225, 255];
+  const logo = imagem(300, 120, (x, y) => {
+    if (dentro(x, y, 20, 40, 280, 80)) return dentro(x, y, 40, 52, 260, 68) ? PRETO : papel;
+    if (dentro(x, y, 100, 90, 200, 115) || dentro(x, y, 100, 5, 200, 30)) return NAVY;
+    return BRANCO;
+  });
+  const tintas = tintasDaLogo(logo.dados, logo.largura, logo.altura, true, 1);
+  assert.ok(!tintas.some((t) => perto(t, papel, 15)), JSON.stringify(tintas));
+});
+
+test("matiz perdido: o vermelho miúdo de uma estampa azul vira tinta", () => {
+  // Estampa: miolo navy grande e pontos vermelhos de 1 px, sem pixel plano, uns 4% da tinta: abaixo
+  // do mínimo do traço fino (5%), e a versão anterior só via o navy.
+  const VERMELHO_TELHA = [150, 60, 45, 255];
+  const logo = imagem(300, 120, (x, y) => {
+    if (dentro(x, y, 10, 10, 190, 110)) return NAVY;
+    if (dentro(x, y, 200, 10, 240, 110) && x % 3 === 0 && y % 2 === 0) return VERMELHO_TELHA;
+    return BRANCO;
+  });
+  const tintas = tintasDaLogo(logo.dados, logo.largura, logo.altura, true, 1);
+  assert.equal(tintas.length, 2, JSON.stringify(tintas));
+  assert.ok(tintas.some((t) => t.r > 100 && t.r > 2 * t.b), `vermelho: ${JSON.stringify(tintas)}`);
+});
+
+test("cor dominante com brilho de outra imprime a dominante", () => {
+  // Nome marinho (quase toda a arte) com o brilho ciano de uma letra em degradê para o marinho, e um
+  // detalhe roxo: a chapa do marinho e do ciano imprime marinho, não o ciano mais vivo.
+  const MARINHO = [4, 18, 55, 255];
+  const logo = imagem(320, 100, (x, y) => {
+    if (dentro(x, y, 10, 10, 230, 90)) return dentro(x, y, 10, 10, 60, 40) ? misturar([5, 212, 250, 255], MARINHO, Math.max(0, 1 - (x - 10) / 50)) : MARINHO;
+    if (dentro(x, y, 250, 30, 310, 70)) return [125, 39, 237, 255];
+    return TRANSPARENTE;
+  });
+  const tintas = tintasDaLogo(logo.dados, logo.largura, logo.altura, false, 1);
+  assert.ok(tintas.some((t) => perto(t, MARINHO, 12)), JSON.stringify(tintas));
+});
+
+test("separação: degradê de ouro claro a bronze, sobre branco, sai cheio", () => {
+  // Perto do branco os raios do ouro claro e do bronze quase se encontram; o pixel claro que caía
+  // no raio do bronze saía pela metade e rachava o traço.
+  const OURO = [221, 192, 115, 255];
+  const BRONZE = [146, 98, 33, 255];
+  const logo = imagem(240, 80, (x, y) => (dentro(x, y, 20, 20, 220, 60) ? misturar(BRONZE, OURO, (x - 20) / 200).map((c, k) => (k === 3 ? 255 : c)) : BRANCO));
+  const tintas = [{ r: 183, g: 136, b: 54 }];
+  const grade = separarTintas(logo.dados, logo.largura, logo.altura, tintas, true, { ...SEPARACAO, coresDeCada: [[OURO, BRONZE].map(([r, g, b]) => ({ r, g, b }))] });
+  for (let x = 24; x < 216; x += 6) for (const y of [26, 40, 54]) assert.equal(indiceEm(grade, 2, x, y), 1, `(${x}, ${y})`);
 });
 
 test("vetorização: logo preta borrada sai numa tinta só, no tamanho da imagem recebida", () => {

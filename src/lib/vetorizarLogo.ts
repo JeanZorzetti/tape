@@ -3,7 +3,7 @@
  * curvas. Só conta sobre pixels (sem DOM): roda no Worker da prévia e no teste do Node.
  */
 import ImageTracer from "imagetracerjs";
-import { tintasDaLogo, separarTintas, type GradeDeTintas } from "./duasTintas.ts";
+import { chapasDaLogo, separarTintas, type GradeDeTintas } from "./duasTintas.ts";
 
 export interface PedidoVetorizacao {
   dados: Uint8ClampedArray;
@@ -38,9 +38,15 @@ const PELICULA = { r: 0, g: 0, b: 0, a: 0 };
 
 /** O SVG da logo em até 2 tintas, no tamanho da imagem recebida, ou null quando não há tinta nenhuma. */
 export function vetorizarPixels({ dados, largura, altura, fundoBranco, escalaFonte }: PedidoVetorizacao): string | null {
-  const tintas = tintasDaLogo(dados, largura, altura, fundoBranco, escalaFonte);
-  if (tintas.length === 0) return null;
-  const grade = separarTintas(dados, largura, altura, tintas, fundoBranco, { escalaFonte, fator: FATOR_AMPLIACAO });
+  const { chapas, pelicula } = chapasDaLogo(dados, largura, altura, fundoBranco, escalaFonte);
+  if (chapas.length === 0) return null;
+  const tintas = chapas.map((c) => c.tinta);
+  const grade = separarTintas(dados, largura, altura, tintas, fundoBranco, {
+    escalaFonte,
+    fator: FATOR_AMPLIACAO,
+    coresDeCada: chapas.map((c) => c.cores),
+    pelicula,
+  });
   return (
     tracar(grade, [PELICULA, ...tintas.map((t) => ({ ...t, a: 255 }))])
       // As coordenadas estão na grade ampliada; o tamanho declarado volta ao da imagem recebida.
