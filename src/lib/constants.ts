@@ -12,6 +12,7 @@ export const WHATSAPP_NUMERO = "5562983443919"; // wa.me (só dígitos, com DDI 
 export const WHATSAPP_DISPLAY = "(62) 98344-3919";
 
 export const PEDIDO_MINIMO_ROLOS = 20;
+// Fonte: registro de vendas interno da TapePro (confirmado pelo Jean em 17/10/2026).
 export const EMPRESAS_ATENDIDAS = 1000;
 
 // Clientes reais (prova social autorizada). Ver specs/.../assets.md

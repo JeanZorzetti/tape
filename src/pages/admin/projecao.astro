@@ -80,11 +80,12 @@ const maxRec = realista.proj.receitaAno1 || 1;
 const carimbo = "font-mono text-[0.65rem] uppercase tracking-[0.15em] text-steel";
 const linkFunil = pipeline === "recuperacao" ? "/admin/funil/?pipeline=recuperacao&periodo=tudo" : "/admin/funil/?periodo=tudo";
 
-// Tickets reais (goiania.roilabs.com.br) — 1º pedido inclui clichê R$80 na personalizada.
+// Tickets reais (goiania.roilabs.com.br, tabela de 20/07/2026) com o reajuste de 20% de 17/10/2026 —
+// 1º pedido inclui clichê R$96 na personalizada.
 const tabelaFitas = [
-  { produto: "Personalizada", spec: "48×100 · até 2 cores · R$16,20→10,10/rolo", minimo: "R$404 · 20 rolos", m50: "R$775", m100: "R$1.130", cheio: "R$2.100" },
-  { produto: "Gomada reforçada", spec: "kraft+nylon 70×150 · R$37,20→32,20/rolo", minimo: "R$558 · 15 rolos", m50: "R$1.860", m100: "R$3.720", cheio: "R$3.220+" },
-  { produto: "Transparente comum", spec: "48×100 · sem arte · commodity", minimo: "R$7,90 · 1 rolo", m50: "R$395", m100: "R$790", cheio: "por volume" },
+  { produto: "Personalizada", spec: "48×100 · até 2 cores · R$19,44→12,12/rolo", minimo: "R$484,80 · 20 rolos", m50: "R$930", m100: "R$1.356", cheio: "R$2.520" },
+  { produto: "Gomada reforçada", spec: "kraft+nylon 70×150 · R$44,64→38,64/rolo", minimo: "R$669,60 · 15 rolos", m50: "R$2.232", m100: "R$4.464", cheio: "R$3.864+" },
+  { produto: "Transparente comum", spec: "48×100 · sem arte · commodity", minimo: "R$9,48 · 1 rolo", m50: "R$474", m100: "R$948", cheio: "por volume" },
 ];
 ---
 
@@ -254,7 +255,7 @@ const tabelaFitas = [
           {/* ── Tickets reais ────────────────────────────────────────── */}
           <h2 class="mt-10 font-display text-base font-bold text-navy">Tickets reais — suas condições comerciais</h2>
           <div class="mt-4 rounded-xl border border-kraft/60 bg-white p-5">
-            <p class="font-body text-xs text-steel">1º pedido inclui clichê R$80 na personalizada; recompra não.</p>
+            <p class="font-body text-xs text-steel">1º pedido inclui clichê R$96 na personalizada; recompra não.</p>
             <div class="mt-4 overflow-x-auto">
               <table class="w-full min-w-[560px] border-collapse font-body text-sm">
                 <thead>
@@ -283,7 +284,7 @@ const tabelaFitas = [
               </table>
             </div>
             <p class="mt-4 border-t border-dashed border-kraft pt-3 font-body text-xs text-steel">
-              Priorize <strong class="text-navy">gomada</strong> em quem envia volume (e-commerce, distribuidor, indústria): ticket 2–4× o da personalizada básica. A personalizada de R$404 é a isca de entrada.
+              Priorize <strong class="text-navy">gomada</strong> em quem envia volume (e-commerce, distribuidor, indústria): ticket 2–4× o da personalizada básica. A personalizada de R$484,80 é a isca de entrada.
             </p>
           </div>
 
@@ -294,9 +295,9 @@ const tabelaFitas = [
               <li><strong class="text-ink">Meta × real:</strong> a <em>meta</em> vem das premissas de benchmark; o <em>real</em> vem das transições e pedidos da coorte (mesma fonte do <a href={linkFunil} class="text-orange-800 underline">/admin/funil</a>). Enquanto a base for pequena, o real fica baixo/"—".</li>
               <li><strong class="text-ink">Base:</strong> {int(base.contataveis)} de {int(base.total)} leads têm canal (telefone/WhatsApp, e-mail ou Instagram); {int(semCanal)} exigem enriquecimento.</li>
               <li><strong class="text-ink">Funil (cons./real./otim.):</strong> resposta 15/25/40% · resposta→orçamento 30/40/50% · orçamento→fechado 20/30/40%. As três taxas rumo ao ganho são a composição dessas etapas.</li>
-              <li><strong class="text-ink">Ticket blended:</strong> R$700 / R$1.100 / R$1.900 — mix de personalizada, gomada e comum, pedidos de 50–100 rolos.</li>
+              <li><strong class="text-ink">Ticket blended:</strong> R$840 / R$1.320 / R$2.280 — mix de personalizada, gomada e comum, pedidos de 50–100 rolos.</li>
               <li><strong class="text-ink">Recompra:</strong> 1º pedido + {RECOMPRAS_ANO1} recompras no ano 1 (consumível de alto giro).</li>
-              <li><strong class="text-ink">Fontes:</strong> preços de goiania.roilabs.com.br; benchmarks de outbound B2B 2025–26 (Apollo, SalesHive, Salesmotion).</li>
+              <li><strong class="text-ink">Fontes:</strong> preços de goiania.roilabs.com.br (20/07/2026) + reajuste de 20% (17/10/2026); benchmarks de outbound B2B 2025–26 (Apollo, SalesHive, Salesmotion).</li>
             </ul>
           </details>
         </>

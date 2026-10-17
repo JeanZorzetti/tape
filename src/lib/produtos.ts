@@ -36,7 +36,8 @@ export interface Produto {
   /** Assunto injetado na mensagem do WhatsApp. */
   contexto: string;
   personalizavel: boolean;
-  /** Menor preço por rolo da tabela oficial da TapePro (20/07/2026) e quando ele vale. */
+  /** Menor preço por rolo da tabela oficial da TapePro (20/07/2026) com o reajuste de 20%
+   *  de 17/10/2026, e quando ele vale. A tabela original está em docs/handoffs/handoff.md. */
   preco: { aPartirDe: number; condicao?: string };
   /** Preço por rolo no pedido mínimo, da mesma tabela: é o que paga quem compra pouco. */
   precoNoMinimo?: { rolos: number; porRolo: number };
@@ -88,8 +89,8 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita adesiva transparente com a marca TAPE PRO impressa em laranja e azul",
     contexto: "fita transparente personalizada (48mm × 100m)",
     personalizavel: true,
-    preco: { aPartirDe: 10.1, condicao: "em pedidos de 200 rolos ou mais" },
-    precoNoMinimo: { rolos: 20, porRolo: 16.2 },
+    preco: { aPartirDe: 12.12, condicao: "em pedidos de 200 rolos ou mais" },
+    precoNoMinimo: { rolos: 20, porRolo: 19.44 },
   },
   {
     slug: "fita-gomada",
@@ -138,8 +139,8 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita gomada de papel kraft reforçada com fios de nylon",
     contexto: "fita gomada kraft reforçada (70mm × 150m)",
     personalizavel: true,
-    preco: { aPartirDe: 32.2, condicao: "em pedidos acima de 100 rolos" },
-    precoNoMinimo: { rolos: 15, porRolo: 37.2 },
+    preco: { aPartirDe: 38.64, condicao: "em pedidos acima de 100 rolos" },
+    precoNoMinimo: { rolos: 15, porRolo: 44.64 },
   },
   {
     slug: "fita-transparente-comum",
@@ -183,7 +184,7 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita adesiva transparente comum, sem impressão",
     contexto: "fita transparente comum (48mm × 100m)",
     personalizavel: false,
-    preco: { aPartirDe: 7.9 },
+    preco: { aPartirDe: 9.48 },
   },
 ];
 

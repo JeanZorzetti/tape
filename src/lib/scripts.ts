@@ -114,7 +114,7 @@ export const OBJECOES: readonly { pergunta: string; resposta: string }[] = [
   {
     pergunta: "É caro personalizar",
     resposta:
-      "“A arte tem um custo único (o clichê, a partir de R$80) que fica guardado. Do 2º pedido em diante " +
+      "“A arte tem um custo único (o clichê, a partir de R$96) que fica guardado. Do 2º pedido em diante " +
       "você paga só a fita. Some rápido no volume.”",
   },
   {
