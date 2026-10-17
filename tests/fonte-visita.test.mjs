@@ -7,7 +7,7 @@ import assert from "node:assert/strict";
 
 import { fonteDaVisita, comFonte, whatsappLink } from "../src/lib/whatsapp.ts";
 
-const HOST = "tapepro.roilabs.com.br";
+const HOST = "tapeprofitas.com.br";
 
 test("buscadores e redes viram nome amigável", () => {
   assert.equal(fonteDaVisita("https://www.google.com/", "", HOST), "Google");

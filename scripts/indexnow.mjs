@@ -13,7 +13,7 @@ import { existsSync, readdirSync, readFileSync, writeFileSync, realpathSync } fr
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const HOST_PRODUCAO = "tapepro.roilabs.com.br";
+const HOST_PRODUCAO = "tapeprofitas.com.br";
 const ENDPOINT = "https://api.indexnow.org/indexnow";
 const DIR_CLIENTE = "dist/client";
 const MARCADOR = "dist/.indexnow-enviado";

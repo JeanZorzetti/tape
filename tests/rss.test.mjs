@@ -15,7 +15,7 @@ const feedVazio = () =>
   rss({
     title: "Blog TapePro",
     description: "Como escolher, especificar e personalizar fita adesiva para a sua operação.",
-    site: "https://tapepro.roilabs.com.br",
+    site: "https://tapeprofitas.com.br",
     items: [],
   });
 

@@ -15,7 +15,7 @@ import { fileURLToPath } from "node:url";
 
 import { urlsDoSitemap, filtrarPublicas, deveSubmeter, lerChave, submeter } from "../scripts/indexnow.mjs";
 
-const HOST = "tapepro.roilabs.com.br";
+const HOST = "tapeprofitas.com.br";
 const sitemap = (...locs) =>
   `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">` +
   locs.map((l) => `<url><loc>${l}</loc></url>`).join("") +

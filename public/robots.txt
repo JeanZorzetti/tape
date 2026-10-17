@@ -1,5 +1,5 @@
 # Índice do site para motores de busca generativa:
-# https://tapepro.roilabs.com.br/llms.txt
+# https://tapeprofitas.com.br/llms.txt
 
 # /admin é o CRM de leads e /api recebe os formulários: nenhum dos dois é
 # conteúdo público, e nenhum bloco abaixo pode reabri-los para agente nenhum.
@@ -27,4 +27,4 @@ Allow: /
 Disallow: /admin/
 Disallow: /api/
 
-Sitemap: https://tapepro.roilabs.com.br/sitemap-index.xml
+Sitemap: https://tapeprofitas.com.br/sitemap-index.xml

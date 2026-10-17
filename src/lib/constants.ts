@@ -2,7 +2,7 @@
 export const NOME_MARCA = "TapePro";
 export const TAGLINE = "Fitas Adesivas Personalizadas";
 
-export const SITE_URL = "https://tapepro.roilabs.com.br";
+export const SITE_URL = "https://tapeprofitas.com.br";
 export const FEED_URL = SITE_URL + "/rss.xml";
 export const EMAIL_CONTATO = "jeanzorzetti@gmail.com";
 

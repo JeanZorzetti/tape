@@ -26,20 +26,46 @@ const LASTMOD_POR_SLUG = new Map(
     .filter(([, data]) => data),
 );
 
+// URLs do site oficial que ocupava tapeprofitas.com.br até 17/10/2026 (lidas do
+// sitemap dele): cada uma vai para a página daqui que cobre o mesmo assunto,
+// para o que o Google e os links já conhecem não cair em 404.
+const URLS_DO_SITE_ANTERIOR = {
+  '/fita-bopp-personalizada': '/produtos/fita-transparente-personalizada/',
+  '/fita-transparente-personalizada': '/produtos/fita-transparente-personalizada/',
+  '/fita-gomada-personalizada': '/produtos/fita-gomada/',
+  '/direto-da-fabrica': '/sobre/',
+  '/grande-volume': '/produtos/',
+  '/industria': '/segmentos/industria/',
+  '/alimentos': '/segmentos/industria/',
+  '/cosmeticos': '/segmentos/industria/',
+  '/farmaceutica': '/segmentos/industria/',
+  '/distribuidoras': '/segmentos/distribuidor/',
+  '/atacadistas': '/segmentos/distribuidor/',
+  '/graficas': '/segmentos/distribuidor/',
+  '/e-commerce': '/segmentos/e-commerce/',
+  '/dropshipping': '/segmentos/e-commerce/',
+  '/marketplaces': '/segmentos/e-commerce/',
+  '/transportadoras': '/blog/fita-adesiva-colorida-para-logistica/',
+};
+
 // O site continua estático (output padrão). Só as rotas que declaram
 // `export const prerender = false` (/admin e /api) rodam no servidor Node.
 export default defineConfig({
-  site: 'https://tapepro.roilabs.com.br',
+  site: 'https://tapeprofitas.com.br',
   // Uma URL por página: sem barra responde 301 para com barra (o adapter node faz o redirect).
   // Com as duas em 200 o Google escolheu a sem barra como canônica, contra a tag e o sitemap.
   trailingSlash: 'always',
+  redirects: Object.fromEntries(
+    Object.entries(URLS_DO_SITE_ANTERIOR).map(([de, para]) => [de, { status: 301, destination: para }]),
+  ),
   adapter: node({ mode: 'standalone' }),
   // Sem allowedDomains o Astro descarta o header Host, monta a URL como
   // http://localhost e recusa TODO POST de formulário com 403 atrás do proxy
   // do Easypanel. Estes são os hosts em que o app pode se reconhecer.
   security: {
     allowedDomains: [
-      { protocol: 'https', hostname: 'tapepro.roilabs.com.br' },
+      { protocol: 'https', hostname: 'tapeprofitas.com.br' },
+      { protocol: 'https', hostname: 'www.tapeprofitas.com.br' },
       { protocol: 'http', hostname: 'localhost' },
       { protocol: 'http', hostname: '127.0.0.1' },
     ],
