@@ -1,7 +1,7 @@
 ---
 import { Image } from "astro:assets";
 import logo from "../../assets/marca/logo-tapepro.png";
-import { NOME_MARCA, TAGLINE, WHATSAPP_DISPLAY, EMAIL_CONTATO } from "../../lib/constants";
+import { RAZAO_SOCIAL, CNPJ, TAGLINE, WHATSAPP_DISPLAY, EMAIL_CONTATO } from "../../lib/constants";
 import { whatsappLink } from "../../lib/whatsapp";
 import { PRODUTOS } from "../../lib/produtos";
 
@@ -60,7 +60,7 @@ const links = [
   <div class="border-t border-white/10">
     <div class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 font-body text-xs text-white/55 md:flex-row md:items-center md:justify-between">
       <p>
-        © {ano} {NOME_MARCA}. Representante comercial oficial.
+        © {ano} {RAZAO_SOCIAL} · CNPJ {CNPJ}.
         <a href="/politica-de-privacidade/" class="ml-2 underline-offset-4 hover:text-white hover:underline">Política de privacidade</a>
       </p>
       <p>Fitas adesivas personalizadas · atendimento nacional</p>

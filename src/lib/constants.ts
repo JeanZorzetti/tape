@@ -4,7 +4,9 @@ export const TAGLINE = "Fitas Adesivas Personalizadas";
 
 export const SITE_URL = "https://tapeprofitas.com.br";
 export const FEED_URL = SITE_URL + "/rss.xml";
-export const EMAIL_CONTATO = "jeanzorzetti@gmail.com";
+export const EMAIL_CONTATO = "tapeprofitas@gmail.com";
+export const RAZAO_SOCIAL = "Tape Pro LTDA";
+export const CNPJ = "44.724.076/0001-35";
 
 export const WHATSAPP_NUMERO = "5562983443919"; // wa.me (só dígitos, com DDI 55)
 export const WHATSAPP_DISPLAY = "(62) 98344-3919";

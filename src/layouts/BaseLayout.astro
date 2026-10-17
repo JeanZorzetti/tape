@@ -6,7 +6,7 @@ import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
 import { getImage } from "astro:assets";
 import logoMarca from "../assets/marca/logo-tapepro.png";
-import { FEED_URL, NOME_MARCA, SITE_URL, TAGLINE, WHATSAPP_NUMERO } from "../lib/constants";
+import { CNPJ, FEED_URL, NOME_MARCA, RAZAO_SOCIAL, SITE_URL, TAGLINE, WHATSAPP_NUMERO } from "../lib/constants";
 
 interface Props {
   title: string;
@@ -26,11 +26,13 @@ const organization = {
   "@type": "Organization",
   "@id": SITE_URL + "/#organization",
   name: NOME_MARCA,
+  legalName: RAZAO_SOCIAL,
+  taxID: CNPJ,
   url: SITE_URL,
   logo: new URL(logoSchema.src, SITE_URL).href,
   slogan: TAGLINE,
   description:
-    "Fitas adesivas personalizadas com a marca do cliente. Representante comercial oficial TapePro. Pedido mínimo a partir de 20 rolos.",
+    "Fábrica de fitas adesivas personalizadas com a marca do cliente. Pedido mínimo a partir de 20 rolos.",
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "sales",

@@ -21,7 +21,7 @@ const RESUMO =
 
 /** Rotas sem coleção por trás — as únicas listadas explicitamente. */
 const INSTITUCIONAL = [
-  { titulo: "Sobre", caminho: "/sobre/", resumo: "Quem é a TapePro e como funciona o atendimento por representante." },
+  { titulo: "Sobre", caminho: "/sobre/", resumo: "Quem é a TapePro e quem fabrica e atende." },
   { titulo: "Orçamento", caminho: "/orcamento/", resumo: "Formulário de pedido de orçamento por volume e tipo de fita." },
   {
     titulo: "Perguntas frequentes",

@@ -1,7 +1,7 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import JsonLd from "../components/seo/JsonLd.astro";
-import { EMAIL_CONTATO, NOME_MARCA, SITE_URL, WHATSAPP_DISPLAY } from "../lib/constants";
+import { CNPJ, EMAIL_CONTATO, NOME_MARCA, RAZAO_SOCIAL, SITE_URL, WHATSAPP_DISPLAY } from "../lib/constants";
 import { whatsappLink } from "../lib/whatsapp";
 
 // Cada item aqui descreve o que o código faz de fato (api/lead.ts, QuoteForm,
@@ -45,7 +45,7 @@ const breadcrumb = {
   <article class="mx-auto max-w-3xl px-4 py-16 font-body leading-relaxed text-ink/80 md:py-20">
     <h2 class="text-2xl text-navy">Quem trata os dados</h2>
     <p class="mt-4">
-      O canal comercial da {NOME_MARCA} em tapeprofitas.com.br, operado pelo representante comercial oficial da marca.
+      A {RAZAO_SOCIAL}, CNPJ {CNPJ}, que opera a marca {NOME_MARCA} e este site (tapeprofitas.com.br).
       Para qualquer assunto sobre os seus dados, escreva para
       <a href={`mailto:${EMAIL_CONTATO}`} class="font-semibold text-navy underline decoration-orange underline-offset-4"
         >{EMAIL_CONTATO}</a
