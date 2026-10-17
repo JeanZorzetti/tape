@@ -288,7 +288,7 @@ const REPETICOES = 4;
     mix-blend-mode: multiply;
   }
   .fita__marca { display: flex; align-items: center; height: 100%; }
-  .fita__logo { height: 68%; width: auto; max-width: clamp(7rem, 22vw, 16rem); object-fit: contain; }
+  .fita__logo { height: 75%; width: auto; max-width: clamp(8rem, 30vw, 20rem); object-fit: contain; }
   .fita__nome {
     font-family: var(--font-display);
     font-weight: 800;
@@ -328,6 +328,57 @@ const REPETICOES = 4;
 
 <script>
   import { whatsappLink, comLogoNaPrevia } from "../../lib/whatsapp";
+  import { caixaDaTinta } from "../../lib/recorteLogo";
+
+  // A busca da tinta roda numa cópia reduzida (rápida no celular); o corte sai da imagem original.
+  const LADO_MAX_ANALISE = 1200;
+  // Logo com menos que isso de altura (depois do recorte) amolece na fita de uma tela retina.
+  const ALTURA_MIN_NITIDA = 60;
+  const AVISO_BAIXA_RESOLUCAO =
+    "A logo veio com pouca resolução e pode sair borrada na prévia. Para a arte final, mande o arquivo original no WhatsApp (de preferência PDF, AI, EPS ou CDR).";
+
+  /** Corta a margem da logo. Sem como ler os pixels (SVG sem tamanho, canvas bloqueado), devolve a original. */
+  async function recortarMargem(url: string): Promise<{ url: string; alturaPx: number }> {
+    const img = new Image();
+    img.src = url;
+    try {
+      await img.decode();
+    } catch {
+      return { url, alturaPx: Infinity };
+    }
+    const { naturalWidth: w0, naturalHeight: h0 } = img;
+    if (!w0 || !h0) return { url, alturaPx: Infinity };
+
+    const escala = Math.min(1, LADO_MAX_ANALISE / Math.max(w0, h0));
+    const analise = document.createElement("canvas");
+    analise.width = Math.max(1, Math.round(w0 * escala));
+    analise.height = Math.max(1, Math.round(h0 * escala));
+    const ctx = analise.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return { url, alturaPx: h0 };
+    ctx.drawImage(img, 0, 0, analise.width, analise.height);
+
+    let tinta;
+    try {
+      tinta = caixaDaTinta(ctx.getImageData(0, 0, analise.width, analise.height).data, analise.width, analise.height);
+    } catch {
+      return { url, alturaPx: h0 };
+    }
+    if (!tinta) return { url, alturaPx: h0 };
+
+    // Volta à escala original, com 1 pixel de folga para não comer a borda suavizada.
+    const sx = Math.max(0, Math.floor((tinta.x - 1) / escala));
+    const sy = Math.max(0, Math.floor((tinta.y - 1) / escala));
+    const sw = Math.min(w0 - sx, Math.ceil((tinta.w + 2) / escala));
+    const sh = Math.min(h0 - sy, Math.ceil((tinta.h + 2) / escala));
+    if (sw >= w0 && sh >= h0) return { url, alturaPx: h0 };
+
+    const corte = document.createElement("canvas");
+    corte.width = sw;
+    corte.height = sh;
+    corte.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    const blob = await new Promise<Blob | null>((ok) => corte.toBlob(ok, "image/png"));
+    return blob ? { url: URL.createObjectURL(blob), alturaPx: sh } : { url, alturaPx: h0 };
+  }
 
   interface Opcao {
     slug: string;
@@ -381,7 +432,7 @@ const REPETICOES = 4;
       delete cta.dataset.fonte;
     };
 
-    const mostrarLogo = (url: string, nomeArquivo: string) => {
+    const mostrarLogo = (url: string, nomeArquivo: string, aviso: string) => {
       if (logoUrl) URL.revokeObjectURL(logoUrl);
       logoUrl = url;
       logos.forEach((img) => {
@@ -391,12 +442,14 @@ const REPETICOES = 4;
       nomes.forEach((n) => (n.hidden = true));
       arquivoNome.textContent = nomeArquivo;
       arquivo.closest(".anexo")!.setAttribute("data-com-logo", "");
-      ajuda.textContent = ajudaPadrao;
+      ajuda.textContent = aviso;
       atualizar();
       imprimir();
     };
 
-    arquivo.addEventListener("change", () => {
+    // Duas escolhas seguidas: só a última chega à fita.
+    let escolhaAtual = 0;
+    arquivo.addEventListener("change", async () => {
       const f = arquivo.files?.[0];
       if (!f) return;
       if (!f.type.startsWith("image/")) {
@@ -407,7 +460,12 @@ const REPETICOES = 4;
         ajuda.textContent = "Arquivo grande demais para a prévia. Envie uma versão menor da logo.";
         return;
       }
-      mostrarLogo(URL.createObjectURL(f), f.name);
+      const minhaEscolha = ++escolhaAtual;
+      const original = URL.createObjectURL(f);
+      const recortada = await recortarMargem(original);
+      if (recortada.url !== original) URL.revokeObjectURL(original);
+      if (minhaEscolha !== escolhaAtual) return URL.revokeObjectURL(recortada.url);
+      mostrarLogo(recortada.url, f.name, recortada.alturaPx < ALTURA_MIN_NITIDA ? AVISO_BAIXA_RESOLUCAO : ajudaPadrao);
     });
     raiz.querySelectorAll("[data-opcao]").forEach((r) =>
       r.addEventListener("change", () => {
