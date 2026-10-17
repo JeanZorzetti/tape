@@ -4,6 +4,7 @@ dist
 .env
 imagens
 specs
+videos
 awesome-cursorrules
 .playwright-mcp
 *.png

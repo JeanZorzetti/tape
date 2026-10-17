@@ -20,3 +20,8 @@ awesome-cursorrules/
 # Lista bruta de prospecção (PII de terceiros: nome/telefone/email/CNPJ de ~503 empresas).
 # Fica local — é insumo operacional do script de import, não fonte versionada.
 docs/leads-bruto.csv
+
+# Vídeos HyperFrames: o projeto vai para o git, os renders e artefatos de checagem não.
+videos/*/renders/
+videos/*/.hyperframes/
+videos/*/.thumbnails/

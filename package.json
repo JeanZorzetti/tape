@@ -10,7 +10,9 @@
     "check": "astro check",
     "verificar": "node scripts/verificar-seo.mjs",
     "indexnow": "node scripts/indexnow.mjs",
-    "test": "node --test --test-concurrency=1 \"tests/**/*.test.mjs\""
+    "test": "node --test --test-concurrency=1 \"tests/**/*.test.mjs\"",
+    "rolo3d:poster": "node scripts/rolo3d/gerar-poster.mjs",
+    "rolo3d:video": "esbuild src/lib/rolo3d/cena.ts --bundle --format=esm --minify --outfile=videos/rolo-desenrolando/assets/cena.js"
   },
   "dependencies": {
     "@astrojs/mdx": "^4",

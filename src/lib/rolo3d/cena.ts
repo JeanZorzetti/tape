@@ -72,8 +72,15 @@ export interface CenaDoRolo {
   destruir(): void;
 }
 
+export interface Enquadramento {
+  campoDeVisao: number;
+  posicao: { x: number; y: number };
+}
+
 export interface OpcoesDaCena {
   densidadeDePixels?: number;
+  /** Outro quadro que não o quadrado do hero (o vídeo vertical, por exemplo). */
+  enquadramento?: Enquadramento;
   /** Mantém o último quadro no buffer: necessário para ler o canvas (pôster, vídeo). */
   preservarQuadro?: boolean;
 }
@@ -293,9 +300,9 @@ function montarRolo(impressao: CanvasTexture, voltas: CanvasTexture): Group {
   return rolo;
 }
 
-// Enquadramento num quadro quadrado: rolo no alto à direita, fita saindo pela borda de baixo.
-const CAMERA = { campoDeVisao: 28, distancia: 10 };
-const POSICAO_DO_CONJUNTO = { x: 0.9, y: 0.85 };
+// Enquadramento do quadro quadrado do hero: rolo no alto à direita, fita saindo pela borda de baixo.
+const DISTANCIA_DA_CAMERA = 10;
+const ENQUADRAMENTO_DO_HERO: Enquadramento = { campoDeVisao: 28, posicao: { x: 0.9, y: 0.85 } };
 const GIRO_DO_CONJUNTO = { x: -0.12, y: 0.85, z: -0.14 };
 
 export function criarCenaDoRolo(canvas: HTMLCanvasElement, opcoes: OpcoesDaCena = {}): CenaDoRolo {
@@ -324,13 +331,14 @@ export function criarCenaDoRolo(canvas: HTMLCanvasElement, opcoes: OpcoesDaCena 
   luzDeRecorte.position.set(5, 2, -4);
   cena.add(luzPrincipal, luzDeRecorte);
 
-  const camera = new PerspectiveCamera(CAMERA.campoDeVisao, 1, 0.1, 100);
-  camera.position.set(0, 0, CAMERA.distancia);
+  const enquadramento = opcoes.enquadramento ?? ENQUADRAMENTO_DO_HERO;
+  const camera = new PerspectiveCamera(enquadramento.campoDeVisao, 1, 0.1, 100);
+  camera.position.set(0, 0, DISTANCIA_DA_CAMERA);
 
   const impressao = texturaDaImpressao();
   const voltas = texturaDasVoltas();
   const conjunto = new Group();
-  conjunto.position.set(POSICAO_DO_CONJUNTO.x, POSICAO_DO_CONJUNTO.y, 0);
+  conjunto.position.set(enquadramento.posicao.x, enquadramento.posicao.y, 0);
   conjunto.rotation.set(GIRO_DO_CONJUNTO.x, GIRO_DO_CONJUNTO.y, GIRO_DO_CONJUNTO.z);
   cena.add(conjunto);
 

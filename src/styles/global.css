@@ -1,5 +1,7 @@
 /* art-direction · rolo 3D desenrolando + vitrine · eixos: objeto/ciclo-próprio/média · orçamento: 1kb JS no carregamento + 3D (three+gsap) só depois do load, fora de movimento reduzido · movimento: paisagem/expressivo, puxão 1,4s power3.out e fita presa à rolagem do hero · LCP alvo 2,5s celular (pôster) · 2026-10-17 */
 @import "tailwindcss";
+/* O projeto de vídeo (cena.js minificado, HTML da composição) não é página do site. */
+@source not "../../videos";
 
 @import "@fontsource/archivo/500.css";
 @import "@fontsource/archivo/700.css";
