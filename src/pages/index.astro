@@ -4,11 +4,11 @@ import { getCollection } from "astro:content";
 import BaseLayout from "../layouts/BaseLayout.astro";
 import WhatsAppCta from "../components/quote/WhatsAppCta.astro";
 import TapeStrip from "../components/ui/TapeStrip.astro";
+import RoloFita3D from "../components/ui/RoloFita3D.astro";
 import { PEDIDO_MINIMO_ROLOS, EMPRESAS_ATENDIDAS } from "../lib/constants";
 import { PRODUTOS } from "../lib/produtos";
 import { postsPublicados } from "../lib/conteudo";
 
-import deposito from "../assets/marca/deposito-tapepro.jpg";
 import natures from "../assets/portfolio/natures.png";
 import halyee from "../assets/portfolio/halyee.png";
 import lyon from "../assets/portfolio/lyon.png";
@@ -58,27 +58,19 @@ const posts = (await postsPublicados()).slice(0, 3);
   title="Fitas Adesivas Personalizadas: Preço por Rolo | TapePro"
   description="Fitas adesivas personalizadas para empresas: transparente e kraft com a sua marca impressa. A partir de 20 rolos, até 2 cores, atendimento nacional."
 >
-  <!-- HERO -->
-  <section class="relative isolate overflow-hidden bg-navy text-white">
-    <Image
-      src={deposito}
-      alt="Galpão logístico com prateleiras de fitas TapePro e uma caixa sendo lacrada com a fita personalizada"
-      loading="eager"
-      fetchpriority="high"
-      width={1920}
-      widths={[768, 1280, 1920]}
-      sizes="100vw"
-      class="absolute inset-0 -z-10 h-full w-full object-cover object-[68%_center]"
+  <!-- HERO: o rolo desenrolando é o único momento de movimento da página (CLAUDE.md, Motion).
+       Abaixo de lg o rolo vem antes do texto e a fita some num degradê; em lg ele ocupa o
+       canto e a fita sai pela borda de baixo, emendando na faixa TapeStrip. -->
+  <section class="grao-noite relative isolate overflow-hidden bg-navy text-white">
+    <RoloFita3D
+      class="mask-fita ml-auto -mb-14 w-[86vw] max-w-lg lg:absolute lg:bottom-0 lg:right-0 lg:-z-10 lg:mb-0 lg:w-[min(50vw,52rem)] lg:max-w-none"
     />
-    <div class="absolute inset-0 -z-10 bg-gradient-to-r from-breu via-breu/72 to-transparent" aria-hidden="true"></div>
-    <div class="absolute inset-0 -z-10 bg-gradient-to-t from-breu via-breu/20 to-transparent" aria-hidden="true"></div>
-    <div class="absolute inset-0 -z-10 bg-breu/25" aria-hidden="true"></div>
 
-    <div class="mx-auto flex min-h-[86vh] max-w-6xl flex-col justify-end px-4 pb-16 pt-28 md:min-h-[90vh] md:pb-24">
-      <div class="max-w-3xl">
+    <div class="mx-auto flex max-w-6xl flex-col justify-end px-4 pb-16 lg:min-h-[86vh] lg:pb-24 lg:pt-24">
+      <div class="max-w-xl lg:max-w-[34rem] xl:max-w-[36rem]">
         <p class="font-mono text-xs uppercase tracking-[0.3em] text-orange">Fitas adesivas personalizadas · B2B</p>
-        <h1 class="mt-5 font-display text-[clamp(2.75rem,7.5vw,5.75rem)] font-extrabold leading-[0.92] tracking-[-0.03em] text-white drop-shadow-titulo">
-          Sua marca sela<br class="hidden sm:block" /> cada caixa que sai.
+        <h1 class="mt-5 font-display text-[clamp(2.75rem,6.4vw,5rem)] font-extrabold leading-[0.92] tracking-[-0.03em] text-white">
+          Sua marca sela cada caixa que sai.
         </h1>
         <p class="mt-6 max-w-xl font-body text-lg leading-relaxed text-white/85">
           A TapePro imprime a identidade da sua empresa em fita transparente ou kraft: lacre, proteja e divulgue a cada
@@ -90,7 +82,7 @@ const posts = (await postsPublicados()).slice(0, 3);
             Ver portfólio →
           </a>
         </div>
-        <p class="mt-8 font-mono text-xs uppercase tracking-widest text-white/55">
+        <p class="mt-8 font-mono text-xs uppercase tracking-widest text-white/65">
           +{EMPRESAS_ATENDIDAS.toLocaleString("pt-BR")} empresas já estampam suas caixas com a gente
         </p>
       </div>

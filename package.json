@@ -21,12 +21,15 @@
     "@fontsource/ibm-plex-mono": "^5",
     "@fontsource/ibm-plex-sans": "^5",
     "astro": "^5",
+    "gsap": "^3.13.0",
     "imagetracerjs": "1.2.6",
     "postgres": "^3.4.9",
-    "sharp": "^0.34"
+    "sharp": "^0.34",
+    "three": "^0.180.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4",
+    "@types/three": "^0.180.0",
     "tailwindcss": "^4"
   }
 }
