@@ -29,7 +29,7 @@
       "assinatura": "o nome digitado impresso em duas tintas (navy + laranja queimado) na fita lacrando uma tampa de papelão"
     },
     "mudou": "Componente PreviaNaFita (quote/) com tokens no escopo [data-art=sua-marca]; entra só nas fitas personalizáveis. Ficha (mínimo, a partir de, condição) e mensagem do WhatsApp seguem a fita escolhida; o nome vai na mensagem (comNomeNaFita, com teste). Gates: G6/G19 (cores soltas e brancos de croma 0 → tokens mornos), G7 (carimbo no CSS), G23 (fita BOPP sólida em prefers-reduced-transparency/contrast), G36 (troca no meio da passada não reinicia), aviso de 2,5:1 → 4,5:1.",
-    "pendente": "A caixa é desenho (objeto plano); foto real de caixa vista de cima melhoraria. Sem JS o campo não atualiza a prévia (a fita nasce impressa e o botão funciona). Nome em fonte não é logo: a nota de prévia ilustrativa fica."
+    "pendente": "A caixa é desenho (objeto plano); foto real de caixa vista de cima melhoraria. Sem JS o campo não atualiza a prévia (a fita nasce impressa e o botão funciona). Desde 17/10 (pedido do dono) a pessoa anexa a logo em vez de escrever o nome: a imagem fica no navegador (createObjectURL) e é impressa por multiply na fita, então o fundo branco de JPG some; o WhatsApp avisa que o arquivo vai na conversa, porque o link não leva anexo."
   },
   {
     "data": "2026-10-03",
