@@ -18,7 +18,14 @@ const ALFA_MINIMO = 16;
 /** Os três canais acima disso = branco de fundo, com folga para o ruído de compressão do JPG. */
 const LIMIAR_BRANCO = 230;
 
-const ehBranco = (r: number, g: number, b: number) => r >= LIMIAR_BRANCO && g >= LIMIAR_BRANCO && b >= LIMIAR_BRANCO;
+export const ehBranco = (r: number, g: number, b: number) => r >= LIMIAR_BRANCO && g >= LIMIAR_BRANCO && b >= LIMIAR_BRANCO;
+
+/** Os quatro cantos brancos e opacos = a logo veio sobre fundo branco (JPG, print), que não é tinta. */
+export function temFundoBranco(rgba: Uint8ClampedArray, largura: number, altura: number): boolean {
+  const pixel = (x: number, y: number) => (y * largura + x) * 4;
+  const cantos = [pixel(0, 0), pixel(largura - 1, 0), pixel(0, altura - 1), pixel(largura - 1, altura - 1)];
+  return cantos.every((i) => rgba[i + 3] >= ALFA_MINIMO && ehBranco(rgba[i], rgba[i + 1], rgba[i + 2]));
+}
 
 /**
  * Caixa onde há tinta numa imagem RGBA. Transparente é sempre margem; branco só é margem quando
@@ -27,8 +34,7 @@ const ehBranco = (r: number, g: number, b: number) => r >= LIMIAR_BRANCO && g >=
  */
 export function caixaDaTinta(rgba: Uint8ClampedArray, largura: number, altura: number): CaixaDaTinta | null {
   const pixel = (x: number, y: number) => (y * largura + x) * 4;
-  const cantos = [pixel(0, 0), pixel(largura - 1, 0), pixel(0, altura - 1), pixel(largura - 1, altura - 1)];
-  const fundoBranco = cantos.every((i) => rgba[i + 3] >= ALFA_MINIMO && ehBranco(rgba[i], rgba[i + 1], rgba[i + 2]));
+  const fundoBranco = temFundoBranco(rgba, largura, altura);
 
   let minX = largura;
   let minY = altura;

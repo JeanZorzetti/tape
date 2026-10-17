@@ -328,17 +328,38 @@ const REPETICOES = 4;
 
 <script>
   import { whatsappLink, comLogoNaPrevia } from "../../lib/whatsapp";
-  import { caixaDaTinta } from "../../lib/recorteLogo";
+  import { caixaDaTinta, temFundoBranco } from "../../lib/recorteLogo";
+  import type { PedidoVetorizacao, RespostaVetorizacao } from "../../lib/vetorizarLogo.worker";
 
   // A busca da tinta roda numa cópia reduzida (rápida no celular); o corte sai da imagem original.
   const LADO_MAX_ANALISE = 1200;
-  // Logo com menos que isso de altura (depois do recorte) amolece na fita de uma tela retina.
+  // Logo com menos que isso de altura (depois do recorte) perde detalhe na fita de uma tela retina.
   const ALTURA_MIN_NITIDA = 60;
-  const AVISO_BAIXA_RESOLUCAO =
-    "A logo veio com pouca resolução e pode sair borrada na prévia. Para a arte final, mande o arquivo original no WhatsApp (de preferência PDF, AI, EPS ou CDR).";
+  // O traçado trabalha com a logo nesta altura: logo pequena é ampliada antes (curva suave), grande é reduzida (rápido).
+  const ALTURA_VETORIZACAO = 400;
+  const LARGURA_MAX_VETORIZACAO = 2400;
+  // Passou disso sem resposta do Worker, a prévia fica com o recorte em imagem.
+  const PRAZO_VETORIZACAO_MS = 10_000;
 
-  /** Corta a margem da logo. Sem como ler os pixels (SVG sem tamanho, canvas bloqueado), devolve a original. */
-  async function recortarMargem(url: string): Promise<{ url: string; alturaPx: number }> {
+  const AVISO_BAIXA_RESOLUCAO =
+    "A logo veio com pouca resolução e pode perder detalhe na prévia. Para a arte final, mande o arquivo original no WhatsApp (de preferência PDF, AI, EPS ou CDR).";
+  const AVISO_VETORIZANDO = "Redesenhando a logo em até 2 cores, como ela sai na fita…";
+  const AVISO_DUAS_TINTAS = "Logo redesenhada em até 2 cores, como a fita imprime: degradê e sombra viram cor chapada.";
+
+  interface FonteDaLogo {
+    img: HTMLImageElement;
+    sx: number;
+    sy: number;
+    sw: number;
+    sh: number;
+    fundoBranco: boolean;
+  }
+
+  /**
+   * Corta a margem da logo. Devolve a imagem recortada (para mostrar já) e de onde ela saiu (para
+   * vetorizar). Sem como ler os pixels (SVG sem tamanho, canvas bloqueado), devolve a original.
+   */
+  async function recortarMargem(url: string): Promise<{ url: string; alturaPx: number; fonte?: FonteDaLogo }> {
     const img = new Image();
     img.src = url;
     try {
@@ -357,12 +378,14 @@ const REPETICOES = 4;
     if (!ctx) return { url, alturaPx: h0 };
     ctx.drawImage(img, 0, 0, analise.width, analise.height);
 
-    let tinta;
+    let pixels: Uint8ClampedArray;
     try {
-      tinta = caixaDaTinta(ctx.getImageData(0, 0, analise.width, analise.height).data, analise.width, analise.height);
+      pixels = ctx.getImageData(0, 0, analise.width, analise.height).data;
     } catch {
       return { url, alturaPx: h0 };
     }
+    const fundoBranco = temFundoBranco(pixels, analise.width, analise.height);
+    const tinta = caixaDaTinta(pixels, analise.width, analise.height);
     if (!tinta) return { url, alturaPx: h0 };
 
     // Volta à escala original, com 1 pixel de folga para não comer a borda suavizada.
@@ -370,14 +393,56 @@ const REPETICOES = 4;
     const sy = Math.max(0, Math.floor((tinta.y - 1) / escala));
     const sw = Math.min(w0 - sx, Math.ceil((tinta.w + 2) / escala));
     const sh = Math.min(h0 - sy, Math.ceil((tinta.h + 2) / escala));
-    if (sw >= w0 && sh >= h0) return { url, alturaPx: h0 };
+    const fonte = { img, sx, sy, sw, sh, fundoBranco };
+    if (sw >= w0 && sh >= h0) return { url, alturaPx: h0, fonte };
 
     const corte = document.createElement("canvas");
     corte.width = sw;
     corte.height = sh;
     corte.getContext("2d")!.drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
     const blob = await new Promise<Blob | null>((ok) => corte.toBlob(ok, "image/png"));
-    return blob ? { url: URL.createObjectURL(blob), alturaPx: sh } : { url, alturaPx: h0 };
+    return blob ? { url: URL.createObjectURL(blob), alturaPx: sh, fonte } : { url, alturaPx: h0, fonte };
+  }
+
+  // Um Worker por página, criado no primeiro anexo: o traçador só é baixado por quem anexa.
+  let trabalhador: Worker | null = null;
+  let ultimoPedido = 0;
+
+  /** Separa em até 2 tintas e traça em SVG, no Worker. Falha ou demora = null (fica o recorte em imagem). */
+  function vetorizar(fonte: FonteDaLogo): Promise<string | null> {
+    const escala = Math.min(ALTURA_VETORIZACAO / fonte.sh, LARGURA_MAX_VETORIZACAO / fonte.sw);
+    const largura = Math.max(1, Math.round(fonte.sw * escala));
+    const altura = Math.max(1, Math.round(fonte.sh * escala));
+    const tela = document.createElement("canvas");
+    tela.width = largura;
+    tela.height = altura;
+    const ctx = tela.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return Promise.resolve(null);
+    ctx.imageSmoothingQuality = "high";
+    ctx.drawImage(fonte.img, fonte.sx, fonte.sy, fonte.sw, fonte.sh, 0, 0, largura, altura);
+    const dados = ctx.getImageData(0, 0, largura, altura).data;
+
+    try {
+      trabalhador ??= new Worker(new URL("../../lib/vetorizarLogo.worker.ts", import.meta.url), { type: "module" });
+    } catch {
+      return Promise.resolve(null);
+    }
+    const w = trabalhador;
+    const pedido = ++ultimoPedido;
+    return new Promise((resolver) => {
+      const prazo = setTimeout(() => resolver(null), PRAZO_VETORIZACAO_MS);
+      w.onmessage = (e: MessageEvent<RespostaVetorizacao>) => {
+        if (pedido !== ultimoPedido) return;
+        clearTimeout(prazo);
+        resolver(e.data.svg);
+      };
+      w.onerror = () => {
+        clearTimeout(prazo);
+        resolver(null);
+      };
+      const mensagem: PedidoVetorizacao = { dados, largura, altura, fundoBranco: fonte.fundoBranco };
+      w.postMessage(mensagem, [dados.buffer]);
+    });
   }
 
   interface Opcao {
@@ -432,13 +497,17 @@ const REPETICOES = 4;
       delete cta.dataset.fonte;
     };
 
-    const mostrarLogo = (url: string, nomeArquivo: string, aviso: string) => {
+    const usarImagem = (url: string) => {
       if (logoUrl) URL.revokeObjectURL(logoUrl);
       logoUrl = url;
       logos.forEach((img) => {
         img.src = url;
         img.hidden = false;
       });
+    };
+
+    const mostrarLogo = (url: string, nomeArquivo: string, aviso: string) => {
+      usarImagem(url);
       nomes.forEach((n) => (n.hidden = true));
       arquivoNome.textContent = nomeArquivo;
       arquivo.closest(".anexo")!.setAttribute("data-com-logo", "");
@@ -465,7 +534,19 @@ const REPETICOES = 4;
       const recortada = await recortarMargem(original);
       if (recortada.url !== original) URL.revokeObjectURL(original);
       if (minhaEscolha !== escolhaAtual) return URL.revokeObjectURL(recortada.url);
-      mostrarLogo(recortada.url, f.name, recortada.alturaPx < ALTURA_MIN_NITIDA ? AVISO_BAIXA_RESOLUCAO : ajudaPadrao);
+      const avisoFinal = recortada.alturaPx < ALTURA_MIN_NITIDA ? AVISO_BAIXA_RESOLUCAO : null;
+
+      // SVG já é vetor: entra como veio. Sem pixels legíveis, fica o recorte.
+      if (f.type === "image/svg+xml" || !recortada.fonte) {
+        mostrarLogo(recortada.url, f.name, avisoFinal ?? ajudaPadrao);
+        return;
+      }
+      // Mostra o recorte na hora e troca pelo vetor quando o Worker responde.
+      mostrarLogo(recortada.url, f.name, AVISO_VETORIZANDO);
+      const svg = await vetorizar(recortada.fonte);
+      if (minhaEscolha !== escolhaAtual) return;
+      if (svg) usarImagem(URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" })));
+      ajuda.textContent = avisoFinal ?? (svg ? AVISO_DUAS_TINTAS : ajudaPadrao);
     });
     raiz.querySelectorAll("[data-opcao]").forEach((r) =>
       r.addEventListener("change", () => {
