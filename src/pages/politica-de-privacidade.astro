@@ -1,0 +1,114 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import JsonLd from "../components/seo/JsonLd.astro";
+import { EMAIL_CONTATO, NOME_MARCA, SITE_URL, WHATSAPP_DISPLAY } from "../lib/constants";
+import { whatsappLink } from "../lib/whatsapp";
+
+// Cada item aqui descreve o que o código faz de fato (api/lead.ts, QuoteForm,
+// BaseLayout, PreviaNaFita). Mudou a coleta, muda este texto no mesmo commit.
+const ATUALIZADA_EM = "17 de outubro de 2026";
+
+const breadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "Política de privacidade", item: `${SITE_URL}/politica-de-privacidade/` },
+  ],
+};
+---
+
+<BaseLayout
+  title="Política de privacidade e dados do orçamento | TapePro"
+  description="Quais dados o site da TapePro coleta no pedido de orçamento, para que servem, por quanto tempo ficam guardados e como pedir acesso ou exclusão pela LGPD."
+>
+  <JsonLd data={breadcrumb} />
+
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-14 md:py-16">
+      <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/55">
+        <a href="/" class="hover:text-orange">Início</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <span class="text-white/80">Política de privacidade</span>
+      </nav>
+      <h1 class="mt-8 max-w-3xl font-display text-[clamp(2rem,5.5vw,3.5rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
+        Política de privacidade
+      </h1>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-white/85">
+        O site pede só o necessário para fazer o seu orçamento. Aqui está o que é coletado, onde fica e como você pede
+        para ver, corrigir ou apagar.
+      </p>
+      <p class="mt-4 font-mono text-xs uppercase tracking-[0.18em] text-white/55">Atualizada em {ATUALIZADA_EM}</p>
+    </div>
+  </section>
+
+  <article class="mx-auto max-w-3xl px-4 py-16 font-body leading-relaxed text-ink/80 md:py-20">
+    <h2 class="text-2xl text-navy">Quem trata os dados</h2>
+    <p class="mt-4">
+      O canal comercial da {NOME_MARCA} em tapeprofitas.com.br, operado pelo representante comercial oficial da marca.
+      Para qualquer assunto sobre os seus dados, escreva para
+      <a href={`mailto:${EMAIL_CONTATO}`} class="font-semibold text-navy underline decoration-orange underline-offset-4"
+        >{EMAIL_CONTATO}</a
+      > ou chame no
+      <a href={whatsappLink(undefined, "Política de privacidade")} target="_blank" rel="noopener" class="font-semibold text-navy underline decoration-orange underline-offset-4"
+        >WhatsApp {WHATSAPP_DISPLAY}</a
+      >.
+    </p>
+
+    <h2 class="mt-12 text-2xl text-navy">O que é coletado</h2>
+    <ul class="mt-4 list-disc space-y-3 pl-5">
+      <li>
+        <strong class="text-navy">No formulário de orçamento:</strong> nome, empresa, e-mail, telefone, CNPJ (opcional),
+        tipo de fita, quantidade estimada, a mensagem que você escrever e a página do site de onde o pedido saiu.
+      </li>
+      <li>
+        <strong class="text-navy">Na conversa pelo WhatsApp:</strong> o que você mandar na conversa. A mensagem
+        pronta do botão pode dizer por onde você chegou ao site (por exemplo, "pelo Google"), para saber qual canal
+        funciona.
+      </li>
+      <li>
+        <strong class="text-navy">Na prévia da sua logo na fita:</strong> nada. A imagem que você anexa é processada no
+        seu próprio navegador e não é enviada ao site.
+      </li>
+    </ul>
+
+    <h2 class="mt-12 text-2xl text-navy">Para que os dados servem</h2>
+    <p class="mt-4">
+      Para responder ao seu pedido: montar o orçamento, tirar dúvidas sobre a fita e acompanhar a negociação. A base
+      legal é o procedimento preliminar a um contrato a pedido do titular (art. 7º, V, da LGPD). Os dados não são
+      vendidos, não entram em lista de e-mail marketing e não são repassados a terceiros para publicidade.
+    </p>
+
+    <h2 class="mt-12 text-2xl text-navy">Onde ficam e por quanto tempo</h2>
+    <p class="mt-4">
+      O pedido do formulário é gravado no banco de dados do próprio site, num servidor contratado para isso, com acesso
+      restrito por senha. Ele fica guardado enquanto houver negociação ou relação comercial e é apagado quando você
+      pedir, salvo o que a lei obrigar a manter (como dados de nota fiscal de uma compra feita).
+    </p>
+    <p class="mt-4">
+      A conversa pelo WhatsApp fica no próprio WhatsApp, sob a política de privacidade da Meta, que opera o aplicativo.
+    </p>
+
+    <h2 class="mt-12 text-2xl text-navy">Cookies e medição</h2>
+    <p class="mt-4">
+      O site não usa cookies de rastreamento nem ferramentas de publicidade. Ele guarda só a origem da visita no
+      armazenamento da aba do navegador (que se apaga ao fechar a aba), para completar a mensagem do WhatsApp. A área
+      interna de quem atende usa um cookie de login, que não vale para visitantes.
+    </p>
+
+    <h2 class="mt-12 text-2xl text-navy">Os seus direitos</h2>
+    <p class="mt-4">
+      Pela Lei Geral de Proteção de Dados (Lei nº 13.709/2018, art. 18), você pode pedir a qualquer momento: confirmação
+      de que há dados seus, acesso a eles, correção, exclusão, informação sobre com quem foram compartilhados e revogação
+      do consentimento. Basta escrever para
+      <a href={`mailto:${EMAIL_CONTATO}`} class="font-semibold text-navy underline decoration-orange underline-offset-4"
+        >{EMAIL_CONTATO}</a
+      >. Se a resposta não resolver, você também pode reclamar na Autoridade Nacional de Proteção de Dados (ANPD).
+    </p>
+
+    <h2 class="mt-12 text-2xl text-navy">Mudanças nesta política</h2>
+    <p class="mt-4">
+      Se o site passar a coletar algo novo, esta página muda antes, com a data de atualização no topo.
+    </p>
+  </article>
+</BaseLayout>

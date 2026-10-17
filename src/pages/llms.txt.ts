@@ -28,6 +28,11 @@ const INSTITUCIONAL = [
     caminho: "/perguntas-frequentes/",
     resumo: "Pedido mínimo, prazo, clichê, personalização e entrega.",
   },
+  {
+    titulo: "Política de privacidade",
+    caminho: "/politica-de-privacidade/",
+    resumo: "Dados coletados no orçamento, finalidade, guarda e direitos pela LGPD.",
+  },
 ];
 
 const item = (titulo: string, caminho: string, resumo: string) => `- [${titulo}](${SITE_URL}${caminho}): ${resumo}`;

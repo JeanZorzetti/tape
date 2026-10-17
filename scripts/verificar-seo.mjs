@@ -89,8 +89,11 @@ for (const arquivo of html.sort()) {
       if (kb > MAX_IMAGEM_KB) erro(rota, `${url} tem ${kb.toFixed(0)} KB (máx. ${MAX_IMAGEM_KB})`);
     }
     // Sem width+height (ou aspect-ratio no style) o layout pula quando a imagem carrega.
+    // `hidden` é a prévia da logo do comprador: sem src no HTML, só aparece depois de uma ação
+    // dele, então não move nada no carregamento.
     const temDimensao = /\bwidth="\d+"/.test(tag) && /\bheight="\d+"/.test(tag);
-    if (!temDimensao && !/aspect-ratio/.test(tag)) erro(rota, `<img> sem width/height: ${tag.slice(0, 80)}`);
+    const escondida = /\shidden[\s>]/.test(tag);
+    if (!temDimensao && !escondida && !/aspect-ratio/.test(tag)) erro(rota, `<img> sem width/height: ${tag.slice(0, 80)}`);
   }
 
   links.set(
