@@ -55,6 +55,19 @@ export function comFonte(href: string, fonte: string): string {
   return url.toString();
 }
 
+/** Limite do campo "nome na fita" da prévia: mais que isso não cabe legível numa fita de 48 mm. */
+export const NOME_NA_FITA_MAX = 40;
+
+/** Acrescenta o nome que a pessoa digitou na prévia da página de produto. Vazio = link intacto. */
+export function comNomeNaFita(href: string, nome: string): string {
+  const limpo = nome.trim().replace(/\s+/g, " ").slice(0, NOME_NA_FITA_MAX);
+  const url = new URL(href);
+  const texto = url.searchParams.get("text");
+  if (!texto || !limpo) return href;
+  url.searchParams.set("text", `${texto} Nome na fita: "${limpo}".`);
+  return url.toString();
+}
+
 export function whatsappLink(contexto?: string, paginaOrigem?: string): string {
   let abertura = "Olá! Vim pelo site da TapePro";
   if (paginaOrigem) abertura += ` (${paginaOrigem})`;

@@ -1,0 +1,367 @@
+---
+// A pessoa escreve o nome da empresa e vê a fita impressa lacrando uma caixa. Mora na página da fita
+// personalizável (não na home): é ferramenta de quem já está decidindo o produto.
+import WhatsAppCta from "./WhatsAppCta.astro";
+import { PRODUTOS, type Produto } from "../../lib/produtos";
+import { NOME_NA_FITA_MAX } from "../../lib/whatsapp";
+
+interface Props {
+  produto: Produto;
+}
+const { produto } = Astro.props;
+
+const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const spec = (p: Produto, label: string) => p.specs.find((s) => s.label === label)?.valor ?? "";
+
+// Largura real da fita: a altura da faixa na caixa segue a proporção 48 mm × 70 mm.
+const opcoes = PRODUTOS.filter((p) => p.personalizavel).map((p) => ({
+  slug: p.slug,
+  rotulo: `${p.slug === "fita-gomada" ? "Kraft gomada" : "Transparente"} · ${spec(p, "Largura")}`,
+  material: p.slug === "fita-gomada" ? "kraft" : "bopp",
+  larguraMm: parseInt(spec(p, "Largura"), 10),
+  minimo: parseInt(spec(p, "Pedido mínimo"), 10),
+  preco: brl(p.preco.aPartirDe),
+  condicao: p.preco.condicao ?? "",
+  contexto: p.contexto,
+  origem: `Prévia · ${p.nome}`,
+  nome: p.nome,
+}));
+const atual = opcoes.find((o) => o.slug === produto.slug) ?? opcoes[0];
+
+const NOME_PADRAO = "Sua Empresa";
+const AVISO = "Esta fita é sua garantia";
+const REPETICOES = 4;
+---
+
+<section
+  data-art="sua-marca"
+  data-opcoes={JSON.stringify(opcoes)}
+  data-nome-padrao={NOME_PADRAO}
+  class="grao-kraft bg-kraft-100"
+  aria-labelledby="previa-titulo"
+>
+  <div class="previa mx-auto max-w-6xl px-4 py-16 md:py-20">
+    <header class="previa__cabeca">
+      <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">Teste antes de pedir</p>
+      <h2 id="previa-titulo" class="mt-3 text-3xl text-navy md:text-[2.75rem]">Escreva o nome da sua empresa e veja a fita.</h2>
+    </header>
+
+    <div class="previa__palco">
+      <figure class="caixa" role="img" aria-label={`Prévia: ${atual.rotulo} com “${NOME_PADRAO}” impresso, lacrando uma caixa de papelão`} data-caixa>
+        <div class="aba aba--cima"></div>
+        <div class="aba aba--baixo"></div>
+        <div class="fibra grao-kraft"></div>
+        <div class="canal"></div>
+        <div class="fita" data-fita data-material={atual.material} style={`--sm-largura-mm: ${atual.larguraMm}`}>
+          <div class="fita__impressao" data-impressao>
+            {
+              Array.from({ length: REPETICOES }, () => (
+                <>
+                  <span class="fita__nome" data-nome>{NOME_PADRAO}</span>
+                  <span class="fita__aviso">{AVISO}</span>
+                </>
+              ))
+            }
+          </div>
+        </div>
+        <div class="borda"></div>
+      </figure>
+      <p class="mt-3 font-mono md:text-right text-[0.68rem] uppercase tracking-[0.12em] text-steel">
+        Prévia ilustrativa · a arte final sai com o seu logo, em até 2 cores
+      </p>
+    </div>
+
+    <form class="previa__controles" data-controles onsubmit="return false">
+      <label for="previa-nome" class="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-steel">Nome na fita</label>
+      <input
+        id="previa-nome"
+        name="nome"
+        type="text"
+        maxlength={NOME_NA_FITA_MAX}
+        autocomplete="organization"
+        placeholder="Nome da sua empresa"
+        class="campo mt-2"
+        data-campo
+      />
+
+      <fieldset class="mt-6">
+        <legend class="font-mono text-[0.7rem] uppercase tracking-[0.16em] text-steel">Fita</legend>
+        <div class="mt-2 flex flex-wrap gap-2">
+          {
+            opcoes.map((o) => (
+              <label class="opcao">
+                <input type="radio" name="fita" value={o.slug} checked={o.slug === atual.slug} class="sr-only" data-opcao />
+                <span>{o.rotulo}</span>
+              </label>
+            ))
+          }
+        </div>
+      </fieldset>
+
+      <dl class="mt-6 flex flex-wrap gap-x-8 gap-y-3">
+        <div>
+          <dt class="sr-only">Pedido mínimo</dt>
+          <dd class="font-display text-[1.75rem] font-extrabold leading-none tabular-nums text-navy" data-minimo>{atual.minimo}</dd>
+          <dd class="mt-1 font-body text-sm text-steel">rolos no mínimo</dd>
+        </div>
+        <div>
+          <dt class="sr-only">Preço por rolo</dt>
+          <dd class="font-display text-[1.75rem] font-extrabold leading-none tabular-nums text-navy" data-preco>{atual.preco}</dd>
+          <dd class="mt-1 font-body text-sm text-steel">a partir de, por rolo <span class="block text-xs" data-condicao>{atual.condicao}</span></dd>
+        </div>
+      </dl>
+
+      <div class="mt-6" data-cta>
+        <WhatsAppCta label="Pedir orçamento com este nome" contexto={atual.contexto} paginaOrigem={atual.origem} />
+      </div>
+    </form>
+  </div>
+</section>
+
+<style>
+  /* art-direction · sua-marca-na-fita · eixos: pigmento/estado/média · orçamento: 2kb · 2026-10-17 */
+  [data-art="sua-marca"] {
+    --sm-caixa-luz: oklch(0.755 0.084 75);
+    --sm-caixa: oklch(0.698 0.087 71.4);
+    --sm-caixa-dobra: oklch(0.625 0.085 71.3);
+    --sm-caixa-sombra: oklch(0.55 0.075 71.5);
+    --sm-caixa-baixo: oklch(0.707 0.085 71.7);
+    --sm-caixa-borda: oklch(0.383 0.065 67.8);
+    --sm-gomada: oklch(0.806 0.072 79.1);
+    --sm-gomada-fio: oklch(0.69 0.083 77.6);
+    /* O BOPP é luz sobre o papelão: branco morno com alfa, nunca croma 0. */
+    --sm-bopp-brilho: oklch(0.99 0.006 85 / 0.34);
+    --sm-bopp-meio: oklch(0.99 0.006 85 / 0.12);
+    --sm-bopp-fundo: oklch(0.99 0.006 85 / 0.22);
+    --sm-bopp-reflexo: oklch(0.99 0.006 85 / 0.4);
+    --sm-bopp-borda: oklch(0.99 0.006 85 / 0.35);
+    --sm-bopp-opaco: oklch(0.8 0.06 76);
+    --sm-canal: oklch(0.99 0.006 85 / 0.035);
+    --sm-campo: oklch(0.995 0.004 85);
+    /* Duas tintas, como a impressão real: o nome em navy, o aviso em laranja queimado (4,5:1 nas duas fitas). */
+    --sm-tinta-nome: var(--color-navy);
+    --sm-tinta-aviso: oklch(0.4 0.13 45);
+    --sm-sombra-caixa: 0 40px 60px -30px color-mix(in oklch, var(--color-breu) 60%, transparent),
+      0 8px 18px -8px color-mix(in oklch, var(--sm-caixa-borda) 55%, transparent);
+    --sm-sombra-campo: 0 10px 24px -14px color-mix(in oklch, var(--color-navy) 45%, transparent);
+    --sm-ease: cubic-bezier(0.22, 1, 0.36, 1);
+    --sm-dur-impressao: 700ms;
+    --sm-dur-troca: 220ms;
+    /* 48 mm de fita = 23% da altura da tampa; a gomada (70 mm) cresce na mesma proporção. */
+    --sm-faixa-por-mm: 0.48%;
+  }
+
+  /* Celular: título → prévia → controles. Desktop: título e controles à esquerda, a caixa à direita. */
+  .previa {
+    display: grid;
+    gap: 2rem;
+    grid-template-areas: "cabeca" "palco" "controles";
+  }
+  .previa__cabeca { grid-area: cabeca; }
+  .previa__palco { grid-area: palco; }
+  .previa__controles { grid-area: controles; }
+  @media (min-width: 900px) {
+    .previa {
+      grid-template-columns: 4fr 8fr;
+      grid-template-areas: "cabeca palco" "controles palco";
+      column-gap: 3rem;
+      row-gap: 0;
+      align-items: center;
+    }
+    .previa__cabeca { align-self: end; }
+    .previa__controles { align-self: start; margin-top: 1.75rem; }
+  }
+
+  .campo {
+    width: 100%;
+    font: 600 1.25rem var(--font-body);
+    color: var(--color-navy);
+    background: var(--sm-campo);
+    border: 2px solid var(--color-navy);
+    border-radius: 10px;
+    padding: 0.85rem 1rem;
+    box-shadow: var(--sm-sombra-campo);
+  }
+  .campo::placeholder { color: var(--color-steel); font-weight: 500; }
+
+  .opcao span {
+    display: inline-block;
+    cursor: pointer;
+    font: 600 0.875rem var(--font-body);
+    color: var(--color-navy);
+    padding: 0.55rem 0.9rem;
+    border-radius: 999px;
+    border: 1.5px solid color-mix(in oklch, var(--color-navy) 40%, transparent);
+    transition: background-color var(--sm-dur-troca) var(--sm-ease), color var(--sm-dur-troca) var(--sm-ease);
+  }
+  .opcao input:checked + span { background: var(--color-navy); color: var(--sm-campo); border-color: var(--color-navy); }
+  .opcao input:focus-visible + span { outline: 2px solid var(--color-ink); outline-offset: 2px; box-shadow: 0 0 0 2px var(--color-orange); }
+
+  /* A tampa: duas abas de papelão, a de cima na luz, a de baixo na sombra da emenda. */
+  .caixa {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--sm-caixa);
+    box-shadow: var(--sm-sombra-caixa);
+  }
+  .aba { position: absolute; left: 0; right: 0; height: 50%; }
+  .aba--cima { top: 0; background: linear-gradient(180deg, var(--sm-caixa-luz), var(--sm-caixa) 85%, var(--sm-caixa-dobra)); }
+  .aba--baixo { bottom: 0; background: linear-gradient(180deg, var(--sm-caixa-sombra), var(--sm-caixa-dobra) 14%, var(--sm-caixa-baixo)); }
+  .fibra { position: absolute; inset: 0; mix-blend-mode: multiply; opacity: 0.55; background-size: 160px; }
+  .canal { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, var(--sm-canal) 0 3px, transparent 3px 9px); }
+  .borda {
+    position: absolute;
+    inset: 0;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 10px color-mix(in oklch, var(--sm-caixa-borda) 18%, transparent),
+      inset 0 0 50px color-mix(in oklch, var(--sm-caixa-borda) 40%, transparent);
+  }
+
+  .fita {
+    position: absolute;
+    left: -2%;
+    right: -2%;
+    top: 50%;
+    height: calc(var(--sm-largura-mm) * var(--sm-faixa-por-mm));
+    translate: 0 -50%;
+    rotate: -1.2deg;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    white-space: nowrap;
+    transition: height var(--sm-dur-troca) var(--sm-ease), background var(--sm-dur-troca) var(--sm-ease);
+  }
+  .fita[data-material="bopp"] {
+    background: linear-gradient(180deg, var(--sm-bopp-brilho), var(--sm-bopp-meio) 40%, var(--sm-bopp-fundo));
+    border-block: 1px solid var(--sm-bopp-borda);
+    box-shadow: inset 0 1px 0 var(--sm-bopp-reflexo);
+  }
+  /* Gomada reforçada: papel kraft opaco com os fios de nylon cruzados na trama. */
+  .fita[data-material="kraft"] {
+    background:
+      repeating-linear-gradient(60deg, color-mix(in oklch, var(--sm-gomada-fio) 55%, transparent) 0 1px, transparent 1px 14px),
+      repeating-linear-gradient(-60deg, color-mix(in oklch, var(--sm-gomada-fio) 55%, transparent) 0 1px, transparent 1px 14px),
+      var(--sm-gomada);
+    box-shadow: 0 2px 4px color-mix(in oklch, var(--sm-caixa-borda) 35%, transparent);
+  }
+
+  .fita__impressao {
+    display: flex;
+    align-items: center;
+    gap: 2.6rem;
+    padding-left: 1.5rem;
+  }
+  .fita__nome {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: clamp(1.1rem, 2.4vw, 2rem);
+    letter-spacing: -0.01em;
+    color: var(--sm-tinta-nome);
+  }
+  .fita__aviso {
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: clamp(0.5rem, 0.85vw, 0.75rem);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--sm-tinta-aviso);
+  }
+
+  /* A impressão passa pela fita da esquerda para a direita, como o rolo saindo da impressora.
+     Só com JS (data-vivo): sem ele, a fita já nasce impressa. */
+  @keyframes imprimir {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+  [data-vivo] .fita__impressao[data-aguardando] { clip-path: inset(0 100% 0 0); }
+  [data-vivo] .fita__impressao[data-imprimindo] { animation: imprimir var(--sm-dur-impressao) var(--sm-ease) both; }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-vivo] .fita__impressao[data-imprimindo] { animation: none; }
+    .fita, .opcao span { transition: none; }
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .fita[data-material="bopp"] { background: var(--sm-bopp-opaco); }
+  }
+  @media (prefers-contrast: more) {
+    .fita[data-material="bopp"] { background: var(--sm-bopp-opaco); border-block: 2px solid var(--color-navy); }
+  }
+</style>
+
+<script>
+  import { whatsappLink, comNomeNaFita } from "../../lib/whatsapp";
+
+  interface Opcao {
+    slug: string;
+    rotulo: string;
+    material: string;
+    larguraMm: number;
+    minimo: number;
+    preco: string;
+    condicao: string;
+    contexto: string;
+    origem: string;
+  }
+
+  for (const raiz of document.querySelectorAll<HTMLElement>("[data-art='sua-marca']")) {
+    const opcoes: Opcao[] = JSON.parse(raiz.dataset.opcoes ?? "[]");
+    const padrao = raiz.dataset.nomePadrao ?? "";
+    const campo = raiz.querySelector<HTMLInputElement>("[data-campo]")!;
+    const caixa = raiz.querySelector<HTMLElement>("[data-caixa]")!;
+    const fita = raiz.querySelector<HTMLElement>("[data-fita]")!;
+    const impressao = raiz.querySelector<HTMLElement>("[data-impressao]")!;
+    const nomes = raiz.querySelectorAll<HTMLElement>("[data-nome]");
+    const cta = raiz.querySelector<HTMLAnchorElement>("[data-cta] a")!;
+    const escolhida = () =>
+      opcoes.find((o) => o.slug === raiz.querySelector<HTMLInputElement>("[data-opcao]:checked")?.value) ?? opcoes[0];
+
+    // Troca no meio de uma impressão não reinicia a passada: a fita já mudou e a passada segue de onde está.
+    const imprimindo = () => impressao.getAnimations().some((a) => a.playState === "running");
+    const imprimir = () => {
+      if (imprimindo()) return;
+      impressao.removeAttribute("data-imprimindo");
+      void impressao.offsetWidth; // força o reflow para a mesma animação rodar de novo
+      impressao.setAttribute("data-imprimindo", "");
+    };
+
+    const atualizar = () => {
+      const o = escolhida();
+      const nome = campo.value.trim().replace(/\s+/g, " ") || padrao;
+      nomes.forEach((n) => (n.textContent = nome));
+      fita.dataset.material = o.material;
+      fita.style.setProperty("--sm-largura-mm", String(o.larguraMm));
+      caixa.setAttribute("aria-label", `Prévia: ${o.rotulo} com “${nome}” impresso, lacrando uma caixa de papelão`);
+      raiz.querySelector("[data-minimo]")!.textContent = String(o.minimo);
+      raiz.querySelector("[data-preco]")!.textContent = o.preco;
+      raiz.querySelector("[data-condicao]")!.textContent = o.condicao;
+      cta.href = comNomeNaFita(whatsappLink(o.contexto, o.origem), campo.value);
+      // O layout acrescenta a fonte da visita no clique e marca o link; link novo precisa da frase de novo.
+      delete cta.dataset.fonte;
+    };
+
+    campo.addEventListener("input", atualizar);
+    raiz.querySelectorAll("[data-opcao]").forEach((r) =>
+      r.addEventListener("change", () => {
+        atualizar();
+        imprimir();
+      }),
+    );
+
+    raiz.setAttribute("data-vivo", "");
+    // Entrada: a primeira impressão acontece quando a caixa aparece. Com movimento reduzido, nasce impressa.
+    if (!matchMedia("(prefers-reduced-motion: reduce)").matches && "IntersectionObserver" in window) {
+      impressao.setAttribute("data-aguardando", "");
+      new IntersectionObserver(
+        (entradas, observador) => {
+          if (!entradas.some((e) => e.isIntersecting)) return;
+          impressao.removeAttribute("data-aguardando");
+          imprimir();
+          observador.disconnect();
+        },
+        { threshold: 0.5 },
+      ).observe(caixa);
+    }
+  }
+</script>

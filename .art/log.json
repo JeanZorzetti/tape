@@ -1,5 +1,37 @@
 [
   {
+    "data": "2026-10-17",
+    "alvo": "/produtos/fita-transparente-personalizada/ e /produtos/fita-gomada/ — bloco logo abaixo do hero",
+    "direcao": "custom:sua-marca-na-fita",
+    "eixos": {
+      "materia": "pigmento",
+      "motor": "estado",
+      "banda": "media"
+    },
+    "orcamento": {
+      "js_kb": 1.6,
+      "lcp_alvo": 2.5,
+      "lcp_medido": 1.04,
+      "cls": 0,
+      "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3, servidor local; LCP é o parágrafo do hero (inalterado)"
+    },
+    "deps": [],
+    "recusadas": [
+      "Sanfona (foto/scroll/escura) para a home",
+      "Sua marca na fita para a home (aceita em outra página)",
+      "Vinte rolos (geometria/scroll/clara) para a home"
+    ],
+    "coreografia": {
+      "entrada": "a impressão passa pela fita da esquerda para a direita (clip-path, 700 ms) quando a caixa aparece; uma vez",
+      "scroll": "ausente: é ferramenta de digitar, gesto de rolagem competiria com o campo",
+      "ponteiro": "teclado/dedo: cada letra reimprime o nome na hora, sem transição",
+      "transicao": "troca transparente ↔ kraft gomada: a faixa muda de largura (48 → 70 mm) e de material em 220 ms e a impressão passa de novo; troca no meio da passada não reinicia",
+      "assinatura": "o nome digitado impresso em duas tintas (navy + laranja queimado) na fita lacrando uma tampa de papelão"
+    },
+    "mudou": "Componente PreviaNaFita (quote/) com tokens no escopo [data-art=sua-marca]; entra só nas fitas personalizáveis. Ficha (mínimo, a partir de, condição) e mensagem do WhatsApp seguem a fita escolhida; o nome vai na mensagem (comNomeNaFita, com teste). Gates: G6/G19 (cores soltas e brancos de croma 0 → tokens mornos), G7 (carimbo no CSS), G23 (fita BOPP sólida em prefers-reduced-transparency/contrast), G36 (troca no meio da passada não reinicia), aviso de 2,5:1 → 4,5:1.",
+    "pendente": "A caixa é desenho (objeto plano); foto real de caixa vista de cima melhoraria. Sem JS o campo não atualiza a prévia (a fita nasce impressa e o botão funciona). Nome em fonte não é logo: a nota de prévia ilustrativa fica."
+  },
+  {
     "data": "2026-10-03",
     "alvo": "home / — vitrine do portfólio + gates",
     "direcao": "custom:galpao-com-veu + vitrine",
