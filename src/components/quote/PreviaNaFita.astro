@@ -440,7 +440,7 @@ const REPETICOES = 4;
         clearTimeout(prazo);
         resolver(null);
       };
-      const mensagem: PedidoVetorizacao = { dados, largura, altura, fundoBranco: fonte.fundoBranco };
+      const mensagem: PedidoVetorizacao = { dados, largura, altura, fundoBranco: fonte.fundoBranco, escalaFonte: escala };
       w.postMessage(mensagem, [dados.buffer]);
     });
   }

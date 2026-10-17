@@ -6,7 +6,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
-import { caixaDaTinta } from "../src/lib/recorteLogo.ts";
+import { caixaDaTinta, temFundoBranco } from "../src/lib/recorteLogo.ts";
 
 const BRANCO = [255, 255, 255, 255];
 const TRANSPARENTE = [0, 0, 0, 0];
@@ -32,6 +32,13 @@ test("PNG com margem transparente: a caixa é só a logo", () => {
 test("JPG com margem branca e ruído de compressão: o quase-branco conta como fundo", () => {
   const dados = imagem(300, 300, [246, 248, 244, 255], NAVY, { x: 100, y: 120, w: 90, h: 40 });
   assert.deepEqual(caixaDaTinta(dados, 300, 300), { x: 100, y: 120, w: 90, h: 40 });
+});
+
+test("logo que encosta no canto continua sobre fundo branco", () => {
+  // A ponta do símbolo toca o canto de baixo à esquerda; o resto da borda é o branco do JPG.
+  const dados = imagem(300, 120, BRANCO, NAVY, { x: 0, y: 40, w: 120, h: 80 });
+  assert.equal(temFundoBranco(dados, 300, 120), true);
+  assert.deepEqual(caixaDaTinta(dados, 300, 120), { x: 0, y: 40, w: 120, h: 80 });
 });
 
 test("fundo colorido faz parte da marca: não recorta", () => {
