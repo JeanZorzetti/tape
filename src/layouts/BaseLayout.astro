@@ -4,6 +4,8 @@ import Seo from "../components/seo/Seo.astro";
 import JsonLd from "../components/seo/JsonLd.astro";
 import Header from "../components/layout/Header.astro";
 import Footer from "../components/layout/Footer.astro";
+import { getImage } from "astro:assets";
+import logoMarca from "../assets/marca/logo-tapepro.png";
 import { FEED_URL, NOME_MARCA, SITE_URL, TAGLINE, WHATSAPP_NUMERO } from "../lib/constants";
 
 interface Props {
@@ -14,11 +16,18 @@ interface Props {
 }
 const { title, description, image, noindex } = Astro.props;
 
+// O Google usa o `logo` do Organization no painel da busca pela marca e pede
+// pelo menos 112px de cada lado; 512px de largura cobre com folga.
+const LARGURA_LOGO_SCHEMA = 512;
+const logoSchema = await getImage({ src: logoMarca, width: LARGURA_LOGO_SCHEMA, format: "png" });
+
 const organization = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": SITE_URL + "/#organization",
   name: NOME_MARCA,
   url: SITE_URL,
+  logo: new URL(logoSchema.src, SITE_URL).href,
   slogan: TAGLINE,
   description:
     "Fitas adesivas personalizadas com a marca do cliente. Representante comercial oficial TapePro. Pedido mínimo a partir de 20 rolos.",
