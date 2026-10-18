@@ -1,7 +1,7 @@
 ---
 // O momento da home: o rolo TapePro desenrolando a fita com a marca impressa.
 // O pôster é um quadro da própria cena (scripts/rolo3d) e é o que todo mundo vê
-// primeiro; a cena 3D só assume depois do `load`, e nunca com movimento reduzido,
+// primeiro; a cena 3D só assume na primeira interação (rolar, tocar, mover), e nunca com movimento reduzido,
 // economia de dados ou sem WebGL. Pôster e cena têm o mesmo enquadramento quadrado,
 // então a troca entre os dois não aparece.
 import { Image } from "astro:assets";
@@ -128,13 +128,19 @@ const { class: cls = "" } = Astro.props;
     });
   }
 
+  // O núcleo do three + ScrollTrigger somam ~3 s de thread principal em celular médio
+  // (TBT 5 s no PageSpeed). Quem não interage fica com o pôster, que é o mesmo quadro;
+  // quem rola ou toca ganha a cena. Interação real é o sinal de que alguém está olhando.
+  const EVENTOS_DE_INTERACAO = ["scroll", "pointerdown", "pointermove", "touchstart", "keydown", "wheel"] as const;
+
   const caixa = document.querySelector<HTMLElement>("[data-rolo3d]");
   if (caixa && podeAnimar()) {
-    const agendar = () =>
+    const aoInteragir = () => {
+      EVENTOS_DE_INTERACAO.forEach((tipo) => removeEventListener(tipo, aoInteragir));
       "requestIdleCallback" in window
         ? requestIdleCallback(() => ligarCena(caixa), { timeout: ESPERA_MAXIMA_OCIOSA_MS })
         : setTimeout(() => ligarCena(caixa), 0);
-    if (document.readyState === "complete") agendar();
-    else addEventListener("load", agendar, { once: true });
+    };
+    EVENTOS_DE_INTERACAO.forEach((tipo) => addEventListener(tipo, aoInteragir, { passive: true }));
   }
 </script>
