@@ -1,6 +1,34 @@
 [
   {
     "data": "2026-10-17",
+    "alvo": "home / — segunda rodada da costura, depois de «Dá pra melhorar mais»",
+    "direcao": "custom:costura (derivada do H1: a fita que lacra a caixa)",
+    "eixos": {
+      "materia": "pigmento",
+      "motor": "scroll",
+      "banda": "media"
+    },
+    "orcamento": {
+      "js_kb": 1.5,
+      "lcp_alvo": 2.5,
+      "lcp_medido": 1.49,
+      "cls": 0.001,
+      "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3 (1,48/1,49/1,50 s), build de produção em servidor local; HTML da home 11,4 KB gzip, 1.122 elementos; o CLS de 0,001 é a troca de fonte no hero, anterior"
+    },
+    "deps": [],
+    "recusadas": [],
+    "coreografia": {
+      "entrada": "inalterada (rolo 3D do hero)",
+      "scroll": "a mesma costura, agora com a fita do tamanho da do rolo: espessura clamp(2.75rem, 0.5rem + 6vw, 6.5rem) (94 px em 1440) e padding das seções vizinhas lg:py-28 para a diagonal caber (4–7° no desktop); ponta em dois gomos (36% do giro no primeiro, 64% no da serrilha, 64° no total) que curva como fita flexível; sombra do tamanho da ponta inteira",
+      "ponteiro": "hover no botão final em 120 ms (clareia, a seta avança 4 px)",
+      "transicao": "ausente: site estático",
+      "assinatura": "a página lacrada pela fita impressa; o CTA impresso na própria fita na letra da marca (Archivo 800), como o TAPEPRO da arte"
+    },
+    "mudou": "Diagnóstico pelo vídeo da rolagem: no desktop as tiras de 56 px numa tela de 1440 liam como faixa divisória, quase horizontais, com a ponta pequena demais para ler como fita puxada e o botão miúdo; no celular já funcionava. Agora: fita maior, brilho de BOPP nas bordas (fio claro em cima, escuro embaixo), vinco da emenda por baixo da fita (desfaz o giro e cruza a tira na horizontal, onde ela cobre a junta), ponta em dois gomos com a arte alinhada pelo período (3 repetições em vez de 14), botão final com 88 px no desktop e o texto em Archivo 800 a 0,28 da espessura. Checado por colisão de cantos de texto/cartão com a tira girada em 360/1024/1280/1920: nenhuma.",
+    "pendente": "Se o vinco ler como defeito, sai (.costura__vinco). O vídeo 9:16 segue só com o hero."
+  },
+  {
+    "data": "2026-10-17",
     "alvo": "home / — a fita do rolo do hero atravessando a página até o CTA final (CosturaDeFita, FitaFinal, ImpressaoDaFita, src/lib/fita-costurada.ts, src/styles/fita.css)",
     "direcao": "custom:costura (derivada do H1: a fita que lacra a caixa)",
     "eixos": {

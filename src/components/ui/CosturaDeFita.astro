@@ -4,7 +4,7 @@
 // outra enquanto a pessoa rola, com a ponta serrilhada erguida, sendo puxada. Uma emenda
 // sai pela direita e a seguinte entra por ela (zigue-zague), até a FitaFinal do CTA.
 // Vai entre duas seções, com altura zero: a tira fica metade em cada uma, dentro do
-// padding (py-20). Sem JS ou com movimento reduzido ela já está colada: a página lacrada.
+// padding (py-20, lg:py-28). Sem JS ou com movimento reduzido ela já está colada.
 import ImpressaoDaFita from "./ImpressaoDaFita.astro";
 import { pontaSerrilhada } from "../../lib/serrilha";
 import "../../styles/fita.css";
@@ -14,17 +14,27 @@ interface Props {
   sentido: "direita" | "esquerda";
 }
 const { sentido } = Astro.props;
+// A ponta mostra a arte pelo resto da divisão pelo período: três repetições cobrem os dois gomos.
+const REPETICOES_NA_PONTA = 3;
 ---
 
 <div class="costura" data-costura data-sentido={sentido} aria-hidden="true">
   <div class="costura__tira">
-    <div class="fita-faixa costura__faixa" data-revela><ImpressaoDaFita /></div>
+    <div class="fita-faixa costura__faixa" data-revela>
+      <ImpressaoDaFita />
+      <span class="costura__vinco"></span>
+    </div>
     <div class="fita-sombra" data-sombra></div>
-    <div class="fita-ponta" data-ponta style={`clip-path: ${pontaSerrilhada(sentido)}`}>
-      <div class="fita-faixa">
-        <div class="fita-ponta__conteudo" data-conteudo><ImpressaoDaFita /></div>
+    <div class="fita-ponta" data-ponta>
+      <div class="fita-faixa fita-ponta__gomo">
+        <span class="fita-ponta__conteudo" data-conteudo><ImpressaoDaFita repeticoes={REPETICOES_NA_PONTA} /></span>
       </div>
-      <div class="fita-ponta__luz" data-luz></div>
+      <div class="fita-ponta__fim" data-ponta-fim style={`clip-path: ${pontaSerrilhada(sentido)}`}>
+        <div class="fita-faixa fita-ponta__gomo">
+          <span class="fita-ponta__conteudo" data-conteudo-fim><ImpressaoDaFita repeticoes={REPETICOES_NA_PONTA} /></span>
+        </div>
+        <div class="fita-ponta__luz" data-luz></div>
+      </div>
     </div>
   </div>
 </div>
@@ -38,18 +48,29 @@ const { sentido } = Astro.props;
     pointer-events: none;
   }
   .costura__tira {
-    --espessura: clamp(2.5rem, 2rem + 1.5vw, 3.5rem);
-    /* Folga do padding das seções (py-20) dos dois lados da emenda, menos meia espessura
-       e um respiro: é o quanto a tira pode descer até a borda da tela sem tocar no conteúdo. */
-    --queda: calc(5rem - var(--espessura) / 2 - 0.75rem);
+    --espessura: clamp(2.75rem, 0.5rem + 6vw, 6.5rem);
+    /* Padding das seções dos dois lados da emenda (py-20, lg:py-28) menos meia espessura e
+       um respiro: o quanto a tira pode descer até a borda da tela sem tocar no conteúdo. */
+    --folga: 5rem;
+    --queda: calc(var(--folga) - var(--espessura) / 2 - 0.75rem);
+    --giro: calc(var(--sinal) * 2.5deg);
     position: absolute;
     top: 0;
     left: 50%;
     width: calc(106vw + 2 * var(--espessura));
     height: var(--espessura);
     translate: -50% -50%;
-    rotate: calc(var(--sinal) * 2.5deg);
-    rotate: calc(var(--sinal) * min(atan2(var(--queda), 50vw), 8deg));
+    rotate: var(--giro);
+  }
+  @supports (rotate: atan2(1px, 1px)) {
+    .costura__tira {
+      --giro: calc(var(--sinal) * min(atan2(var(--queda), 50vw), 8deg));
+    }
+  }
+  @media (min-width: 64rem) {
+    .costura__tira {
+      --folga: 7rem;
+    }
   }
   [data-sentido="direita"] .costura__tira {
     --sinal: 1;
@@ -61,15 +82,19 @@ const { sentido } = Astro.props;
     position: absolute;
     inset: 0;
   }
-  /* A dobradiça da ponta fica do lado de onde a fita vem. */
-  [data-sentido="direita"] .fita-ponta {
-    transform-origin: 0 50%;
-  }
-  [data-sentido="esquerda"] .fita-ponta {
-    transform-origin: 100% 50%;
-  }
-  [data-sentido="esquerda"] .fita-ponta__luz {
-    --lado-da-luz: 270deg;
+  /* O vinco da emenda por baixo da fita: a junta entre as duas seções continua reta,
+     então o vinco desfaz o giro da tira e a atravessa em ângulo, como a fita sobre a
+     abertura de uma caixa. */
+  .costura__vinco {
+    position: absolute;
+    top: 50%;
+    left: -5%;
+    right: -5%;
+    z-index: 1;
+    border-top: 1.5px solid color-mix(in oklch, var(--color-orange-800) 30%, transparent);
+    box-shadow: 0 1.5px 0 color-mix(in oklch, var(--fita-brilho) 28%, transparent);
+    rotate: calc(-1 * var(--giro));
+    pointer-events: none;
   }
 </style>
 

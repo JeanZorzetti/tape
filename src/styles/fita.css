@@ -9,7 +9,8 @@
 }
 
 /* A fita laranja impressa, a mesma do rolo 3D do hero: laranja chapado, pontilhado navy
-   nas duas bordas e um brilho de BOPP de cima para baixo. A espessura vem de quem usa. */
+   nas duas bordas e o brilho do BOPP: a luz de cima, o fio claro na borda de cima e o fio
+   escuro na de baixo. A espessura vem de quem usa. */
 .fita-faixa {
   position: relative;
   overflow: hidden;
@@ -17,14 +18,16 @@
   background-color: var(--color-orange);
   background-image: linear-gradient(
     180deg,
-    color-mix(in oklch, var(--fita-brilho) 24%, transparent) 0%,
-    color-mix(in oklch, var(--fita-brilho) 6%, transparent) 32%,
+    color-mix(in oklch, var(--fita-brilho) 26%, transparent) 0%,
+    color-mix(in oklch, var(--fita-brilho) 7%, transparent) 30%,
     transparent 55%,
-    color-mix(in oklch, var(--fita-sombra-quente) 10%, transparent) 100%
+    color-mix(in oklch, var(--fita-sombra-quente) 12%, transparent) 100%
   );
   box-shadow:
+    inset 0 1px 0 color-mix(in oklch, var(--fita-brilho) 55%, transparent),
+    inset 0 -1px 0 color-mix(in oklch, var(--fita-sombra-quente) 22%, transparent),
     0 1px 0 color-mix(in oklch, var(--color-orange-800) 30%, transparent),
-    0 14px 18px -16px color-mix(in oklch, var(--color-breu) 80%, transparent);
+    0 16px 20px -16px color-mix(in oklch, var(--color-breu) 80%, transparent);
 }
 .fita-faixa::before,
 .fita-faixa::after {
@@ -33,27 +36,37 @@
   left: 0;
   right: 0;
   z-index: 1;
-  border-top: max(1.5px, calc(var(--espessura) * 0.035)) dashed color-mix(in oklch, var(--color-navy) 45%, transparent);
+  border-top: max(1.5px, calc(var(--espessura) * 0.03)) dashed color-mix(in oklch, var(--color-navy) 45%, transparent);
   pointer-events: none;
 }
 .fita-faixa::before { top: 10%; }
 .fita-faixa::after { bottom: 10%; }
 
-/* A ponta sendo puxada: um pedaço da mesma fita, dobrado na dobradiça e erguido em
-   direção a quem olha. O script move, gira e mostra; parada, ela não existe. */
+/* A ponta sendo puxada: dois gomos da mesma fita, o primeiro preso na dobradiça e o
+   segundo, com a serrilha, dobrando mais. Juntos fazem a curva de fita flexível, não de
+   placa. O script move, gira e mostra; parada, ela não existe. */
 .fita-ponta {
   position: absolute;
   top: 0;
   left: 0;
   z-index: 2;
-  width: calc(var(--espessura) * 1.25);
+  width: calc(var(--espessura) * 0.8);
   height: 100%;
   visibility: hidden;
+  transform-style: preserve-3d;
   will-change: transform;
 }
-.fita-ponta .fita-faixa {
+.fita-ponta__gomo {
   position: absolute;
   inset: 0;
+}
+.fita-ponta__fim {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  width: 100%;
+  height: 100%;
+  transform-origin: 0 50%;
 }
 .fita-ponta__conteudo {
   position: absolute;
@@ -69,17 +82,33 @@
   inset: 0;
   z-index: 3;
   opacity: 0;
-  background: linear-gradient(var(--lado-da-luz, 90deg), transparent, color-mix(in oklch, var(--fita-brilho) 45%, transparent));
+  background: linear-gradient(var(--lado-da-luz, 90deg), transparent, color-mix(in oklch, var(--fita-brilho) 50%, transparent));
   pointer-events: none;
 }
 .fita-sombra {
   position: absolute;
   top: 0;
   left: 0;
-  width: calc(var(--espessura) * 1.25);
+  width: calc(var(--espessura) * 1.6);
   height: 100%;
   opacity: 0;
   background: radial-gradient(closest-side, color-mix(in oklch, var(--color-breu) 60%, transparent), transparent);
   pointer-events: none;
   will-change: transform, opacity;
+}
+
+/* A dobradiça fica do lado de onde a fita vem. */
+[data-sentido="direita"] .fita-ponta {
+  transform-origin: 0 50%;
+}
+[data-sentido="esquerda"] .fita-ponta {
+  transform-origin: 100% 50%;
+}
+[data-sentido="esquerda"] .fita-ponta__fim {
+  left: auto;
+  right: 100%;
+  transform-origin: 100% 50%;
+}
+[data-sentido="esquerda"] .fita-ponta__luz {
+  --lado-da-luz: 270deg;
 }

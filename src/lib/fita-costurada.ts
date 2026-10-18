@@ -17,8 +17,10 @@ const CURSO_MINIMO_DA_FITA_FINAL = 0.32;
 const ASSENTAR_A_PARTIR_DE = 0.86;
 /** Amortecimento do progresso: a fita acompanha a rolagem com um pouco de peso. */
 const AMORTECIMENTO_S = 0.14;
-const GIRO_MAXIMO_DA_PONTA_GRAUS = 58;
-const PERSPECTIVA_EM_ESPESSURAS = 5;
+/** A ponta curva em dois gomos: o primeiro dobra pouco, o segundo dobra o resto. */
+const GIRO_MAXIMO_DA_PONTA_GRAUS = 64;
+const PARTE_DO_GIRO_NO_PRIMEIRO_GOMO = 0.36;
+const PERSPECTIVA_EM_ESPESSURAS = 6;
 const LUZ_MAXIMA_NA_PONTA = 0.85;
 const SOMBRA_MAXIMA = 0.6;
 /** Quanto da janela a ponta leva para erguer no começo e para deitar no fim das emendas. */
@@ -31,7 +33,9 @@ interface Pedaco {
   raiz: HTMLElement;
   revela: HTMLElement;
   ponta: HTMLElement;
+  pontaFim: HTMLElement;
   conteudo: HTMLElement;
+  conteudoFim: HTMLElement;
   luz: HTMLElement;
   sombra: HTMLElement;
   /** 1: puxada para a direita; -1: para a esquerda. */
@@ -40,8 +44,11 @@ interface Pedaco {
   /** Altura da emenda (ou do centro do botão) no documento. */
   y: number;
   comprimento: number;
-  largura: number;
+  /** Comprimento de um gomo da ponta; a ponta inteira tem dois. */
+  gomo: number;
   espessura: number;
+  /** Comprimento de uma repetição da arte; 0 quando a tira não é periódica (a final). */
+  periodo: number;
   comeco: number;
   fim: number;
   progresso: number;
@@ -58,15 +65,18 @@ function montar(raiz: HTMLElement): Pedaco {
     raiz,
     revela: raiz.querySelector<HTMLElement>("[data-revela]")!,
     ponta: raiz.querySelector<HTMLElement>("[data-ponta]")!,
+    pontaFim: raiz.querySelector<HTMLElement>("[data-ponta-fim]")!,
     conteudo: raiz.querySelector<HTMLElement>("[data-conteudo]")!,
+    conteudoFim: raiz.querySelector<HTMLElement>("[data-conteudo-fim]")!,
     luz: raiz.querySelector<HTMLElement>("[data-luz]")!,
     sombra: raiz.querySelector<HTMLElement>("[data-sombra]")!,
     sentido: final || raiz.dataset.sentido === "esquerda" ? -1 : 1,
     final,
     y: 0,
     comprimento: 1,
-    largura: 1,
+    gomo: 1,
     espessura: 1,
+    periodo: 0,
     comeco: COMECO_DA_COSTURA,
     fim: FIM_DA_COSTURA,
     progresso: -1,
@@ -80,8 +90,9 @@ function medir(pedacos: Pedaco[]) {
   const limiteDaRolagem = Math.max(0, document.documentElement.scrollHeight - altura);
   for (const p of pedacos) {
     p.comprimento = p.revela.offsetWidth;
-    p.largura = p.ponta.offsetWidth;
+    p.gomo = p.ponta.offsetWidth;
     p.espessura = p.ponta.offsetHeight;
+    p.periodo = p.final ? 0 : (p.revela.querySelector<HTMLElement>(".impressao__unidade")?.offsetWidth ?? 0);
     const caixa = p.raiz.getBoundingClientRect();
     p.y = caixa.top + scrollY + (p.final ? caixa.height / 2 : 0);
     if (p.final) {
@@ -99,20 +110,29 @@ function alvoDe(p: Pedaco, rolagem: number, altura: number): number {
   return suave(entre((p.comeco - naTela) / (p.comeco - p.fim), 0, 1));
 }
 
+// Onde a arte da tira está na posição s: a cópia dentro da ponta é curta e periódica,
+// então basta o resto da divisão pelo período; a final não repete e anda inteira.
+function deslocamentoDaArte(p: Pedaco, s: number): number {
+  return p.periodo > 0 ? s % p.periodo : s;
+}
+
+function erguidaEm(p: Pedaco): number {
+  const subindo = suave(entre(p.progresso / RAMPA_DA_PONTA, 0, 1));
+  const inicioDaDescida = p.final ? ASSENTAR_A_PARTIR_DE : 1 - RAMPA_DA_PONTA;
+  const descendo = suave(entre((p.progresso - inicioDaDescida) / (1 - inicioDaDescida), 0, 1));
+  return subindo * (1 - descendo);
+}
+
 // Coordenadas ao longo da tira, a partir da ponta por onde a fita entra. A borda de
 // ataque (a serrilha) percorre a tira; o que ficou para trás da dobradiça está colado.
 function aplicar(p: Pedaco) {
-  const { comprimento, largura, espessura, sentido, progresso } = p;
+  const { comprimento, gomo, espessura, sentido, progresso } = p;
+  const ponta = gomo * 2;
   const viagem = p.final ? entre(progresso / ASSENTAR_A_PARTIR_DE, 0, 1) : progresso;
-  const percurso = p.final ? comprimento : comprimento + largura;
-  const ataque = viagem * percurso;
-  const colado = Math.max(0, ataque - largura);
+  const percurso = p.final ? comprimento : comprimento + ponta;
+  const colado = Math.max(0, viagem * percurso - ponta);
   const terminou = progresso >= 1 && p.final;
-
-  const erguida = p.final
-    ? suave(entre(progresso / RAMPA_DA_PONTA, 0, 1)) *
-      (1 - suave(entre((progresso - ASSENTAR_A_PARTIR_DE) / (1 - ASSENTAR_A_PARTIR_DE), 0, 1)))
-    : suave(entre(progresso / RAMPA_DA_PONTA, 0, 1)) * (1 - suave(entre((progresso - (1 - RAMPA_DA_PONTA)) / RAMPA_DA_PONTA, 0, 1)));
+  const erguida = erguidaEm(p);
 
   // A tira colada entra um pouco por baixo da dobradiça: sem isso sobra um fio de fundo
   // entre ela e a ponta, no arredondamento dos subpixels.
@@ -123,18 +143,23 @@ function aplicar(p: Pedaco) {
       ? `inset(-2rem ${descoberto} -2rem 0)`
       : `inset(-2rem 0 -2rem ${descoberto})`;
 
-  const esquerdaDaPonta = sentido > 0 ? colado : comprimento - colado - largura;
+  // O primeiro gomo nasce na dobradiça; o segundo, com a serrilha, continua depois dele.
+  const inicioDoGomo = sentido > 0 ? colado : comprimento - colado - gomo;
+  const inicioDoFim = sentido > 0 ? colado + gomo : comprimento - colado - ponta;
   const giro = -sentido * erguida * GIRO_MAXIMO_DA_PONTA_GRAUS;
   p.ponta.style.visibility = progresso <= 0 || terminou ? "hidden" : "visible";
   p.ponta.style.transform =
-    `translate3d(${esquerdaDaPonta}px, 0, 0) perspective(${espessura * PERSPECTIVA_EM_ESPESSURAS}px) rotateY(${giro}deg)`;
-  p.conteudo.style.transform = `translate3d(${-esquerdaDaPonta}px, 0, 0)`;
+    `translate3d(${inicioDoGomo}px, 0, 0) perspective(${espessura * PERSPECTIVA_EM_ESPESSURAS}px) rotateY(${giro * PARTE_DO_GIRO_NO_PRIMEIRO_GOMO}deg)`;
+  p.pontaFim.style.transform = `rotateY(${giro * (1 - PARTE_DO_GIRO_NO_PRIMEIRO_GOMO)}deg)`;
+  p.conteudo.style.transform = `translate3d(${-deslocamentoDaArte(p, inicioDoGomo)}px, 0, 0)`;
+  p.conteudoFim.style.transform = `translate3d(${-deslocamentoDaArte(p, inicioDoFim)}px, 0, 0)`;
   p.luz.style.opacity = String(erguida * LUZ_MAXIMA_NA_PONTA);
 
   // A sombra cai à frente e abaixo da ponta, maior quanto mais ela se ergue.
-  const avanco = sentido * erguida * largura * 0.35;
+  const avanco = sentido * erguida * gomo * 0.6;
+  const inicioDaSombra = sentido > 0 ? colado : comprimento - colado - ponta;
   p.sombra.style.transform =
-    `translate3d(${esquerdaDaPonta + avanco}px, ${erguida * espessura * 0.32}px, 0) scale(${0.7 + 0.5 * erguida})`;
+    `translate3d(${inicioDaSombra + avanco}px, ${erguida * espessura * 0.34}px, 0) scale(${0.75 + 0.45 * erguida})`;
   p.sombra.style.opacity = String(progresso <= 0 || terminou ? 0 : erguida * SOMBRA_MAXIMA);
 }
 
