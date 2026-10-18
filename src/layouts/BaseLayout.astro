@@ -13,8 +13,10 @@ interface Props {
   description: string;
   image?: string;
   noindex?: boolean;
+  /** Direção de arte do cabeçalho; sem ela, a barra clara de sempre. */
+  cabecalho?: "ponta";
 }
-const { title, description, image, noindex } = Astro.props;
+const { title, description, image, noindex, cabecalho } = Astro.props;
 
 // O Google usa o `logo` do Organization no painel da busca pela marca e pede
 // pelo menos 112px de cada lado; 512px de largura cobre com folga.
@@ -59,7 +61,7 @@ const organization = {
       class="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded focus:bg-navy focus:px-4 focus:py-2 focus:text-white"
       >Pular para o conteúdo</a
     >
-    <Header />
+    <Header arte={cabecalho} />
     <main id="conteudo" class="flex-1">
       <slot />
     </main>

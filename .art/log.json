@@ -1,6 +1,37 @@
 [
   {
     "data": "2026-10-17",
+    "alvo": "header da home / (componente layout/Header.astro, prop arte=\"ponta\"; as outras páginas seguem com a barra clara)",
+    "direcao": "custom:derivada-aplicador (Ponta)",
+    "eixos": {
+      "materia": "pigmento",
+      "motor": "ponteiro",
+      "banda": "escura"
+    },
+    "orcamento": {
+      "js_kb": 0,
+      "lcp_alvo": 2.5,
+      "lcp_medido": 1.3,
+      "cls": 0,
+      "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3, servidor local; LCP é o pôster do rolo do hero, não o header"
+    },
+    "deps": [],
+    "recusadas": [
+      "Lacre (pigmento/scroll/clara): tira de fita BOPP com microtexto lacrando o topo",
+      "Etiqueta (pigmento/estado/clara): etiqueta de expedição com remetente, CNPJ em código de barras e serviço"
+    ],
+    "coreografia": {
+      "entrada": "a ponta desce 12 px em 600 ms (cubic-bezier .16,1,.3,1), uma vez",
+      "scroll": "scroll(root) nos primeiros 160 px: a ponta recolhe para 66% (desktop) ou 74% (celular), pendurando ~20 px abaixo da barra",
+      "ponteiro": "hover ou foco puxam a fita 6 px para baixo em 120 ms, como saindo do aplicador; reverte do ponto atual",
+      "transicao": "ausente: site estático, sem troca de rota no cliente",
+      "assinatura": "a logo impressa numa ponta de fita kraft com a borda serrilhada pela lâmina, pendurada no topo navy contínuo com o hero"
+    },
+    "mudou": "Header ganhou a prop arte; BaseLayout repassa cabecalho; só index.astro usa. Tokens no escopo [data-art=ponta]. Gates: G14 (puxão 160 → 120 ms), G21 (sombra com filter: blur num elemento que escala na rolagem → rampa de box-shadow). Pesquisa: fita VOID (jetpress), etiqueta dos Correios (Loggi), aplicador com lâmina serrilhada (Extra). Antes da trinca: folha do setor (8 headers) e folha por eixo (6 variantes), as duas 'Nenhum'.",
+    "pendente": "Recolhida, a logo fica com 63 px no desktop e 47 px no celular (no topo, 95 e 66 px). Propagar para as outras páginas só depois do dono ver a home."
+  },
+  {
+    "data": "2026-10-17",
     "alvo": "/produtos/fita-transparente-personalizada/ e /produtos/fita-gomada/ — bloco logo abaixo do hero",
     "direcao": "custom:sua-marca-na-fita",
     "eixos": {
@@ -35,8 +66,17 @@
     "data": "2026-10-03",
     "alvo": "home / — vitrine do portfólio + gates",
     "direcao": "custom:galpao-com-veu + vitrine",
-    "eixos": { "materia": "foto", "motor": "ciclo-proprio", "banda": "media" },
-    "orcamento": { "js_kb": 0.8, "lcp_alvo": 2.5, "lcp_medido": 1.5, "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3; desktop no mesmo perfil 1,6 s local e 2,6 s no ar" },
+    "eixos": {
+      "materia": "foto",
+      "motor": "ciclo-proprio",
+      "banda": "media"
+    },
+    "orcamento": {
+      "js_kb": 0.8,
+      "lcp_alvo": 2.5,
+      "lcp_medido": 1.5,
+      "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3; desktop no mesmo perfil 1,6 s local e 2,6 s no ar"
+    },
     "deps": [],
     "recusadas": [],
     "coreografia": {
@@ -53,9 +93,21 @@
     "data": "2026-10-03",
     "alvo": "site inteiro (home, /produtos/[slug], /blog) — diagnóstico, não construção",
     "direcao": "custom:galpao-com-veu",
-    "eixos": { "materia": "foto", "motor": "ciclo-proprio", "banda": "media" },
-    "orcamento": { "js_kb": null, "lcp_alvo": null, "lcp_medido": null },
-    "deps": ["@fontsource/archivo", "@fontsource/ibm-plex-sans", "@fontsource/ibm-plex-mono"],
+    "eixos": {
+      "materia": "foto",
+      "motor": "ciclo-proprio",
+      "banda": "media"
+    },
+    "orcamento": {
+      "js_kb": null,
+      "lcp_alvo": null,
+      "lcp_medido": null
+    },
+    "deps": [
+      "@fontsource/archivo",
+      "@fontsource/ibm-plex-sans",
+      "@fontsource/ibm-plex-mono"
+    ],
     "recusadas": [],
     "nota": "Direção de julho (handoff: 'hero cinematográfico aprovado'), sem carimbo nem orçamento. Hero = foto do galpão com véu navy à esquerda + h1 Archivo 800; único movimento = letreiro corrido da TapeStrip. Abaixo da dobra: seções chapadas paper/kraft-100/navy/laranja. Diagnóstico 03/10: hero passa em desejo; o resto, não. Dono mandou não trocar a foto do hero."
   }

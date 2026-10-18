@@ -3,6 +3,14 @@ import { Image } from "astro:assets";
 import logo from "../../assets/marca/logo-tapepro.png";
 import WhatsAppCta from "../quote/WhatsAppCta.astro";
 
+interface Props {
+  /** "ponta": a logo impressa numa ponta de fita kraft cortada pelo aplicador (art-direction de 17/10/2026).
+   *  Só a home usa até o dono aprovar; as outras páginas seguem com a barra clara. */
+  arte?: "ponta";
+}
+const { arte } = Astro.props;
+const ponta = arte === "ponta";
+
 const links = [
   { href: "/produtos/", label: "Produtos" },
   { href: "/segmentos/", label: "Segmentos" },
@@ -10,18 +18,63 @@ const links = [
   { href: "/sobre/", label: "Sobre" },
   { href: "/orcamento/", label: "Orçamento" },
 ];
+
+// A borda de baixo da ponta são os dentes que a lâmina serrilhada do aplicador deixa na fita.
+const DENTES = 9;
+const DENTE = "9px";
+const dentes = Array.from(
+  { length: DENTES * 2 + 1 },
+  (_, i) => `${100 - (i / (DENTES * 2)) * 100}% ${i % 2 ? "100%" : `calc(100% - ${DENTE})`}`,
+);
+const SERRILHA = `polygon(0 0, 100% 0, 100% calc(100% - ${DENTE}), ${dentes.join(", ")})`;
 ---
 
-<header class="sticky top-0 z-40 border-b border-kraft/40 bg-paper/90 backdrop-blur">
-  <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
-    <a href="/" aria-label="TapePro, página inicial" class="flex items-center">
-      <Image src={logo} alt="Logo TapePro: Fitas Adesivas Personalizadas" width={320} height={230} class="h-16 w-auto md:h-20" />
-    </a>
+<header
+  data-art={ponta ? "ponta" : undefined}
+  class:list={[
+    "sticky top-0 z-40",
+    ponta ? "grao-noite bg-navy" : "border-b border-kraft/40 bg-paper/90 backdrop-blur",
+  ]}
+>
+  <div
+    class:list={[
+      "mx-auto flex max-w-6xl items-center justify-between gap-4 px-4",
+      ponta ? "h-18 lg:h-22" : "py-3",
+    ]}
+  >
+    {
+      ponta ? (
+        <a href="/" aria-label="TapePro, página inicial" class="ponta__ancora">
+          <span class="ponta__puxa">
+            <span class="ponta__fita grao-kraft" style={`clip-path: ${SERRILHA}`}>
+              <Image
+                src={logo}
+                alt="Logo TapePro: Fitas Adesivas Personalizadas"
+                width={320}
+                height={230}
+                loading="eager"
+                class="ponta__logo"
+              />
+            </span>
+          </span>
+        </a>
+      ) : (
+        <a href="/" aria-label="TapePro, página inicial" class="flex items-center">
+          <Image src={logo} alt="Logo TapePro: Fitas Adesivas Personalizadas" width={320} height={230} class="h-16 w-auto md:h-20" />
+        </a>
+      )
+    }
 
     <nav class="hidden items-center gap-6 lg:flex" aria-label="Principal">
       {
         links.map((l) => (
-          <a href={l.href} class="font-body text-sm font-medium text-ink/80 transition hover:text-navy">
+          <a
+            href={l.href}
+            class:list={[
+              "font-body text-sm transition",
+              ponta ? "font-semibold text-paper hover:text-orange" : "font-medium text-ink/80 hover:text-navy",
+            ]}
+          >
             {l.label}
           </a>
         ))
@@ -33,7 +86,10 @@ const links = [
     </div>
 
     <details class="relative lg:hidden">
-      <summary class="flex cursor-pointer list-none items-center rounded p-2 text-navy" aria-label="Abrir menu">
+      <summary
+        class:list={["flex cursor-pointer list-none items-center rounded p-2", ponta ? "text-paper" : "text-navy"]}
+        aria-label="Abrir menu"
+      >
         <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path d="M4 6h16M4 12h16M4 18h16" stroke-linecap="round"></path>
         </svg>
@@ -53,3 +109,124 @@ const links = [
     </details>
   </div>
 </header>
+
+<style>
+  /* art-direction · ponta · eixos: pigmento/ponteiro/escura · orçamento: 0kb · 2026-10-17 */
+  [data-art="ponta"] {
+    --ponta-kraft: oklch(0.93 0.025 80);
+    --ponta-goma: oklch(0.7 0.06 72 / 0.32);
+    --ponta-goma-fim: oklch(0.7 0.06 72 / 0);
+    --ponta-sombra-1: oklch(0.16 0.07 268 / 0.3);
+    --ponta-sombra-2: oklch(0.16 0.07 268 / 0.24);
+    --ponta-sombra-3: oklch(0.16 0.07 268 / 0.2);
+    --ponta-largura: 136px;
+    --ponta-altura: 124px;
+    --ponta-logo: 64px;
+    --ponta-respiro: 26px;
+    --ponta-giro: 1.4deg;
+    /* recolhida, a ponta passa no máximo ~20px da barra: não cobre o texto que rola por baixo */
+    --ponta-recolhida: 0.74;
+    --ponta-chegada: -12px;
+    --ponta-puxao: 6px;
+    --ponta-dur-puxa: 120ms;
+    --ponta-dur-chegada: 600ms;
+    --ponta-ease-cena: cubic-bezier(0.16, 1, 0.3, 1);
+    --ponta-ease-saida: cubic-bezier(0, 0, 0.2, 1);
+    --ponta-recolhe-em: 160px;
+  }
+  @media (min-width: 64rem) {
+    [data-art="ponta"] {
+      --ponta-largura: 200px;
+      --ponta-altura: 168px;
+      --ponta-logo: 92px;
+      --ponta-respiro: 34px;
+      --ponta-recolhida: 0.66;
+    }
+  }
+
+  /* Sem timeline de rolagem (ou com movimento reduzido) a ponta já nasce recolhida: é o estado final, parado. */
+  .ponta__ancora {
+    align-self: flex-start;
+    display: block;
+    scale: var(--ponta-recolhida);
+    transform-origin: top left;
+  }
+  /* Sombra em rampa, sem filter: a ponta muda de escala a cada quadro da rolagem e blur ali repinta. */
+  .ponta__puxa {
+    position: relative;
+    display: block;
+    box-shadow:
+      0 2px 4px var(--ponta-sombra-1),
+      0 8px 14px var(--ponta-sombra-2),
+      0 18px 30px var(--ponta-sombra-3);
+    rotate: var(--ponta-giro);
+    transform-origin: top center;
+    transition: translate var(--ponta-dur-puxa) var(--ponta-ease-saida);
+  }
+  .ponta__fita {
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    width: var(--ponta-largura);
+    height: var(--ponta-altura);
+    padding-bottom: var(--ponta-respiro);
+    background-color: var(--ponta-kraft);
+  }
+  .ponta__fita::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      var(--ponta-goma),
+      var(--ponta-goma-fim) 9%,
+      var(--ponta-goma-fim) 91%,
+      var(--ponta-goma)
+    );
+  }
+  .ponta__fita :global(img) {
+    position: relative;
+    height: var(--ponta-logo);
+    width: auto;
+  }
+
+  .ponta__ancora:focus-visible .ponta__puxa {
+    translate: 0 var(--ponta-puxao);
+  }
+  @media (hover: hover) {
+    .ponta__ancora:hover .ponta__puxa {
+      translate: 0 var(--ponta-puxao);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .ponta__fita {
+      animation: ponta-chega var(--ponta-dur-chegada) var(--ponta-ease-cena) both;
+    }
+    @supports (animation-timeline: scroll()) {
+      .ponta__ancora {
+        scale: 1;
+        animation: ponta-recolhe linear both;
+        animation-timeline: scroll(root block);
+        animation-range: 0 var(--ponta-recolhe-em);
+      }
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ponta__puxa {
+      transition: none;
+    }
+  }
+  @keyframes ponta-chega {
+    from {
+      translate: 0 var(--ponta-chegada);
+    }
+  }
+  @keyframes ponta-recolhe {
+    to {
+      scale: var(--ponta-recolhida);
+    }
+  }
+</style>
