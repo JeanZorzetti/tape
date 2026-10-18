@@ -1,6 +1,36 @@
 [
   {
     "data": "2026-10-17",
+    "alvo": "home / — a fita do rolo do hero atravessando a página até o CTA final (CosturaDeFita, FitaFinal, ImpressaoDaFita, src/lib/fita-costurada.ts, src/styles/fita.css)",
+    "direcao": "custom:costura (derivada do H1: a fita que lacra a caixa)",
+    "eixos": {
+      "materia": "pigmento",
+      "motor": "scroll",
+      "banda": "media"
+    },
+    "orcamento": {
+      "js_kb": 1.4,
+      "lcp_alvo": 2.5,
+      "lcp_medido": 1.52,
+      "cls": 0.001,
+      "perfil": "celular 390, 4G lento 1,6 Mbps/150 ms, CPU 4×, mediana de 3 (1,48/1,52/1,54 s), build de produção em servidor local; LCP é o pôster do rolo do hero; o CLS de 0,001 é o texto do hero descendo 6 px na troca de fonte a 438 ms, anterior a esta mudança (as tiras não deslocam nada)"
+    },
+    "deps": [],
+    "recusadas": [
+      "Faixa 3D na margem (967b02e): canvas fixo de tela cheia, ponta presa na linha de leitura descendo pela margem direita e dobrando para uma etiqueta no CTA. «Ficou ruim, melhore»"
+    ],
+    "coreografia": {
+      "entrada": "a do hero, inalterada: o rolo 3D dá o puxão de 1,4 s na primeira interação",
+      "scroll": "cada uma das 5 emendas entre seções ganha uma tira da fita colada de borda a borda, na diagonal (até 8°, dentro do py-20), enquanto a emenda sobe de 92% a 42% da tela; a ponta serrilhada vai erguida em perspectiva, com luz e sombra; zigue-zague (entra pela borda por onde a anterior saiu); rolar para cima descola; amortecimento por quadro de 140 ms. A última entra pela direita na seção final e a ponta deita como o botão do WhatsApp, inteiro antes do fim da rolagem",
+      "ponteiro": "hover no botão: o laranja clareia e a seta avança 4 px em 120 ms; as tiras não têm camada de ponteiro (decorativas, aria-hidden); foco pelo teclado assenta a fita final na hora",
+      "transicao": "ausente: site estático, sem troca de rota no cliente",
+      "assinatura": "a página lacrada pela fita impressa TAPEPRO, emenda por emenda, como o H1 promete («Sua marca sela cada caixa que sai»); a ponta da fita é o CTA"
+    },
+    "mudou": "Hero voltou ao estado de 7d3023e (rolo 3D na caixa do hero, pôster idêntico). CosturaDeFita entre as seções (altura zero, overflow-x: clip, tira absoluta centrada na emenda); FitaFinal na seção de contato, agora navy (o laranja sumia sobre laranja), com a parte do botão separada do resto da fita por um picote. Sem JS ou com movimento reduzido as tiras já estão coladas e o botão inteiro. Gates: G6/G19 (branco de croma 0 no brilho e no PRO → tokens --fita-brilho e --fita-tinta-branca com escopo), G14 (hover 150 → 120 ms). Conferido em 390/768/1440/1920 sem transbordo horizontal, console limpo.",
+    "pendente": "A impressão é DOM (Archivo + Plex Mono), não a textura do 3D: igual no desenho, sem a luz da cena. O vídeo 9:16 (videos/rolo-desenrolando) segue só com o hero, sem o percurso."
+  },
+  {
+    "data": "2026-10-17",
     "alvo": "header da home / (componente layout/Header.astro, prop arte=\"ponta\"; as outras páginas seguem com a barra clara)",
     "direcao": "custom:derivada-aplicador (Ponta)",
     "eixos": {

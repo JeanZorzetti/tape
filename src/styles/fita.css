@@ -1,0 +1,85 @@
+/* art-direction · costura (derivada do H1: a fita que lacra a caixa) · eixos: pigmento/scroll/média · orçamento: 2kb · 2026-10-17 */
+
+/* Tokens da fita, com escopo nas duas peças que a usam. O branco é quente: é luz sobre
+   BOPP laranja, não papel. */
+:where(.costura, .fita-final) {
+  --fita-brilho: oklch(0.99 0.012 75);
+  --fita-sombra-quente: oklch(0.32 0.09 45);
+  --fita-tinta-branca: oklch(0.99 0.008 80);
+}
+
+/* A fita laranja impressa, a mesma do rolo 3D do hero: laranja chapado, pontilhado navy
+   nas duas bordas e um brilho de BOPP de cima para baixo. A espessura vem de quem usa. */
+.fita-faixa {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  background-color: var(--color-orange);
+  background-image: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--fita-brilho) 24%, transparent) 0%,
+    color-mix(in oklch, var(--fita-brilho) 6%, transparent) 32%,
+    transparent 55%,
+    color-mix(in oklch, var(--fita-sombra-quente) 10%, transparent) 100%
+  );
+  box-shadow:
+    0 1px 0 color-mix(in oklch, var(--color-orange-800) 30%, transparent),
+    0 14px 18px -16px color-mix(in oklch, var(--color-breu) 80%, transparent);
+}
+.fita-faixa::before,
+.fita-faixa::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  border-top: max(1.5px, calc(var(--espessura) * 0.035)) dashed color-mix(in oklch, var(--color-navy) 45%, transparent);
+  pointer-events: none;
+}
+.fita-faixa::before { top: 10%; }
+.fita-faixa::after { bottom: 10%; }
+
+/* A ponta sendo puxada: um pedaço da mesma fita, dobrado na dobradiça e erguido em
+   direção a quem olha. O script move, gira e mostra; parada, ela não existe. */
+.fita-ponta {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+  width: calc(var(--espessura) * 1.25);
+  height: 100%;
+  visibility: hidden;
+  will-change: transform;
+}
+.fita-ponta .fita-faixa {
+  position: absolute;
+  inset: 0;
+}
+.fita-ponta__conteudo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  height: 100%;
+  width: max-content;
+}
+/* A luz pega a ponta erguida: clareia em direção à borda serrilhada. */
+.fita-ponta__luz {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0;
+  background: linear-gradient(var(--lado-da-luz, 90deg), transparent, color-mix(in oklch, var(--fita-brilho) 45%, transparent));
+  pointer-events: none;
+}
+.fita-sombra {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(var(--espessura) * 1.25);
+  height: 100%;
+  opacity: 0;
+  background: radial-gradient(closest-side, color-mix(in oklch, var(--color-breu) 60%, transparent), transparent);
+  pointer-events: none;
+  will-change: transform, opacity;
+}

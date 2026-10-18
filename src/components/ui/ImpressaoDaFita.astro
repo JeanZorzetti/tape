@@ -1,0 +1,60 @@
+---
+// A arte impressa da fita TapePro, a mesma da textura do rolo 3D (src/lib/rolo3d/cena.ts):
+// TAPE em navy, PRO em branco e «FITAS PERSONALIZADAS» em mono, repetidos ao longo da fita.
+// O tamanho segue --espessura de quem usa.
+interface Props {
+  repeticoes?: number;
+}
+const { repeticoes = 14 } = Astro.props;
+---
+
+<span class="impressao" aria-hidden="true">
+  {
+    Array.from({ length: repeticoes }, () => (
+      <span class="impressao__unidade">
+        <span class="impressao__marca">
+          <span class="impressao__tape">TAPE</span><span class="impressao__pro">PRO</span>
+        </span>
+        <span class="impressao__apoio">Fitas personalizadas</span>
+      </span>
+    ))
+  }
+</span>
+
+<style>
+  .impressao {
+    display: flex;
+    flex: none;
+    align-items: center;
+    height: 100%;
+    white-space: nowrap;
+  }
+  .impressao__unidade {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: calc(var(--espessura) * 1.1);
+    padding-right: calc(var(--espessura) * 1.1);
+  }
+  .impressao__marca {
+    font-family: var(--font-display);
+    font-size: calc(var(--espessura) * 0.46);
+    font-weight: 800;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .impressao__tape {
+    color: var(--color-navy);
+  }
+  .impressao__pro {
+    color: var(--fita-tinta-branca);
+  }
+  .impressao__apoio {
+    font-family: var(--font-mono);
+    font-size: calc(var(--espessura) * 0.19);
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+  }
+</style>

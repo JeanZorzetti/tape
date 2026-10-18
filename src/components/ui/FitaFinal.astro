@@ -1,0 +1,138 @@
+---
+// O fim da fita que desceu a home costurando as emendas (CosturaDeFita): ela entra pela
+// borda direita da última seção e a ponta serrilhada para no lugar do botão. A ponta É o
+// CTA do WhatsApp; o resto da tira segue impresso até sair da tela. Sem JS ou com
+// movimento reduzido, a tira já está inteira no lugar.
+import ImpressaoDaFita from "./ImpressaoDaFita.astro";
+import { pontaSerrilhada } from "../../lib/serrilha";
+import { whatsappLink } from "../../lib/whatsapp";
+import "../../styles/fita.css";
+
+interface Props {
+  label?: string;
+  paginaOrigem?: string;
+}
+const { label = "Falar no WhatsApp", paginaOrigem } = Astro.props;
+const href = whatsappLink(undefined, paginaOrigem);
+const serrilha = pontaSerrilhada("esquerda");
+const ICONE_WHATSAPP =
+  "M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2Zm5.8 14.16c-.24.68-1.42 1.32-1.96 1.36-.5.04-.98.22-3.3-.69-2.78-1.1-4.55-3.94-4.69-4.13-.14-.19-1.13-1.5-1.13-2.86s.71-2.03.97-2.31c.24-.28.53-.35.71-.35.18 0 .35 0 .5.01.16.01.38-.06.59.45.24.55.81 1.92.88 2.06.07.14.12.31.02.5-.09.19-.14.31-.28.48-.14.16-.29.37-.42.49-.14.14-.28.29-.12.57.16.28.72 1.18 1.54 1.91 1.06.94 1.95 1.23 2.23 1.37.28.14.44.12.6-.07.16-.19.69-.8.87-1.08.18-.28.37-.23.61-.14.24.09 1.55.73 1.81.87.28.14.46.21.53.32.07.12.07.68-.17 1.36Z";
+---
+
+<div class="fita-final" data-fita-final>
+  <div class="fita-final__revela" data-revela>
+    <div class="fita-faixa fita-final__faixa" style={`clip-path: ${serrilha}`}>
+      <a class="fita-final__botao" href={href} target="_blank" rel="noopener" data-botao>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path
+            d={ICONE_WHATSAPP}
+          ></path>
+        </svg>
+        <span>{label}</span>
+        <span class="fita-final__seta" aria-hidden="true">→</span>
+      </a>
+      <span class="fita-final__resto" aria-hidden="true"><ImpressaoDaFita /></span>
+    </div>
+  </div>
+  <div class="fita-sombra" data-sombra aria-hidden="true"></div>
+  <div class="fita-ponta" data-ponta aria-hidden="true" style={`clip-path: ${serrilha}`}>
+    <div class="fita-faixa">
+      <div class="fita-ponta__conteudo" data-conteudo>
+        <span class="fita-final__botao">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path
+              d={ICONE_WHATSAPP}
+            ></path>
+          </svg>
+          <span>{label}</span>
+          <span class="fita-final__seta">→</span>
+        </span>
+        <span class="fita-final__resto"><ImpressaoDaFita /></span>
+      </div>
+    </div>
+    <div class="fita-ponta__luz" data-luz></div>
+  </div>
+</div>
+
+<style>
+  .fita-final {
+    --espessura: 3.25rem;
+    position: relative;
+    /* Sangra até a borda direita da tela: a fita entra por ela. A seção corta o excesso. */
+    width: calc(100% + (100vw - 100%) / 2 + 2rem);
+    height: var(--espessura);
+  }
+  @media (min-width: 40rem) {
+    .fita-final {
+      --espessura: 3.5rem;
+    }
+  }
+  .fita-final__revela {
+    position: absolute;
+    inset: 0;
+  }
+  .fita-final__faixa {
+    position: absolute;
+    inset: 0;
+  }
+  .fita-final__botao {
+    position: relative;
+    z-index: 2;
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 0.75rem;
+    height: 100%;
+    padding: 0 2rem 0 1.75rem;
+    /* A emenda picotada entre o botão e o resto da fita: destaque aqui. */
+    border-right: 2px dashed color-mix(in oklch, var(--color-navy) 45%, transparent);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-navy);
+    transition: background-color 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  @media (min-width: 40rem) {
+    .fita-final__botao {
+      font-size: 0.9375rem;
+      padding: 0 2.5rem 0 2.25rem;
+    }
+  }
+  a.fita-final__botao:hover {
+    background-color: var(--color-orange-400);
+  }
+  a.fita-final__botao:focus-visible {
+    outline: 3px solid var(--color-navy);
+    outline-offset: -7px;
+  }
+  .fita-final__seta {
+    transition: transform 120ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  a.fita-final__botao:hover .fita-final__seta {
+    transform: translateX(4px);
+  }
+  .fita-final__resto {
+    display: flex;
+    flex: none;
+    height: 100%;
+    padding-left: calc(var(--espessura) * 0.8);
+  }
+  .fita-final .fita-ponta {
+    transform-origin: 100% 50%;
+  }
+  .fita-final .fita-ponta__luz {
+    --lado-da-luz: 270deg;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fita-final__botao,
+    .fita-final__seta {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import "../../lib/fita-costurada";
+</script>
