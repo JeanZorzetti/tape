@@ -41,13 +41,15 @@ export interface Produto {
   preco: { aPartirDe: number; condicao?: string };
   /** Preço por rolo no pedido mínimo, da mesma tabela: é o que paga quem compra pouco. */
   precoNoMinimo?: { rolos: number; porRolo: number };
+  /** Todas as faixas de quantidade da mesma tabela, da menor para a maior. */
+  faixas: { rolos: string; porRolo: number }[];
 }
 
 export const PRODUTOS: Produto[] = [
   {
     slug: "fita-transparente-personalizada",
     nome: "Fita Transparente Personalizada",
-    h1: "Fita adesiva transparente personalizada com logomarca",
+    h1: "Fita adesiva transparente personalizada com logomarca: impressa com a logo ou o nome da empresa",
     seoTitle: "Fita Adesiva Transparente Personalizada: Preço | TapePro",
     seoDescription:
       "Fita adesiva transparente personalizada em BOPP 48mm × 100m, impressão em até 2 cores, a partir de 20 rolos. Sua marca impressa em cada caixa.",
@@ -91,12 +93,18 @@ export const PRODUTOS: Produto[] = [
     personalizavel: true,
     preco: { aPartirDe: 12.12, condicao: "em pedidos de 200 rolos ou mais" },
     precoNoMinimo: { rolos: 20, porRolo: 19.44 },
+    faixas: [
+      { rolos: "20 a 49", porRolo: 19.44 },
+      { rolos: "50 a 99", porRolo: 16.68 },
+      { rolos: "100 a 199", porRolo: 12.6 },
+      { rolos: "200 ou mais", porRolo: 12.12 },
+    ],
   },
   {
     slug: "fita-gomada",
     nome: "Fita Gomada Reforçada",
-    h1: "Fita adesiva gomada personalizada e impressa direto da fábrica, de papel kraft marrom com reforço de nylon, 70mm, para caixa de papelão",
-    seoTitle: "Fita Gomada Personalizada com Reforço: Preço | TapePro",
+    h1: "Fita adesiva gomada personalizada e impressa direto da fábrica, de papel kraft marrom reforçada com fios de nylon, 70mm, para caixa de papelão",
+    seoTitle: "Fita gomada personalizada kraft: preço por rolo | TapePro",
     seoDescription:
       "Fita adesiva gomada personalizada, de papel kraft com reforço de nylon, 70mm × 150m, ativada com água. Lacre inviolável para caixa pesada, mín. 15 rolos.",
     eyebrow: "Kraft · fios de nylon",
@@ -141,12 +149,16 @@ export const PRODUTOS: Produto[] = [
     personalizavel: true,
     preco: { aPartirDe: 38.64, condicao: "em pedidos acima de 100 rolos" },
     precoNoMinimo: { rolos: 15, porRolo: 44.64 },
+    faixas: [
+      { rolos: "15 a 100", porRolo: 44.64 },
+      { rolos: "acima de 100", porRolo: 38.64 },
+    ],
   },
   {
     slug: "fita-transparente-comum",
     nome: "Fita Transparente Comum",
-    h1: "Fita adesiva transparente comum",
-    seoTitle: "Fita Adesiva Transparente Comum 48mm: Preço | TapePro",
+    h1: "Fita adesiva transparente comum, larga, 48mm x 100m",
+    seoTitle: "Fita adesiva transparente 48mm: preço por rolo | TapePro",
     seoDescription:
       "Fita adesiva transparente comum sem impressão, 48mm × 100m, em BOPP de alta adesão. Fornecimento por volume para expedição e indústria. Peça orçamento.",
     eyebrow: "BOPP cristal · sem impressão",
@@ -179,12 +191,34 @@ export const PRODUTOS: Produto[] = [
         titulo: "Compra junto",
         texto: "Muita empresa usa a personalizada no lacre externo e a comum na montagem. Dá para orçar as duas juntas.",
       },
+      // Um subtema buscado por bloco (plano de SEO de 18/10/2026), como na gomada.
+      {
+        titulo: "Fita adesiva transparente larga, de 48mm",
+        texto:
+          "A largura de 48mm cobre a emenda das abas de uma caixa comum e ainda desce pelas laterais, onde a fita segura a aba quando a caixa é apertada. É a medida que aplicadores de mão e seladoras já esperam: a fita entra na operação sem ajuste de máquina.",
+      },
+      {
+        titulo: "Quantas caixas fecha um rolo de 100m",
+        texto:
+          "Regra prática: uma caixa média gasta perto de 1,5m de fita, fechada em cima e embaixo. Um rolo de 100m fecha, então, perto de 66 caixas. Para a compra do mês, some de 10% a 15% de perda com pontas e erros de aplicação.",
+      },
+      {
+        titulo: "Fita adesiva transparente: preço por rolo",
+        texto:
+          "O preço de tabela é R$ 9,48 o rolo de 48mm × 100m. Na comparação com outro fornecedor, compare por metro, não por rolo: um rolo mais barato com metade do comprimento sai mais caro na caixa fechada.",
+      },
+      {
+        titulo: "Quando trocar pela fita gomada",
+        texto:
+          "A cola da fita transparente trabalha na superfície do papelão. Em caixa pesada, cheia ou empilhada em palete, a tensão constante faz essa junta escorregar devagar até a aba abrir. Nesses casos a indicação é a fita gomada kraft, que cola dentro da fibra da caixa.",
+      },
     ],
     imagem: fitaComum,
     alt: "Rolo de fita adesiva transparente comum, sem impressão",
     contexto: "fita transparente comum (48mm × 100m)",
     personalizavel: false,
     preco: { aPartirDe: 9.48 },
+    faixas: [{ rolos: "preço único da tabela", porRolo: 9.48 }],
   },
 ];
 

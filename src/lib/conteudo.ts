@@ -37,3 +37,7 @@ export const postsRelacionados = (
     )
     .slice(0, limite);
 };
+
+/** Guias de fita na ordem do plano de SEO (`ordem`): a home e as páginas de produto listam nesta ordem. */
+export const guiasOrdenados = async (): Promise<CollectionEntry<"guias">[]> =>
+  (await getCollection("guias")).sort((a, b) => a.data.ordem - b.data.ordem);

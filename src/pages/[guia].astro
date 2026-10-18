@@ -1,0 +1,153 @@
+---
+import { Image } from "astro:assets";
+import { getCollection, render } from "astro:content";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import JsonLd from "../components/seo/JsonLd.astro";
+import WhatsAppCta from "../components/quote/WhatsAppCta.astro";
+import { getProduto } from "../lib/produtos";
+import { guiasOrdenados } from "../lib/conteudo";
+import { SITE_URL, NOME_MARCA, PEDIDO_MINIMO_ROLOS } from "../lib/constants";
+
+/** Quantos guias irmãos o trilho lateral lista: o bastante para nenhum guia depender só da home. */
+const IRMAOS = 4;
+
+export async function getStaticPaths() {
+  const guias = await guiasOrdenados();
+  return guias.map((guia) => ({ params: { guia: guia.id }, props: { guia, guias } }));
+}
+
+const { guia, guias } = Astro.props;
+const { data } = guia;
+const { Content } = await render(guia);
+
+const url = `${SITE_URL}/${guia.id}/`;
+const produtos = data.produtosRelacionados.map(getProduto).filter((p) => p !== undefined);
+
+// Rodízio a partir do guia seguinte, como em postsRelacionados: cada guia recebe o mesmo número de links.
+const i = guias.findIndex((g) => g.id === guia.id);
+const irmaos = [...guias.slice(i + 1), ...guias.slice(0, i)].slice(0, IRMAOS);
+
+const breadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: data.nome, item: url },
+  ],
+};
+
+// As fitas do catálogo que respondem a esta busca, com o mesmo `@id` das páginas de produto.
+const fitasIndicadas = {
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  name: `${data.nome}: fitas da ${NOME_MARCA}`,
+  itemListElement: produtos.map((p, n) => ({
+    "@type": "ListItem",
+    position: n + 1,
+    name: p.nome,
+    url: `${SITE_URL}/produtos/${p.slug}/`,
+  })),
+};
+---
+
+<BaseLayout title={data.seoTitle} description={data.descricao}>
+  <JsonLd data={breadcrumb} />
+  <JsonLd data={fitasIndicadas} />
+
+  <article>
+    <header class="mx-auto max-w-6xl px-4 pt-10 md:pt-14">
+      <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-steel">
+        <a href="/" class="hover:text-orange-800">Início</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <span>{data.nome}</span>
+      </nav>
+
+      <div class="mt-8 max-w-3xl">
+        <p class="font-mono text-[0.7rem] uppercase tracking-[0.22em] text-orange-800">{data.eyebrow}</p>
+        <h1 class="mt-4 font-display text-[clamp(1.9rem,5vw,3.25rem)] font-extrabold leading-[1.02] tracking-[-0.03em] text-navy">
+          {data.h1}
+        </h1>
+        <p class="mt-6 border-l-2 border-orange pl-5 font-body text-lg leading-relaxed text-ink/80">
+          {data.resumo}
+        </p>
+        <div class="mt-8">
+          <WhatsAppCta label="Pedir orçamento" contexto={data.contexto} paginaOrigem={data.nome} />
+        </div>
+      </div>
+    </header>
+
+    <figure class="mx-auto max-w-6xl px-4 pt-10">
+      <Image
+        src={data.imagem}
+        alt={data.imagemAlt}
+        widths={[720, 1200]}
+        sizes="(min-width: 1152px) 1088px, 100vw"
+        loading="eager"
+        class="aspect-[3/2] w-full rounded-2xl object-cover md:aspect-[21/9]"
+      />
+    </figure>
+
+    <div class="mx-auto grid max-w-6xl gap-12 px-4 py-14 md:grid-cols-12 md:gap-16 md:py-16">
+      <div class="prosa min-w-0 md:col-span-8">
+        <Content />
+      </div>
+
+      <aside class="md:col-span-4">
+        <div class="md:sticky md:top-28">
+          <h2 class="font-mono text-xs uppercase tracking-[0.22em] text-steel">A fita do catálogo para isso</h2>
+          <div class="mt-5 space-y-3">
+            {
+              produtos.map((p) => (
+                <a
+                  href={`/produtos/${p.slug}/`}
+                  class="flex items-center gap-4 rounded-xl border border-kraft/50 bg-white p-4 transition hover:border-orange"
+                >
+                  <div class="flex h-14 w-14 flex-none items-center justify-center rounded-lg bg-white">
+                    <Image src={p.imagem} alt="" loading="lazy" class="h-auto w-full object-contain" />
+                  </div>
+                  <div>
+                    <h3 class="font-display text-sm font-bold leading-snug text-navy">{p.nome}</h3>
+                    <p class="mt-0.5 font-mono text-[0.6rem] uppercase tracking-[0.16em] text-steel">{p.eyebrow}</p>
+                  </div>
+                </a>
+              ))
+            }
+          </div>
+
+          <h2 class="mt-10 font-mono text-xs uppercase tracking-[0.22em] text-steel">Outros guias de fita</h2>
+          <ul class="mt-5 space-y-2.5">
+            {
+              irmaos.map((g) => (
+                <li>
+                  <a
+                    href={`/${g.id}/`}
+                    class="font-body text-sm font-semibold text-navy underline-offset-4 hover:text-orange-800 hover:underline"
+                  >
+                    {g.data.nome} →
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </article>
+
+  <section class="bg-orange text-navy">
+    <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between">
+      <div>
+        <h2 class="text-3xl md:text-4xl">Vamos orçar a sua fita.</h2>
+        <p class="mt-3 font-body text-navy">
+          Resposta rápida no WhatsApp · a partir de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-4">
+        <WhatsAppCta label="Falar no WhatsApp" contexto={data.contexto} paginaOrigem={`${data.nome} · CTA final`} variant="light" />
+        <a href="/orcamento/" class="font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
+          Ou preencher o formulário →
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

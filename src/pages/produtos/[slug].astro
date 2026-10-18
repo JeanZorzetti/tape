@@ -8,7 +8,7 @@ import TapeStrip from "../../components/ui/TapeStrip.astro";
 import PreviaNaFita from "../../components/quote/PreviaNaFita.astro";
 import { PRODUTOS } from "../../lib/produtos";
 import { SITE_URL, NOME_MARCA, PEDIDO_MINIMO_ROLOS } from "../../lib/constants";
-import { postsPublicados } from "../../lib/conteudo";
+import { guiasOrdenados, postsPublicados } from "../../lib/conteudo";
 import cliche from "../../assets/produtos/cliche-flexografico.png";
 
 export function getStaticPaths() {
@@ -26,6 +26,7 @@ const segmentos = (await getCollection("segmentos"))
 
 // Todos, não os 3 mais novos: o corte por data deixava os posts antigos sem link de produto.
 const posts = (await postsPublicados()).filter((p) => p.data.produtosRelacionados.includes(produto.slug));
+const guias = (await guiasOrdenados()).filter((g) => g.data.produtosRelacionados.includes(produto.slug));
 
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
@@ -337,6 +338,26 @@ const perguntasCliche = [
     <a href="/produtos/" class="mt-6 inline-block font-body text-sm font-semibold text-navy underline-offset-4 hover:underline">
       Comparar as três fitas lado a lado, com preço por rolo →
     </a>
+
+    {
+      guias.length > 0 && (
+        <>
+          <h2 class="mt-14 font-mono text-xs uppercase tracking-[0.22em] text-steel">Esta fita também é</h2>
+          <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-1">
+            {guias.map((g) => (
+              <li>
+                <a
+                  href={`/${g.id}/`}
+                  class="inline-flex min-h-11 items-center font-body text-sm font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+                >
+                  {g.data.nome}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </>
+      )
+    }
   </section>
 
   <section class="bg-orange text-navy">

@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 
 import { PRODUTOS } from "../lib/produtos";
-import { postsPublicados } from "../lib/conteudo";
+import { guiasOrdenados, postsPublicados } from "../lib/conteudo";
 import { NOME_MARCA, SITE_URL, PEDIDO_MINIMO_ROLOS } from "../lib/constants";
 
 /**
@@ -42,6 +42,7 @@ const secao = (titulo: string, itens: string[]) => `## ${titulo}\n\n${itens.join
 export const GET: APIRoute = async () => {
   const segmentos = (await getCollection("segmentos")).sort((a, b) => a.data.ordem - b.data.ordem);
   const posts = await postsPublicados();
+  const guias = await guiasOrdenados();
 
   const corpo = [
     `# ${NOME_MARCA} — Fitas adesivas personalizadas`,
@@ -49,6 +50,10 @@ export const GET: APIRoute = async () => {
     secao(
       "Produtos",
       PRODUTOS.map((p) => item(p.nome, `/produtos/${p.slug}/`, p.chamada)),
+    ),
+    secao(
+      "Guias de fita",
+      guias.map((g) => item(g.data.nome, `/${g.id}/`, g.data.descricao)),
     ),
     secao(
       "Segmentos",

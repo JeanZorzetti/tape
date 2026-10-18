@@ -11,6 +11,7 @@ import { join, relative } from "node:path";
 
 const RAIZ = "dist/client";
 const BLOG = "src/content/blog";
+const GUIAS = "src/content/guias";
 const MAX_DESCRIPTION = 160;
 const MAX_IMAGEM_KB = 200;
 
@@ -204,7 +205,10 @@ else {
     if (!rotas.has(destino)) erro("/llms.txt", `link para rota inexistente: ${destino}`);
   }
 
-  const deConteudo = [...rotas].filter((r) => /^\/(produtos|segmentos|blog)\/[^/]+\/$/.test(r));
+  const guias = existsSync(GUIAS)
+    ? readdirSync(GUIAS).filter((n) => n.endsWith(".mdx")).map((n) => `/${n.replace(/\.mdx$/, "")}/`)
+    : [];
+  const deConteudo = [...rotas].filter((r) => /^\/(produtos|segmentos|blog)\/[^/]+\/$/.test(r) || guias.includes(r));
   for (const destino of deConteudo) {
     if (!indexadas.has(destino)) erro("/llms.txt", `rota de conteúdo fora do índice: ${destino}`);
   }

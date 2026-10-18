@@ -9,7 +9,7 @@ import CosturaDeFita from "../components/ui/CosturaDeFita.astro";
 import FitaFinal from "../components/ui/FitaFinal.astro";
 import { PEDIDO_MINIMO_ROLOS, EMPRESAS_ATENDIDAS } from "../lib/constants";
 import { PRODUTOS } from "../lib/produtos";
-import { postsPublicados } from "../lib/conteudo";
+import { guiasOrdenados, postsPublicados } from "../lib/conteudo";
 
 import natures from "../assets/portfolio/natures.png";
 import halyee from "../assets/portfolio/halyee.png";
@@ -54,10 +54,11 @@ const GIROS = ["-1.5deg", "1deg", "-0.5deg"];
 
 const segmentos = (await getCollection("segmentos")).sort((a, b) => a.data.ordem - b.data.ordem);
 const posts = (await postsPublicados()).slice(0, 3);
+const guias = await guiasOrdenados();
 ---
 
 <BaseLayout
-  title="Fitas Adesivas Personalizadas: Preço por Rolo | TapePro"
+  title="Fita adesiva com a sua marca: preço por rolo | TapePro"
   description="Fitas adesivas personalizadas para empresas: transparente e kraft com a sua marca impressa. A partir de 20 rolos, até 2 cores, atendimento nacional."
   cabecalho="ponta"
 >
@@ -143,6 +144,25 @@ const posts = (await postsPublicados()).slice(0, 3);
           </article>
         ))
       }
+    </div>
+
+    <!-- Os guias por busca (plano de SEO): a home é a página que mais distribui link interno. -->
+    <div class="mt-14 border-t border-kraft/50 pt-8">
+      <h3 class="font-mono text-xs uppercase tracking-[0.22em] text-steel">Procurando por medida, cor ou uso</h3>
+      <ul class="mt-4 flex flex-wrap gap-x-6 gap-y-1">
+        {
+          guias.map((g) => (
+            <li>
+              <a
+                href={`/${g.id}/`}
+                class="inline-flex min-h-11 items-center font-body text-sm font-semibold text-navy underline decoration-orange underline-offset-4 hover:text-orange-800"
+              >
+                {g.data.nome}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
     </div>
   </section>
 

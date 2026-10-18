@@ -7,7 +7,7 @@ import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
 
 // `lastmod` é o único sinal de atualização que o Google aceita para página
-// comum (o IndexNow ele não usa). Só as rotas de blog levam: institucionais e
+// comum (o IndexNow ele não usa). Só as rotas de blog e os guias levam: institucionais e
 // de produto mudam junto com o deploy inteiro, e carimbar todas com a data do
 // build seria ruído, não sinal.
 //
@@ -15,16 +15,19 @@ import tailwindcss from '@tailwindcss/vite';
 // ponytail: regex em vez de parser de YAML — o formato dessas datas é gerado
 // pelo nosso próprio schema. Migrar para leitura da coleção se ficar irregular.
 const DIR_BLOG = './src/content/blog';
-const LASTMOD_POR_SLUG = new Map(
-  readdirSync(DIR_BLOG)
+const DIR_GUIAS = './src/content/guias';
+const datasDoFrontmatter = (dir) =>
+  readdirSync(dir)
     .filter((nome) => nome.endsWith('.mdx'))
     .map((nome) => {
-      const frontmatter = readFileSync(`${DIR_BLOG}/${nome}`, 'utf8').split(/^---$/m)[1] ?? '';
+      const frontmatter = readFileSync(`${dir}/${nome}`, 'utf8').split(/^---$/m)[1] ?? '';
       const campo = (chave) => frontmatter.match(new RegExp(`^${chave}:\\s*["']?(\\d{4}-\\d{2}-\\d{2})`, 'm'))?.[1];
       return [nome.replace(/\.mdx$/, ''), campo('atualizadoEm') ?? campo('publicadoEm')];
     })
-    .filter(([, data]) => data),
-);
+    .filter(([, data]) => data);
+const LASTMOD_POR_SLUG = new Map(datasDoFrontmatter(DIR_BLOG));
+// Os guias de fita moram na raiz (/fita-kraft/) e também carregam a data de atualização.
+const LASTMOD_POR_GUIA = new Map(datasDoFrontmatter(DIR_GUIAS));
 
 // URLs do site oficial que ocupava tapeprofitas.com.br até 17/10/2026 (lidas do
 // sitemap dele): cada uma vai para a página daqui que cobre o mesmo assunto,
@@ -77,7 +80,8 @@ export default defineConfig({
       filter: (page) => !page.includes('/admin') && !page.endsWith('/orcamento/'),
       serialize(item) {
         const slug = item.url.match(/\/blog\/([^/]+)\/?$/)?.[1];
-        const data = slug && LASTMOD_POR_SLUG.get(slug);
+        const raiz = new URL(item.url).pathname.match(/^\/([^/]+)\/$/)?.[1];
+        const data = (slug && LASTMOD_POR_SLUG.get(slug)) || (raiz && LASTMOD_POR_GUIA.get(raiz));
         if (data) item.lastmod = new Date(data).toISOString();
         return item;
       },

@@ -1,0 +1,29 @@
+---
+import { PRODUTOS } from "../../lib/produtos";
+
+/** As faixas de preço por rolo das três fitas, da tabela oficial (fonte única: src/lib/produtos.ts). */
+const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+---
+
+<table>
+  <thead>
+    <tr>
+      <th>Fita</th>
+      <th>Quantidade</th>
+      <th>Preço por rolo</th>
+    </tr>
+  </thead>
+  <tbody>
+    {
+      PRODUTOS.flatMap((p) =>
+        p.faixas.map((f) => (
+          <tr>
+            <td>{p.nome}</td>
+            <td>{f.rolos}</td>
+            <td class="tabular-nums">{brl(f.porRolo)}</td>
+          </tr>
+        )),
+      )
+    }
+  </tbody>
+</table>

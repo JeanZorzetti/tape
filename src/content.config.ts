@@ -62,6 +62,35 @@ const blog = defineCollection({
     }),
 });
 
+/**
+ * Guias de fita na raiz do site (`/fita-kraft/`), um por busca do plano de SEO (app.roilabs /admin/seo).
+ * Só fita que está no catálogo: a página responde quem quer comprar aquela fita, então fita que a TapePro
+ * não vende não ganha guia, mesmo com busca alta (decisão de 18/10/2026).
+ */
+const guias = defineCollection({
+  loader: glob({ pattern: "**/*.mdx", base: "./src/content/guias" }),
+  schema: ({ image }) =>
+    z.object({
+      /** Nome curto: trilha, cartões e âncora do link da home (a âncora do plano). */
+      nome: z.string(),
+      /** Título da aba: precisa conter todas as palavras de cada termo do plano (regra do hub). */
+      seoTitle: z.string().max(60),
+      h1: z.string(),
+      descricao: z.string().max(160),
+      eyebrow: z.string(),
+      resumo: z.string(),
+      /** Frase de vitrine na home e nas páginas de produto. */
+      chamada: z.string(),
+      /** Assunto injetado na mensagem do WhatsApp. */
+      contexto: z.string(),
+      produtosRelacionados: z.array(produtoRelacionado).min(1),
+      imagem: image(),
+      imagemAlt: z.string(),
+      ordem: z.number().default(0),
+      atualizadoEm: z.coerce.date(),
+    }),
+});
+
 const faq = defineCollection({
   loader: file("./src/content/faq/perguntas.json"),
   schema: z.object({
@@ -72,4 +101,4 @@ const faq = defineCollection({
   }),
 });
 
-export const collections = { segmentos, blog, faq };
+export const collections = { segmentos, blog, guias, faq };
