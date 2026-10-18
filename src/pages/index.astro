@@ -5,6 +5,7 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import WhatsAppCta from "../components/quote/WhatsAppCta.astro";
 import TapeStrip from "../components/ui/TapeStrip.astro";
 import RoloFita3D from "../components/ui/RoloFita3D.astro";
+import FitaCta from "../components/ui/FitaCta.astro";
 import { PEDIDO_MINIMO_ROLOS, EMPRESAS_ATENDIDAS } from "../lib/constants";
 import { PRODUTOS } from "../lib/produtos";
 import { postsPublicados } from "../lib/conteudo";
@@ -59,16 +60,18 @@ const posts = (await postsPublicados()).slice(0, 3);
   description="Fitas adesivas personalizadas para empresas: transparente e kraft com a sua marca impressa. A partir de 20 rolos, até 2 cores, atendimento nacional."
   cabecalho="ponta"
 >
-  <!-- HERO: o rolo desenrolando é o único momento de movimento da página (CLAUDE.md, Motion).
+  <!-- HERO: o rolo desenrolando é o único momento de movimento da página (CLAUDE.md, Motion),
+       e a fita que sai dele é a mesma que desce a página até o CTA final. O texto do hero e do
+       CTA tem z-30 para ficar acima do canvas da fita (z-20), que o RoloFita3D cria.
        Abaixo de lg o rolo vem antes do texto e a fita some num degradê; em lg ele ocupa o
        canto e a fita sai pela borda de baixo, emendando na faixa TapeStrip. -->
-  <section class="grao-noite relative isolate overflow-hidden bg-navy text-white">
+  <section class="grao-noite relative overflow-hidden bg-navy text-white">
     <!-- Abaixo de sm o rolo encolhe para o botão do WhatsApp caber inteiro na primeira tela (360×740). -->
     <RoloFita3D
-      class="mask-fita ml-auto -mb-14 w-[62vw] max-w-lg sm:w-[86vw] lg:absolute lg:bottom-0 lg:right-0 lg:-z-10 lg:mb-0 lg:w-[min(50vw,52rem)] lg:max-w-none"
+      class="mask-fita ml-auto -mb-14 w-[62vw] max-w-lg sm:w-[86vw] lg:absolute lg:bottom-0 lg:right-0 lg:mb-0 lg:w-[min(50vw,52rem)] lg:max-w-none"
     />
 
-    <div class="mx-auto flex max-w-6xl flex-col justify-end px-4 pb-16 lg:min-h-[86vh] lg:pb-24 lg:pt-24">
+    <div class="relative z-30 mx-auto flex max-w-6xl flex-col justify-end px-4 pb-16 lg:min-h-[86vh] lg:pb-24 lg:pt-24">
       <div class="max-w-xl lg:max-w-[34rem] xl:max-w-[36rem]">
         <p class="font-mono text-xs uppercase tracking-[0.3em] text-orange">Fitas adesivas personalizadas · B2B</p>
         <h1 class="mt-5 font-display text-[clamp(2.75rem,6.4vw,5rem)] font-extrabold leading-[0.92] tracking-[-0.03em] text-white">
@@ -96,7 +99,7 @@ const posts = (await postsPublicados()).slice(0, 3);
   </section>
 
   <!-- PRODUTOS -->
-  <section id="produtos" class="mx-auto max-w-6xl px-4 py-20">
+  <section id="produtos" class="relative z-30 mx-auto max-w-6xl px-4 py-20">
     <div class="max-w-2xl">
       <p class="font-mono text-xs uppercase tracking-[0.28em] text-orange-800">O que a gente faz</p>
       <h2 class="mt-3 text-3xl md:text-4xl">Três fitas, uma missão: sua marca protegendo o pacote.</h2>
@@ -288,19 +291,24 @@ const posts = (await postsPublicados()).slice(0, 3);
     </div>
   </section>
 
-  <!-- CTA FINAL -->
-  <section id="contato" class="bg-orange text-navy">
-    <div class="mx-auto flex max-w-6xl flex-col items-start gap-6 px-4 py-16 md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 class="text-3xl md:text-4xl">Peça seu orçamento hoje.</h2>
-        <p class="mt-3 font-body text-navy">Resposta rápida no WhatsApp · pedido mínimo de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.</p>
+  <!-- CTA FINAL: a fita 3D que desceu a página termina na etiqueta (FitaCta), que é o botão.
+       Fundo navy: o laranja da fita some sobre o laranja da antiga faixa. -->
+  <section id="contato" class="grao-noite relative overflow-hidden bg-navy text-white">
+    <div class="relative z-30 mx-auto max-w-6xl px-4 py-24 md:py-32">
+      <p class="font-mono text-xs uppercase tracking-[0.3em] text-orange">Seu rolo começa aqui</p>
+      <h2 class="mt-4 max-w-2xl text-4xl text-white md:text-6xl">Peça seu orçamento hoje.</h2>
+      <p class="mt-5 max-w-lg font-body text-lg leading-relaxed text-white/85">
+        Resposta rápida no WhatsApp · pedido mínimo de {PEDIDO_MINIMO_ROLOS} rolos · atendimento nacional.
+      </p>
+      <div class="mt-12">
+        <FitaCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} · CTA final`} />
       </div>
-      <div class="flex flex-col items-start gap-2 md:items-end">
-        <WhatsAppCta label="Falar no WhatsApp" paginaOrigem={`${ORIGEM} · CTA final`} variant="light" />
-        <a href="/orcamento/" class="inline-flex min-h-11 items-center font-body text-sm font-semibold text-navy underline underline-offset-4 hover:no-underline">
-          ou envie o pedido pelo formulário →
-        </a>
-      </div>
+      <a
+        href="/orcamento/"
+        class="mt-8 inline-flex min-h-11 items-center font-body text-sm font-semibold text-white/90 underline underline-offset-4 hover:no-underline"
+      >
+        ou envie o pedido pelo formulário →
+      </a>
     </div>
   </section>
 </BaseLayout>

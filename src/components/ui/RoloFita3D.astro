@@ -1,8 +1,10 @@
 ---
-// O momento da home: o rolo TapePro desenrolando a fita com a marca impressa.
+// O momento da home: o rolo TapePro desenrolando a fita com a marca impressa, e a fita
+// descendo a página inteira até virar o botão do CTA final (FitaCta, [data-fita-fim]).
 // O pôster é um quadro da própria cena (scripts/rolo3d) e é o que todo mundo vê
-// primeiro; a cena 3D só assume na primeira interação (rolar, tocar, mover), e nunca com movimento reduzido,
-// economia de dados ou sem WebGL. Pôster e cena têm o mesmo enquadramento quadrado,
+// primeiro; a cena 3D só assume na primeira interação (rolar, tocar, mover), e nunca com
+// movimento reduzido, economia de dados ou sem WebGL. A cena vive num canvas fixo de tela
+// cheia, criado pelo script; no hero ela repete o enquadramento do pôster pixel a pixel,
 // então a troca entre os dois não aparece.
 import { Image } from "astro:assets";
 import poster from "../../assets/marca/rolo-3d-repouso.png";
@@ -23,7 +25,6 @@ const { class: cls = "" } = Astro.props;
     fetchpriority="high"
     class="rolo-3d__quadro"
   />
-  <canvas class="rolo-3d__quadro rolo-3d__cena" aria-hidden="true"></canvas>
 </div>
 
 <!-- Posição e tamanho da caixa ficam nas classes do Tailwind: estilo com escopo fica fora
@@ -35,28 +36,39 @@ const { class: cls = "" } = Astro.props;
     width: 100%;
     height: 100%;
   }
-  .rolo-3d__cena {
-    opacity: 0;
-    transition: opacity 250ms cubic-bezier(0, 0, 0.2, 1);
-  }
-  .rolo-3d[data-ao-vivo] .rolo-3d__cena {
-    opacity: 1;
-  }
   /* O pôster só some depois que a cena cobriu: quadros iguais, troca invisível. */
   .rolo-3d[data-ao-vivo] img {
     opacity: 0;
     transition: opacity 0s linear 250ms;
   }
+  /* A fita da viagem só existe depois do hero: sem a cena, o pôster fica como está. */
 </style>
 
 <script>
-  import { COMPRIMENTO_REPOUSO, CURSO_DA_ROLAGEM, PUXAO_DE_ENTRADA } from "../../lib/rolo3d/medidas";
+  import {
+    ENCAIXE_NA_ETIQUETA,
+    LARGURA_COM_MARGEM_PARA_A_FITA,
+    LARGURA_DA_FITA_NA_VIAGEM,
+    LINHA_DE_LEITURA,
+    RAIO_DA_DOBRA,
+    VIAGEM_COMECA_EM,
+    VIAGEM_TERMINA_EM,
+    COMPRIMENTO_REPOUSO,
+    CURSO_DA_ROLAGEM,
+    PUXAO_DE_ENTRADA,
+  } from "../../lib/rolo3d/medidas";
 
-  // Declarado em global.css (carimbo de art-direction): paisagem/expressivo.
   const DURACAO_DO_PUXAO_S = 1.4;
   const ESPERA_ANTES_DO_PUXAO_S = 0.25;
-  const SUAVIZACAO_DA_ROLAGEM_S = 0.8;
   const ESPERA_MAXIMA_OCIOSA_MS = 2000;
+  const DENSIDADE_MAXIMA_DE_PIXELS = 1.75;
+  const LARGURA_DO_TELEFONE_PARA_O_HERO = 1024;
+  const RECUO_DA_FITA_NA_MARGEM = { larga: 14, estreita: -10 };
+  /** A ponta já está na linha de leitura; a dobra termina quando a etiqueta chega nesta distância. */
+  const CURSO_DA_DOBRA_PX = { minimo: 80, maximo: 260 };
+  const FOLGA_DA_LINHA_ATE_A_ETIQUETA_PX = 140;
+  const MARGEM_INFERIOR_DA_LINHA_PX = 24;
+  const MASCARA_DO_HERO = { opacoAte: 0.45, somemEm: 0.86 };
 
   type ConexaoComEconomia = { connection?: { saveData?: boolean } };
 
@@ -73,40 +85,145 @@ const { class: cls = "" } = Astro.props;
     return !matchMedia("(prefers-reduced-motion: reduce)").matches && !economizaDados && suportaWebGL2();
   }
 
+  const entre = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
+  const suave = (t: number) => t * t * (3 - 2 * t);
+
   // Se o 3D falhar, o pôster continua no lugar: nada a avisar ao visitante.
-  const ligarCena = (caixa: HTMLElement) => montarCena(caixa).catch(() => delete caixa.dataset.aoVivo);
+  const ligarCena = (caixa: HTMLElement) => montarCena(caixa).catch(() => desligar(caixa));
+
+  function desligar(caixa: HTMLElement) {
+    delete caixa.dataset.aoVivo;
+    delete document.documentElement.dataset.fitaAoVivo;
+    document.querySelector("canvas[data-fita-cena]")?.remove();
+  }
 
   async function montarCena(caixa: HTMLElement) {
-    const canvas = caixa.querySelector("canvas")!;
-    const [{ criarCenaDoRolo, carregarFontesDaImpressao }, { gsap }, { ScrollTrigger }] = await Promise.all([
-      import("../../lib/rolo3d/cena"),
-      import("gsap"),
-      import("gsap/ScrollTrigger"),
-    ]);
-    await carregarFontesDaImpressao();
-    gsap.registerPlugin(ScrollTrigger);
+    const [cena3d, { gsap }] = await Promise.all([import("../../lib/rolo3d/cena"), import("gsap")]);
+    await cena3d.carregarFontesDaImpressao();
 
-    const cena = criarCenaDoRolo(canvas);
-    const estado = { puxao: 0, rolagem: 0 };
+    const hero = caixa.closest("section")!;
+    const etiqueta = document.querySelector<HTMLElement>("[data-fita-fim]");
+    const secaoFinal = etiqueta?.closest("section") ?? null;
+
+    // Tela cheia por cima da página (abaixo do cabeçalho); o texto do hero e do CTA sobe
+    // acima dele com z-index, então a fita passa por trás das letras.
+    const canvas = document.createElement("canvas");
+    canvas.dataset.fitaCena = "";
+    canvas.setAttribute("aria-hidden", "true");
+    canvas.style.cssText =
+      "position:fixed;inset:0;width:100%;height:100%;z-index:20;pointer-events:none;opacity:0;transition:opacity 250ms cubic-bezier(0,0,.2,1)";
+    document.body.append(canvas);
+
+    const cena = cena3d.criarCenaDoRolo(canvas, {
+      densidadeDePixels: Math.min(window.devicePixelRatio, DENSIDADE_MAXIMA_DE_PIXELS),
+    });
+
+    const estado = { puxao: 0 };
     let quadroPedido = 0;
-    const desenhar = () => {
-      quadroPedido = 0;
-      cena.definirComprimento(COMPRIMENTO_REPOUSO + estado.puxao + estado.rolagem);
-      cena.renderizar();
+    const medidas = { vw: 0, vh: 0, ppu: 1, etiquetaNoDocumento: 0, alturaDoHero: 1, fimDoHero: 0, comecoDoFim: 0, limiteDaRolagem: 0 };
+
+    const medir = () => {
+      const { width, height } = caixa.getBoundingClientRect();
+      const vw = document.documentElement.clientWidth;
+      const vh = innerHeight;
+      medidas.vw = vw;
+      medidas.vh = vh;
+      medidas.ppu = height / cena3d.ALTURA_DO_QUADRO_DO_HERO;
+      medidas.alturaDoHero = hero.offsetHeight;
+      medidas.fimDoHero = hero.getBoundingClientRect().bottom + scrollY;
+      medidas.limiteDaRolagem = Math.max(0, document.documentElement.scrollHeight - vh);
+      if (etiqueta) {
+        const e = etiqueta.getBoundingClientRect();
+        medidas.etiquetaNoDocumento = e.top + scrollY + e.height / 2;
+      }
+      if (secaoFinal) medidas.comecoDoFim = secaoFinal.getBoundingClientRect().top + scrollY;
+      cena.enquadrarPagina(vw, vh, medidas.ppu);
+      desenhar();
     };
+
+    function aplicarMascara(rolagem: number, caixaTopo: number, caixaAltura: number) {
+      const { vw, fimDoHero, comecoDoFim } = medidas;
+      if (vw >= LARGURA_COM_MARGEM_PARA_A_FITA) {
+        canvas.style.maskImage = canvas.style.webkitMaskImage = "";
+        return;
+      }
+      // Sem margem livre ao lado do texto, a fita só aparece onde não atrapalha a leitura:
+      // no hero e na seção final. Em celular o hero esmaece como o pôster.
+      const heroAcaba = fimDoHero - rolagem;
+      const fimComeca = comecoDoFim - rolagem;
+      const heroEmCelular = vw < LARGURA_DO_TELEFONE_PARA_O_HERO;
+      const opacoAte = heroEmCelular ? caixaTopo + caixaAltura * MASCARA_DO_HERO.opacoAte : heroAcaba;
+      const somemEm = heroEmCelular ? caixaTopo + caixaAltura * MASCARA_DO_HERO.somemEm : heroAcaba;
+      const fimDaJanela = Math.max(somemEm, fimComeca);
+      const mascara = `linear-gradient(to bottom, #000 ${opacoAte}px, transparent ${somemEm}px, transparent ${fimDaJanela}px, #000 ${fimDaJanela}px)`;
+      canvas.style.maskImage = canvas.style.webkitMaskImage = mascara;
+    }
+
+    function desenhar() {
+      quadroPedido = 0;
+      const { vw, vh, ppu, alturaDoHero, limiteDaRolagem } = medidas;
+      const rolagem = scrollY;
+      const caixaRect = caixa.getBoundingClientRect();
+      const mundo = (px: number, py: number) => ({ x: (px - vw / 2) / ppu, y: -(py - vh / 2) / ppu });
+
+      const eixo = mundo(caixaRect.left + caixaRect.width / 2, caixaRect.top + caixaRect.height / 2);
+      const roloNoHero = { x: eixo.x + cena3d.DESLOCAMENTO_DO_ROLO_NO_QUADRO.x, y: eixo.y + cena3d.DESLOCAMENTO_DO_ROLO_NO_QUADRO.y };
+
+      const viagem = suave(entre((rolagem / vh - VIAGEM_COMECA_EM) / (VIAGEM_TERMINA_EM - VIAGEM_COMECA_EM), 0, 1));
+      const larga = vw >= LARGURA_COM_MARGEM_PARA_A_FITA;
+      const larguraPx = larga ? LARGURA_DA_FITA_NA_VIAGEM.larga : LARGURA_DA_FITA_NA_VIAGEM.estreita;
+      const raioPx = larga ? RAIO_DA_DOBRA.larga : RAIO_DA_DOBRA.estreita;
+      const escalaDaViagem = larguraPx / (cena3d.LARGURA_DA_FITA * ppu);
+      const pxPorUnidadeLocal = escalaDaViagem * ppu;
+      const xDaFitaPx = vw - larguraPx / 2 - (larga ? RECUO_DA_FITA_NA_MARGEM.larga : RECUO_DA_FITA_NA_MARGEM.estreita);
+      const roloNaViagemX = mundo(xDaFitaPx, 0).x + cena3d.RAIO_DO_ROLO * escalaDaViagem;
+
+      // A ponta lidera a leitura na linha de leitura e, quando a etiqueta do CTA sobe até ela,
+      // passa a seguir a etiqueta: a fita dobra para a esquerda e entra por baixo dela.
+      let alvoDaPonta: number | null = null;
+      let dobra = 0;
+      let corrida = 0;
+      if (etiqueta) {
+        const etiquetaY = medidas.etiquetaNoDocumento - rolagem;
+        const etiquetaFinalY = medidas.etiquetaNoDocumento - limiteDaRolagem;
+        const linha = Math.min(
+          Math.max(LINHA_DE_LEITURA * vh, etiquetaFinalY + FOLGA_DA_LINHA_ATE_A_ETIQUETA_PX),
+          vh - MARGEM_INFERIOR_DA_LINHA_PX,
+        );
+        const curso = entre(linha - etiquetaFinalY, CURSO_DA_DOBRA_PX.minimo, CURSO_DA_DOBRA_PX.maximo);
+        dobra = entre((linha - etiquetaY) / curso, 0, 1);
+        alvoDaPonta = mundo(0, Math.min(linha, etiquetaY)).y;
+        const e = etiqueta.getBoundingClientRect();
+        const pontaX = e.right - ENCAIXE_NA_ETIQUETA;
+        corrida = (dobra * Math.max(0, xDaFitaPx - raioPx - pontaX)) / pxPorUnidadeLocal;
+      }
+
+      const rolagemDoHero = entre(rolagem / alturaDoHero, 0, 1);
+      cena.definirPose({
+        eixo,
+        rolo: { x: roloNoHero.x + (roloNaViagemX - roloNoHero.x) * viagem, y: roloNoHero.y },
+        escala: 1 + (escalaDaViagem - 1) * viagem,
+        comprimentoDoHero: COMPRIMENTO_REPOUSO + estado.puxao + CURSO_DA_ROLAGEM * rolagemDoHero,
+        forma: { viagem, raio: raioPx / pxPorUnidadeLocal, giro: (dobra * Math.PI) / 2, corrida },
+        alvoDaPonta,
+        trechoVisivel: (vh * 1.3) / pxPorUnidadeLocal + 4,
+      });
+      aplicarMascara(rolagem, caixaRect.top, caixaRect.height);
+      cena.renderizar();
+    }
+
     const pedirQuadro = () => {
       quadroPedido ||= requestAnimationFrame(desenhar);
     };
-    const medir = () => {
-      const { width, height } = caixa.getBoundingClientRect();
-      cena.redimensionar(width, height);
-      desenhar();
-    };
     new ResizeObserver(medir).observe(caixa);
+    new ResizeObserver(medir).observe(document.body);
     medir();
+    addEventListener("scroll", pedirQuadro, { passive: true });
 
     caixa.dataset.aoVivo = "";
-    canvas.addEventListener("webglcontextlost", () => delete caixa.dataset.aoVivo);
+    document.documentElement.dataset.fitaAoVivo = "";
+    canvas.style.opacity = "1";
+    canvas.addEventListener("webglcontextlost", () => desligar(caixa));
 
     gsap.to(estado, {
       puxao: PUXAO_DE_ENTRADA,
@@ -115,22 +232,11 @@ const { class: cls = "" } = Astro.props;
       ease: "power3.out",
       onUpdate: pedirQuadro,
     });
-    gsap.to(estado, {
-      rolagem: CURSO_DA_ROLAGEM,
-      ease: "none",
-      onUpdate: pedirQuadro,
-      scrollTrigger: {
-        trigger: caixa.closest("section") ?? caixa,
-        start: "top top",
-        end: "bottom top",
-        scrub: SUAVIZACAO_DA_ROLAGEM_S,
-      },
-    });
   }
 
-  // O núcleo do three + ScrollTrigger somam ~3 s de thread principal em celular médio
-  // (TBT 5 s no PageSpeed). Quem não interage fica com o pôster, que é o mesmo quadro;
-  // quem rola ou toca ganha a cena. Interação real é o sinal de que alguém está olhando.
+  // O núcleo do three soma ~3 s de thread principal em celular médio (TBT 5 s no PageSpeed).
+  // Quem não interage fica com o pôster, que é o mesmo quadro; quem rola ou toca ganha a
+  // cena. Interação real é o sinal de que alguém está olhando.
   const EVENTOS_DE_INTERACAO = ["scroll", "pointerdown", "pointermove", "touchstart", "keydown", "wheel"] as const;
 
   const caixa = document.querySelector<HTMLElement>("[data-rolo3d]");

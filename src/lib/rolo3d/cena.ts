@@ -26,6 +26,7 @@ import {
   RingGeometry,
   Scene,
   SRGBColorSpace,
+  Vector3,
   WebGLRenderer,
 } from "three";
 import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
@@ -49,9 +50,11 @@ const CURVA_TOTAL = 1.1;
 const CURVA_ESCALA = 3;
 const TORCAO_TOTAL = -0.75;
 const TORCAO_ESCALA = 2.4;
-const COMPRIMENTO_MAXIMO = 16;
+const COMPRIMENTO_MINIMO = 0.1;
 const PASSO_DO_CAMINHO = 0.02;
-const SEGMENTOS_AO_LONGO = 220;
+const SEGMENTOS_AO_LONGO = 320;
+/** Fita que vira malha no hero: cobre o maior comprimento que o hero usa. */
+const TRECHO_DO_HERO = 16;
 const SEGMENTOS_NA_LARGURA = 10;
 const DENTE_DA_SERRILHA = 0.05;
 
@@ -64,13 +67,6 @@ const COR = {
   kraft: "#c8a97a",
   kraftEscuro: "#9c7f55",
 };
-
-export interface CenaDoRolo {
-  definirComprimento(comprimento: number): void;
-  redimensionar(largura: number, altura: number): void;
-  renderizar(): void;
-  destruir(): void;
-}
 
 export interface Enquadramento {
   campoDeVisao: number;
@@ -181,33 +177,57 @@ interface PontoDoCaminho {
   torcao: number;
 }
 
-// Caminho da fita pré-calculado uma vez; cada quadro só amostra até o comprimento.
-function caminhoDaFita(): PontoDoCaminho[] {
-  const pontos: PontoDoCaminho[] = [];
-  let x = -RAIO;
-  let y = 0;
-  for (let s = 0; s <= COMPRIMENTO_MAXIMO + PASSO_DO_CAMINHO; s += PASSO_DO_CAMINHO) {
-    const angulo = -Math.PI / 2 - CURVA_TOTAL * (1 - Math.exp(-s / CURVA_ESCALA));
-    const torcao = TORCAO_TOTAL * (1 - Math.exp(-s / TORCAO_ESCALA));
-    pontos.push({ x, y, angulo, torcao });
-    x += Math.cos(angulo) * PASSO_DO_CAMINHO;
-    y += Math.sin(angulo) * PASSO_DO_CAMINHO;
-  }
-  return pontos;
+/**
+ * Para onde a fita vai, além do hero. Tudo em unidades locais do conjunto (antes da escala).
+ * `viagem` 0 é a fita pendurada do hero; 1 é a faixa reta que desce pela margem da página.
+ * A dobra só existe na viagem: perto da ponta, a fita vira para a esquerda (até `giro`
+ * radianos, num arco de `raio`) e corre `corrida` na horizontal até a etiqueta do CTA.
+ */
+export interface FormaDaFita {
+  viagem: number;
+  raio: number;
+  giro: number;
+  corrida: number;
 }
 
-function amostrar(caminho: PontoDoCaminho[], s: number): PontoDoCaminho {
-  const i = Math.min(s / PASSO_DO_CAMINHO, caminho.length - 2);
-  const base = Math.floor(i);
-  const t = i - base;
-  const a = caminho[base];
-  const b = caminho[base + 1];
-  return {
-    x: a.x + (b.x - a.x) * t,
-    y: a.y + (b.y - a.y) * t,
-    angulo: a.angulo + (b.angulo - a.angulo) * t,
-    torcao: a.torcao + (b.torcao - a.torcao) * t,
-  };
+const VIRADA_DA_ARTE = 0.5;
+const FORMA_DO_HERO: FormaDaFita = { viagem: 0, raio: 1, giro: 0, corrida: 0 };
+
+// Direção da fita a s do rolo. A forma do hero é contada a partir do rolo; a dobra, a
+// partir da ponta: a curva do CTA acompanha a ponta, por mais fita que já tenha saído.
+function anguloEm(s: number, comprimento: number, forma: FormaDaFita): number {
+  const doHero = -Math.PI / 2 - CURVA_TOTAL * (1 - Math.exp(-s / CURVA_ESCALA));
+  if (forma.viagem === 0) return doHero;
+  const atePonta = comprimento - s;
+  const arco = forma.raio * forma.giro;
+  let varredura = 0;
+  if (atePonta < forma.corrida) varredura = forma.giro;
+  else if (atePonta < forma.corrida + arco) varredura = forma.giro * (1 - (atePonta - forma.corrida) / arco);
+  const daViagem = -Math.PI / 2 - varredura;
+  return doHero + (daViagem - doHero) * forma.viagem;
+}
+
+// Na viagem a fita deita de frente para a câmera (largura no plano da tela): a impressão aparece inteira.
+const TORCAO_DE_FRENTE = -Math.PI / 2;
+
+function torcaoEm(s: number, forma: FormaDaFita): number {
+  const doHero = TORCAO_TOTAL * (1 - Math.exp(-s / TORCAO_ESCALA));
+  return doHero + (TORCAO_DE_FRENTE - doHero) * forma.viagem;
+}
+
+// Integra a direção do rolo até s. O passo cresce com a fita: na viagem ela passa de
+// cem unidades, e a parte reta não precisa da resolução da curva do hero.
+function pontoEm(s: number, comprimento: number, forma: FormaDaFita): PontoDoCaminho {
+  const passos = Math.max(1, Math.ceil(s / Math.max(PASSO_DO_CAMINHO, comprimento / 800)));
+  const passo = s / passos;
+  let x = -RAIO;
+  let y = 0;
+  for (let k = 0; k < passos; k++) {
+    const angulo = anguloEm((k + 0.5) * passo, comprimento, forma);
+    x += Math.cos(angulo) * passo;
+    y += Math.sin(angulo) * passo;
+  }
+  return { x, y, angulo: anguloEm(s, comprimento, forma), torcao: torcaoEm(s, forma) };
 }
 
 function geometriaDaFita(): BufferGeometry {
@@ -230,26 +250,48 @@ function geometriaDaFita(): BufferGeometry {
 
 // Reposiciona os vértices da fita para o comprimento dado. A ponta tem os dentes da
 // lâmina do aplicador, e a impressão fica presa à ponta: puxar faz a arte sair do rolo.
-function moldarFita(geometria: BufferGeometry, caminho: PontoDoCaminho[], comprimento: number) {
+// Só o trecho final (`trechoVisivel`) vira malha: o começo já saiu da tela junto com o rolo.
+function moldarFita(
+  geometria: BufferGeometry,
+  comprimento: number,
+  forma: FormaDaFita,
+  trechoVisivel: number,
+) {
   const posicoes = geometria.getAttribute("position") as BufferAttribute;
   const uvs = geometria.getAttribute("uv") as BufferAttribute;
   const colunas = SEGMENTOS_NA_LARGURA + 1;
+  const inicio = Math.max(0, comprimento - trechoVisivel);
+  const passo = (comprimento - inicio) / SEGMENTOS_AO_LONGO;
+  let { x, y } = pontoEm(inicio, comprimento, forma);
+  // A fita termina correndo para a esquerda: com a arte no sentido do hero, a marca ficaria
+  // de cabeça para baixo na etiqueta. Na metade da saída do hero (fita em movimento rápido)
+  // a arte gira 180° no plano e passa a ler direito no trecho final.
+  const sentido = forma.viagem >= VIRADA_DA_ARTE ? -1 : 1;
   for (let i = 0; i <= SEGMENTOS_AO_LONGO; i++) {
+    const sDaLinha = inicio + passo * i;
+    if (i > 0) {
+      const angulo = anguloEm(sDaLinha - passo / 2, comprimento, forma);
+      x += Math.cos(angulo) * passo;
+      y += Math.sin(angulo) * passo;
+    }
+    const angulo = anguloEm(sDaLinha, comprimento, forma);
+    const torcao = torcaoEm(sDaLinha, forma);
     for (let j = 0; j < colunas; j++) {
       const naPonta = i === SEGMENTOS_AO_LONGO;
-      const recuo = naPonta && j % 2 === 1 ? DENTE_DA_SERRILHA : 0;
-      const s = Math.max(0, (comprimento * i) / SEGMENTOS_AO_LONGO - recuo);
-      const p = amostrar(caminho, s);
+      const recuo = naPonta && j % 2 === 1 ? Math.min(DENTE_DA_SERRILHA, sDaLinha) : 0;
+      const s = sDaLinha - recuo;
+      const px = x - Math.cos(angulo) * recuo;
+      const py = y - Math.sin(angulo) * recuo;
       const v = j / SEGMENTOS_NA_LARGURA;
       const z = (v - 0.5) * LARGURA;
       // Gira o eixo da largura (Z) em torno da tangente: a torção expõe a face impressa.
-      const cosT = Math.cos(p.torcao);
-      const sinT = Math.sin(p.torcao);
-      const lateralX = Math.sin(p.angulo) * sinT;
-      const lateralY = -Math.cos(p.angulo) * sinT;
+      const cosT = Math.cos(torcao);
+      const sinT = Math.sin(torcao);
+      const lateralX = Math.sin(angulo) * sinT;
+      const lateralY = -Math.cos(angulo) * sinT;
       const indice = i * colunas + j;
-      posicoes.setXYZ(indice, p.x + lateralX * z, p.y + lateralY * z, cosT * z);
-      uvs.setXY(indice, (s - comprimento) / PERIODO_IMPRESSAO, v);
+      posicoes.setXYZ(indice, px + lateralX * z, py + lateralY * z, cosT * z);
+      uvs.setXY(indice, (sentido * (s - comprimento)) / PERIODO_IMPRESSAO, sentido > 0 ? v : 1 - v);
     }
   }
   posicoes.needsUpdate = true;
@@ -304,6 +346,39 @@ function montarRolo(impressao: CanvasTexture, voltas: CanvasTexture): Group {
 const DISTANCIA_DA_CAMERA = 10;
 const ENQUADRAMENTO_DO_HERO: Enquadramento = { campoDeVisao: 28, posicao: { x: 0.9, y: 0.85 } };
 const GIRO_DO_CONJUNTO = { x: -0.12, y: 0.85, z: -0.14 };
+const ITERACOES_DA_BUSCA = 26;
+
+/** Altura, em unidades da cena, do quadro quadrado do hero. A página converte pixels por ela. */
+export const ALTURA_DO_QUADRO_DO_HERO =
+  2 * DISTANCIA_DA_CAMERA * Math.tan(((ENQUADRAMENTO_DO_HERO.campoDeVisao / 2) * Math.PI) / 180);
+export const DESLOCAMENTO_DO_ROLO_NO_QUADRO = ENQUADRAMENTO_DO_HERO.posicao;
+export const RAIO_DO_ROLO = RAIO;
+export const LARGURA_DA_FITA = LARGURA;
+
+/**
+ * Pose do rolo na página inteira, em unidades do mundo: origem no centro da tela, y para cima.
+ * `eixo` é o centro do quadro do hero (por onde a câmera olha, para a perspectiva bater com o
+ * pôster). Com `alvoDaPonta`, o comprimento é o que leva a ponta até essa altura.
+ */
+export interface PoseNaPagina {
+  eixo: { x: number; y: number };
+  rolo: { x: number; y: number };
+  escala: number;
+  comprimentoDoHero: number;
+  forma: FormaDaFita;
+  alvoDaPonta: number | null;
+  trechoVisivel: number;
+}
+
+export interface CenaDoRolo {
+  definirComprimento(comprimento: number): void;
+  /** Muda o canvas para a página inteira: largura e altura da tela, em px, e px por unidade. */
+  enquadrarPagina(largura: number, altura: number, pixelsPorUnidade: number): void;
+  definirPose(pose: PoseNaPagina): void;
+  redimensionar(largura: number, altura: number): void;
+  renderizar(): void;
+  destruir(): void;
+}
 
 export function criarCenaDoRolo(canvas: HTMLCanvasElement, opcoes: OpcoesDaCena = {}): CenaDoRolo {
   const renderer = new WebGLRenderer({
@@ -345,7 +420,6 @@ export function criarCenaDoRolo(canvas: HTMLCanvasElement, opcoes: OpcoesDaCena 
   const rolo = montarRolo(impressao, voltas);
   conjunto.add(rolo);
 
-  const caminho = caminhoDaFita();
   const geometria = geometriaDaFita();
   const fita = new Mesh(
     geometria,
@@ -360,19 +434,79 @@ export function criarCenaDoRolo(canvas: HTMLCanvasElement, opcoes: OpcoesDaCena 
   fita.frustumCulled = false;
   conjunto.add(fita);
 
+  const pagina = { largura: 1, altura: 1, pixelsPorUnidade: 1 };
+  const pontaNoMundo = new Vector3();
+
+  function aplicarComprimento(comprimento: number, forma: FormaDaFita, trechoVisivel: number) {
+    const c = Math.max(comprimento, COMPRIMENTO_MINIMO);
+    moldarFita(geometria, c, forma, trechoVisivel);
+    // Ponto de saída com coordenada -c na arte: o rolo gira para casar a impressão.
+    rolo.rotation.z = (3 * Math.PI) / 2 + c / RAIO;
+  }
+
+  function alturaDaPonta(comprimento: number, forma: FormaDaFita): number {
+    const ponta = pontoEm(comprimento, comprimento, forma);
+    return conjunto.localToWorld(pontaNoMundo.set(ponta.x, ponta.y, 0)).y;
+  }
+
+  // A ponta desce quanto mais fita sai: busca binária pelo comprimento que a leva ao alvo.
+  function comprimentoAte(alvo: number, forma: FormaDaFita, maximo: number): number {
+    let curto = COMPRIMENTO_MINIMO;
+    let longo = maximo;
+    if (alturaDaPonta(longo, forma) > alvo) return longo;
+    for (let k = 0; k < ITERACOES_DA_BUSCA; k++) {
+      const meio = (curto + longo) / 2;
+      if (alturaDaPonta(meio, forma) > alvo) curto = meio;
+      else longo = meio;
+    }
+    return (curto + longo) / 2;
+  }
+
   const cenaDoRolo: CenaDoRolo = {
     definirComprimento(comprimento) {
-      const c = Math.min(Math.max(comprimento, 0.1), COMPRIMENTO_MAXIMO);
-      moldarFita(geometria, caminho, c);
-      // Ponto de saída com coordenada -c na arte: o rolo gira para casar a impressão.
-      rolo.rotation.z = (3 * Math.PI) / 2 + c / RAIO;
+      aplicarComprimento(comprimento, FORMA_DO_HERO, TRECHO_DO_HERO);
+    },
+    enquadrarPagina(largura, altura, pixelsPorUnidade) {
+      Object.assign(pagina, { largura, altura, pixelsPorUnidade });
+      renderer.setSize(largura, altura, false);
+    },
+    definirPose(pose) {
+      const { largura, altura, pixelsPorUnidade } = pagina;
+      // A câmera fica sobre o centro do quadro do hero e só a janela desliza até a tela:
+      // assim a perspectiva do rolo é a mesma do pôster, em qualquer ponto da página.
+      const eixoX = largura / 2 + pose.eixo.x * pixelsPorUnidade;
+      const eixoY = altura / 2 - pose.eixo.y * pixelsPorUnidade;
+      const larguraTotal = 2 * Math.max(eixoX, largura - eixoX, 1);
+      const alturaTotal = 2 * Math.max(eixoY, altura - eixoY, 1);
+      camera.position.set(pose.eixo.x, pose.eixo.y, DISTANCIA_DA_CAMERA);
+      camera.aspect = larguraTotal / alturaTotal;
+      camera.fov = (2 * Math.atan(alturaTotal / pixelsPorUnidade / 2 / DISTANCIA_DA_CAMERA) * 180) / Math.PI;
+      camera.setViewOffset(larguraTotal, alturaTotal, larguraTotal / 2 - eixoX, alturaTotal / 2 - eixoY, largura, altura);
+
+      const v = pose.forma.viagem;
+      conjunto.position.set(pose.rolo.x, pose.rolo.y, 0);
+      conjunto.scale.setScalar(pose.escala);
+      conjunto.rotation.set(GIRO_DO_CONJUNTO.x * (1 - v), GIRO_DO_CONJUNTO.y * (1 - v), GIRO_DO_CONJUNTO.z * (1 - v));
+      conjunto.updateMatrixWorld(true);
+
+      let comprimento = pose.comprimentoDoHero;
+      if (pose.alvoDaPonta !== null && v > 0) {
+        // O rolo ficou lá no hero: a fita precisa vencer a distância dele até o alvo, com folga para a dobra.
+        const distancia = Math.abs(pose.rolo.y - pose.alvoDaPonta) / pose.escala;
+        const maximo = pose.comprimentoDoHero + 1.5 * distancia + (2 * altura) / (pixelsPorUnidade * pose.escala) + 40;
+        const ateOAlvo = comprimentoAte(pose.alvoDaPonta, pose.forma, maximo);
+        comprimento += (ateOAlvo - comprimento) * v;
+      }
+      aplicarComprimento(comprimento, pose.forma, Math.max(TRECHO_DO_HERO, pose.trechoVisivel));
     },
     redimensionar(largura, altura) {
       renderer.setSize(largura, altura, false);
+      camera.clearViewOffset();
       camera.aspect = largura / altura;
       camera.updateProjectionMatrix();
     },
     renderizar() {
+      camera.updateProjectionMatrix();
       renderer.render(cena, camera);
     },
     destruir() {
