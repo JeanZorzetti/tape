@@ -55,7 +55,8 @@ const fitasIndicadas = {
   <JsonLd data={fitasIndicadas} />
 
   <article>
-    <header class="mx-auto max-w-6xl px-4 pt-10 md:pt-14">
+    <!-- div, não header: o leitor de tamanho do planejador de SEO descarta <header> e perderia o H1 e o resumo. -->
+    <div class="mx-auto max-w-6xl px-4 pt-10 md:pt-14">
       <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-steel">
         <a href="/" class="hover:text-orange-800">Início</a>
         <span class="px-2" aria-hidden="true">/</span>
@@ -74,7 +75,7 @@ const fitasIndicadas = {
           <WhatsAppCta label="Pedir orçamento" contexto={data.contexto} paginaOrigem={data.nome} />
         </div>
       </div>
-    </header>
+    </div>
 
     <figure class="mx-auto max-w-6xl px-4 pt-10">
       <Image

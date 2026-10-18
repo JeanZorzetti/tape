@@ -157,7 +157,7 @@ export const PRODUTOS: Produto[] = [
   {
     slug: "fita-transparente-comum",
     nome: "Fita Transparente Comum",
-    h1: "Fita adesiva transparente comum, larga, 48mm x 100m",
+    h1: "Fita adesiva transparente comum, larga, 48mm x 100m, para embalagem",
     seoTitle: "Fita adesiva transparente 48mm: preço por rolo | TapePro",
     seoDescription:
       "Fita adesiva transparente comum sem impressão, 48mm × 100m, em BOPP de alta adesão. Fornecimento por volume para expedição e indústria. Peça orçamento.",
@@ -211,6 +211,11 @@ export const PRODUTOS: Produto[] = [
         titulo: "Quando trocar pela fita gomada",
         texto:
           "A cola da fita transparente trabalha na superfície do papelão. Em caixa pesada, cheia ou empilhada em palete, a tensão constante faz essa junta escorregar devagar até a aba abrir. Nesses casos a indicação é a fita gomada kraft, que cola dentro da fibra da caixa.",
+      },
+      {
+        titulo: "Como guardar os rolos",
+        texto:
+          "Guarde os rolos em pé, em lugar seco e fresco, longe do sol e do calor, que amolecem a cola. Use primeiro os rolos mais antigos. Rolo guardado deitado e empilhado pode deformar nas bordas e enroscar no aplicador. Na dúvida sobre quanto estocar, faça a conta pelo consumo do mês.",
       },
     ],
     imagem: fitaComum,
