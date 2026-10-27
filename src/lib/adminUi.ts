@@ -216,8 +216,8 @@ export function taxasFunil(c: FunilCounts) {
    Modela o funil e a receita de uma lista de leads a partir de três taxas por
    cenário. Taxas ancoradas em benchmark de outbound B2B 2025–26 (WhatsApp no
    Brasil é canal quente, mas lista fria + cadência de 6 toques seguram o realista
-   em 25% de resposta). Ticket = preços reais de goiania.roilabs.com.br com o reajuste
-   de 20% de 17/10/2026 (mínimo de 20 rolos / R$484,80 na personalizada), blended por mix de produto.
+   em 25% de resposta). Ticket = preços reais de goiania.roilabs.com.br (mínimo de
+   20 rolos / R$404 na personalizada), blended por mix de produto.
    ponytail: modelo linear de 3 taxas com constantes; quando a operação medir as
    taxas reais (o funil por coorte já registra), trocar estas premissas por elas. */
 
@@ -231,9 +231,9 @@ export interface CenarioProjecao {
 }
 
 export const CENARIOS_PROJECAO: readonly CenarioProjecao[] = [
-  { id: "conservador", label: "Conservador", resposta: 0.15, respOrcamento: 0.3, orcFechado: 0.2, ticketCentavos: 84_000 },
-  { id: "realista", label: "Realista", resposta: 0.25, respOrcamento: 0.4, orcFechado: 0.3, ticketCentavos: 132_000 },
-  { id: "otimista", label: "Otimista", resposta: 0.4, respOrcamento: 0.5, orcFechado: 0.4, ticketCentavos: 228_000 },
+  { id: "conservador", label: "Conservador", resposta: 0.15, respOrcamento: 0.3, orcFechado: 0.2, ticketCentavos: 70_000 },
+  { id: "realista", label: "Realista", resposta: 0.25, respOrcamento: 0.4, orcFechado: 0.3, ticketCentavos: 110_000 },
+  { id: "otimista", label: "Otimista", resposta: 0.4, respOrcamento: 0.5, orcFechado: 0.4, ticketCentavos: 190_000 },
 ] as const;
 
 /** Vendas extras ao enriquecer os leads sem canal (fase 2), como fração das vendas da base contatável. */

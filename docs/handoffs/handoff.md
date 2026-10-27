@@ -121,7 +121,7 @@ Só vendem **3 produtos + o Clichê**. Fonte: `imagens/com fundo/WhatsApp Image 
 | **Fita Transparente Comum** | sem impressão · **48mm × 100m** | R$7,90 |
 | **Clichê Flexográfico** | matriz usada para imprimir a marca na fita — **custo único** | a partir de **R$80,00** |
 
-**Reajuste de +20% em 17/10/2026 (pedido do Jean):** o site e o admin mostram esta tabela × 1,2 — personalizada 20–49 R$19,44 · 50–99 R$16,68 · 100–199 R$12,60 · 200+ R$12,12; gomada 15–100 R$44,64 · 100+ R$38,64; comum R$9,48; clichê a partir de R$96. A tabela acima fica como a original.
+**Reajuste de +20% em 17/10/2026 revertido em 27/10/2026 (pedido do Jean):** site e admin voltaram a mostrar esta tabela original, sem reajuste.
 
 Rodapé oficial da tabela (usar como copy de confiança):
 > "Trabalhamos apenas com as fitas da tabela acima — transparentes com ou sem personalização e gomada reforçada com fios de nylon, garantindo mais resistência e segurança para caixas mais pesadas."
