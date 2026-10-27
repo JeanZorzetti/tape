@@ -122,7 +122,7 @@ Só vendem **3 produtos + o Clichê**. Fonte: `imagens/com fundo/WhatsApp Image 
 | **Fita Transparente Comum** | sem impressão · **48mm × 100m** | R$7,90 |
 | **Clichê Flexográfico** | matriz usada para imprimir a marca na fita — **custo único** | a partir de **R$80,00** |
 
-**Tabela nova de 27/10/2026 (Jean):** personalizada e gomada são as do motor de preço do atendente «Vendas - Tape Pro» na Polaris, que começam em 1 rolo; o site mantém os mínimos (20 e 15), então as faixas de 1 a 19 valem só no atendente. Transparente comum e clichê seguem da tabela de 20/07/2026. Antes (20/07): personalizada 20–49 R$16,20 · 50–99 R$13,90 · 100–199 R$10,50 · 200+ R$10,10; gomada 15–100 R$37,20 · 100+ R$32,20. O reajuste de +20% de 17/10 foi revertido no mesmo dia 27/10.
+**Tabela nova de 27/10/2026 (Jean):** personalizada e gomada são as do motor de preço do atendente «Vendas - Tape Pro» na Polaris. Desde a noite de 27/10 o motor também começa nos mínimos (20 e 15 rolos) e tem a transparente comum (R$ 7,90, sem desconto): site, motor, instrução e base do atendente batem. Transparente comum e clichê seguem da tabela de 20/07/2026. Mudou um preço aqui, muda no motor (tela do atendente na Polaris) e reensina as páginas do site na base dele. Antes (20/07): personalizada 20–49 R$16,20 · 50–99 R$13,90 · 100–199 R$10,50 · 200+ R$10,10; gomada 15–100 R$37,20 · 100+ R$32,20. O reajuste de +20% de 17/10 foi revertido no mesmo dia 27/10.
 
 Rodapé oficial da tabela (usar como copy de confiança):
 > "Trabalhamos apenas com as fitas da tabela acima — transparentes com ou sem personalização e gomada reforçada com fios de nylon, garantindo mais resistência e segurança para caixas mais pesadas."
