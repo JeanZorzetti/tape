@@ -84,7 +84,7 @@ por palavra das [dores dos segmentos](../src/content/segmentos) — é o gancho 
 
 Princípios (B2B WhatsApp/DM, 2026): **mensagem curta**, contexto relevante na 1ª linha, **uma** dor,
 **um** CTA leve. Nada de "Olá, tudo bem?" seguido de parede de texto. Sem preço no 1º toque — o preço
-puxa para o orçamento, não fecha por mensagem. WhatsApp oficial: **+55 62 98344-3919**.
+puxa para o orçamento, não fecha por mensagem. WhatsApp oficial: **+55 62 9469-0540**.
 
 ### 4.1 — WhatsApp · E-commerce / marca (Fila B)
 

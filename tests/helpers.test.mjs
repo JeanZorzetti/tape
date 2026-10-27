@@ -16,20 +16,20 @@ const numeroDe = (url) => new URL(url).pathname.slice(1);
 const textoDe = (url) => new URL(url).searchParams.get("text");
 
 test("whatsappParaNumero prefixa o DDI 55 quando falta", () => {
-  assert.equal(numeroDe(whatsappParaNumero("62983443919")), "5562983443919");
+  assert.equal(numeroDe(whatsappParaNumero("6294690540")), "556294690540");
 });
 
 test("whatsappParaNumero não duplica um DDI já presente", () => {
-  assert.equal(numeroDe(whatsappParaNumero("5562983443919")), "5562983443919");
+  assert.equal(numeroDe(whatsappParaNumero("556294690540")), "556294690540");
 });
 
 test("whatsappParaNumero descarta a máscara do telefone", () => {
-  assert.equal(numeroDe(whatsappParaNumero("(62) 98344-3919")), "5562983443919");
+  assert.equal(numeroDe(whatsappParaNumero("(62) 9469-0540")), "556294690540");
 });
 
 test("whatsappParaNumero só inclui ?text= quando há texto", () => {
-  assert.equal(whatsappParaNumero("62983443919"), "https://wa.me/5562983443919");
-  assert.equal(textoDe(whatsappParaNumero("62983443919", "olá & cia")), "olá & cia");
+  assert.equal(whatsappParaNumero("6294690540"), "https://wa.me/556294690540");
+  assert.equal(textoDe(whatsappParaNumero("6294690540", "olá & cia")), "olá & cia");
 });
 
 test("whatsappLink registra a página de origem entre parênteses", () => {

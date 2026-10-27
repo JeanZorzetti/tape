@@ -28,7 +28,7 @@ const leadInbound = {
   nome: "Cliente Inbound",
   empresa: "Inbound Ltda",
   email: "inbound@teste.com.br",
-  telefone: "62983443919",
+  telefone: "6294690540",
   tipo_fita: "gomada",
   quantidade: "200 rolos",
 };

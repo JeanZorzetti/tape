@@ -17,7 +17,7 @@
 - **SEO opening:** no competitor has a blog or rich application/use-case pages. Long-tail technical + application content (how to choose tape, industrial use cases, personalização) is the open lane — win on content depth + structure, not on a prettier one-pager.
 - **Brand identity (from real assets):** logo is **TAPE** (deep navy) + **PRO** (orange), tagline "FITAS PERSONALIZADAS"; the signature product shot is a vivid orange roll. Palette = navy + orange + kraft (the boxes) + off-white + near-black ink. Sample exact hex from the logo file.
 - **Real assets:** product/portfolio photos live in `imagens/` — TapePro's own client work (Finaart, Nature's, Quemed, Lyon, Halyee, Yanmei, Comando…), printed transparent (BOPP) and kraft/gummed tapes, often with a printed security/warranty message ("ESTA FITA É SUA GARANTIA…", "CUIDADO FRÁGIL", "VOLUME CONFERIDO"). **Exclude `sua-marca-aqui.png`** — it carries another supplier's brand/phone (Chimas), not TapePro's.
-- **WhatsApp:** +55 62 98344-3919.
+- **WhatsApp:** +55 62 9469-0540.
 
 ## Design & Visual Identity — kill the "AI look"
 

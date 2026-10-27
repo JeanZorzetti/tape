@@ -148,7 +148,7 @@ Rodapé oficial da tabela (usar como copy de confiança):
 - Posicionamento: **representante oficial autorizado** — pode usar marca/fotos TapePro e mirar o termo "TapePro".
 - SEO: **nacional temático** (sem páginas por cidade; schema **Organization**, não LocalBusiness).
 - Portfólio: **autorizado** a publicar cases reais (Nature's, Halyee, Lyon, Finaart, Comando, Yanmei, Quemed). **Excluir `imagens/**/sua-marca-aqui.png`** (marca de outro fornecedor — Chimas).
-- WhatsApp: **+55 62 98344-3919** (`src/lib/constants.ts` → `5562983443919`).
+- WhatsApp: **+55 62 9469-0540** (`src/lib/constants.ts` → `556294690540`).
 
 ## Paleta e tipografia
 `src/styles/global.css` (bloco `@theme`):

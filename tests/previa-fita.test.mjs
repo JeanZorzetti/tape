@@ -18,7 +18,7 @@ test("comLogoNaPrevia acrescenta o aviso do arquivo no fim do texto", () => {
 });
 
 test("comLogoNaPrevia sem texto devolve o link como estava", () => {
-  assert.equal(comLogoNaPrevia("https://wa.me/5562983443919"), "https://wa.me/5562983443919");
+  assert.equal(comLogoNaPrevia("https://wa.me/556294690540"), "https://wa.me/556294690540");
 });
 
 test("a fonte da visita entra depois do aviso da logo", () => {

@@ -23,7 +23,7 @@ const leadValido = {
   nome: "Ana Souza",
   empresa: "Acme Embalagens",
   email: "ana@acme.com.br",
-  telefone: "62983443919",
+  telefone: "6294690540",
   tipoFita: "gomada",
   quantidadeEstimada: "100 rolos",
 };
