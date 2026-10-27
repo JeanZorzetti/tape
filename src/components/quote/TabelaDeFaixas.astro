@@ -3,6 +3,16 @@ import { PRODUTOS } from "../../lib/produtos";
 
 /** As faixas de preço por rolo das três fitas, da tabela oficial (fonte única: src/lib/produtos.ts). */
 const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+const spec = (p: (typeof PRODUTOS)[number], label: string) => p.specs.find((s) => s.label === label)?.valor;
+
+// Fita com mais de uma medida leva a medida no nome, senão as linhas das duas se confundem.
+const linhas = PRODUTOS.flatMap((p) => [
+  ...p.faixas.map((f) => ({
+    fita: p.outrasMedidas ? `${p.nome} ${spec(p, "Largura")} × ${spec(p, "Comprimento")}` : p.nome,
+    ...f,
+  })),
+  ...(p.outrasMedidas ?? []).flatMap((m) => m.faixas.map((f) => ({ fita: `${p.nome} ${m.medida}`, ...f }))),
+]);
 ---
 
 <table>
@@ -15,15 +25,13 @@ const brl = (v: number) => v.toLocaleString("pt-BR", { style: "currency", curren
   </thead>
   <tbody>
     {
-      PRODUTOS.flatMap((p) =>
-        p.faixas.map((f) => (
-          <tr>
-            <td>{p.nome}</td>
-            <td>{f.rolos}</td>
-            <td class="tabular-nums">{brl(f.porRolo)}</td>
-          </tr>
-        )),
-      )
+      linhas.map((l) => (
+        <tr>
+          <td>{l.fita}</td>
+          <td>{l.rolos}</td>
+          <td class="tabular-nums">{brl(l.porRolo)}</td>
+        </tr>
+      ))
     }
   </tbody>
 </table>

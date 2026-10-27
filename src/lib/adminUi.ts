@@ -216,8 +216,8 @@ export function taxasFunil(c: FunilCounts) {
    Modela o funil e a receita de uma lista de leads a partir de três taxas por
    cenário. Taxas ancoradas em benchmark de outbound B2B 2025–26 (WhatsApp no
    Brasil é canal quente, mas lista fria + cadência de 6 toques seguram o realista
-   em 25% de resposta). Ticket = preços reais de goiania.roilabs.com.br (mínimo de
-   20 rolos / R$404 na personalizada), blended por mix de produto.
+   em 25% de resposta). Ticket = tabela da TapePro de 27/10/2026 (mínimo de 20 rolos /
+   R$438 na personalizada, com o clichê), blended por mix de produto.
    ponytail: modelo linear de 3 taxas com constantes; quando a operação medir as
    taxas reais (o funil por coorte já registra), trocar estas premissas por elas. */
 

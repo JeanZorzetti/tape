@@ -116,12 +116,13 @@ Só vendem **3 produtos + o Clichê**. Fonte: `imagens/com fundo/WhatsApp Image 
 
 | Produto | Specs | Preço unitário |
 |---|---|---|
-| **Fita Adesiva Transparente Personalizada** | logo em até **2 cores** · **48mm × 100m** | 20–49 rolos R$16,20 · 50–99 R$13,90 · 100–199 R$10,50 · 200+ R$10,10 |
-| **Fita Gomada** (reforçada com **fios de nylon**) | **70mm × 150m** | 15–100 rolos R$37,20 · 100+ R$32,20 |
+| **Fita Adesiva Transparente Personalizada** | logo em até **2 cores** · **48mm × 100m** | 20–24 rolos R$17,90 · 25–49 R$16,90 · 50–74 R$15,90 · 75–100 R$14,90 · 101+ R$13,90 |
+| **Fita Adesiva Transparente Personalizada** | **48mm × 300m** (só na tabela de faixas do site, sem página) | 20–24 rolos R$37,90 · 25–49 R$34,90 · 50–74 R$30,90 · 75–100 R$29,90 · 101+ R$28,90 |
+| **Fita Gomada** (reforçada com **fios de nylon**) | **70mm × 150m** | 15–24 rolos R$39,90 · 25–49 R$36,90 · 50–74 R$35,90 · 75+ R$34,90 |
 | **Fita Transparente Comum** | sem impressão · **48mm × 100m** | R$7,90 |
 | **Clichê Flexográfico** | matriz usada para imprimir a marca na fita — **custo único** | a partir de **R$80,00** |
 
-**Reajuste de +20% em 17/10/2026 revertido em 27/10/2026 (pedido do Jean):** site e admin voltaram a mostrar esta tabela original, sem reajuste.
+**Tabela nova de 27/10/2026 (Jean):** personalizada e gomada são as do motor de preço do atendente «Vendas - Tape Pro» na Polaris, que começam em 1 rolo; o site mantém os mínimos (20 e 15), então as faixas de 1 a 19 valem só no atendente. Transparente comum e clichê seguem da tabela de 20/07/2026. Antes (20/07): personalizada 20–49 R$16,20 · 50–99 R$13,90 · 100–199 R$10,50 · 200+ R$10,10; gomada 15–100 R$37,20 · 100+ R$32,20. O reajuste de +20% de 17/10 foi revertido no mesmo dia 27/10.
 
 Rodapé oficial da tabela (usar como copy de confiança):
 > "Trabalhamos apenas com as fitas da tabela acima — transparentes com ou sem personalização e gomada reforçada com fios de nylon, garantindo mais resistência e segurança para caixas mais pesadas."

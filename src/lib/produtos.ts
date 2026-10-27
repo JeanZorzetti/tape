@@ -36,13 +36,15 @@ export interface Produto {
   /** Assunto injetado na mensagem do WhatsApp. */
   contexto: string;
   personalizavel: boolean;
-  /** Menor preço por rolo da tabela oficial da TapePro (20/07/2026), e quando ele vale.
-   *  A tabela está em docs/handoffs/handoff.md. */
+  /** Menor preço por rolo da tabela da TapePro, e quando ele vale. A tabela e a data de cada
+   *  preço estão em docs/handoffs/handoff.md. */
   preco: { aPartirDe: number; condicao?: string };
   /** Preço por rolo no pedido mínimo, da mesma tabela: é o que paga quem compra pouco. */
   precoNoMinimo?: { rolos: number; porRolo: number };
   /** Todas as faixas de quantidade da mesma tabela, da menor para a maior. */
   faixas: { rolos: string; porRolo: number }[];
+  /** Outra medida da mesma fita, vendida pela tabela de faixas, sem página própria. */
+  outrasMedidas?: { medida: string; faixas: { rolos: string; porRolo: number }[] }[];
 }
 
 export const PRODUTOS: Produto[] = [
@@ -91,13 +93,26 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita adesiva transparente com a marca TAPE PRO impressa em laranja e azul",
     contexto: "fita transparente personalizada (48mm × 100m)",
     personalizavel: true,
-    preco: { aPartirDe: 10.1, condicao: "em pedidos de 200 rolos ou mais" },
-    precoNoMinimo: { rolos: 20, porRolo: 16.2 },
+    preco: { aPartirDe: 13.9, condicao: "em pedidos acima de 100 rolos" },
+    precoNoMinimo: { rolos: 20, porRolo: 17.9 },
     faixas: [
-      { rolos: "20 a 49", porRolo: 16.2 },
-      { rolos: "50 a 99", porRolo: 13.9 },
-      { rolos: "100 a 199", porRolo: 10.5 },
-      { rolos: "200 ou mais", porRolo: 10.1 },
+      { rolos: "20 a 24", porRolo: 17.9 },
+      { rolos: "25 a 49", porRolo: 16.9 },
+      { rolos: "50 a 74", porRolo: 15.9 },
+      { rolos: "75 a 100", porRolo: 14.9 },
+      { rolos: "acima de 100", porRolo: 13.9 },
+    ],
+    outrasMedidas: [
+      {
+        medida: "48 mm × 300 m",
+        faixas: [
+          { rolos: "20 a 24", porRolo: 37.9 },
+          { rolos: "25 a 49", porRolo: 34.9 },
+          { rolos: "50 a 74", porRolo: 30.9 },
+          { rolos: "75 a 100", porRolo: 29.9 },
+          { rolos: "acima de 100", porRolo: 28.9 },
+        ],
+      },
     ],
   },
   {
@@ -147,11 +162,13 @@ export const PRODUTOS: Produto[] = [
     alt: "Rolo de fita gomada de papel kraft reforçada com fios de nylon",
     contexto: "fita gomada kraft reforçada (70mm × 150m)",
     personalizavel: true,
-    preco: { aPartirDe: 32.2, condicao: "em pedidos acima de 100 rolos" },
-    precoNoMinimo: { rolos: 15, porRolo: 37.2 },
+    preco: { aPartirDe: 34.9, condicao: "em pedidos de 75 rolos ou mais" },
+    precoNoMinimo: { rolos: 15, porRolo: 39.9 },
     faixas: [
-      { rolos: "15 a 100", porRolo: 37.2 },
-      { rolos: "acima de 100", porRolo: 32.2 },
+      { rolos: "15 a 24", porRolo: 39.9 },
+      { rolos: "25 a 49", porRolo: 36.9 },
+      { rolos: "50 a 74", porRolo: 35.9 },
+      { rolos: "75 ou mais", porRolo: 34.9 },
     ],
   },
   {
