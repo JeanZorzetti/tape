@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "preview": "astro preview",
+    "postbuild": "node scripts/markdown.mjs",
+    "preview": "node servidor/entrada.mjs",
     "check": "astro check",
     "verificar": "node scripts/verificar-seo.mjs",
     "indexnow": "node scripts/indexnow.mjs",
@@ -27,7 +28,8 @@
     "imagetracerjs": "1.2.6",
     "postgres": "^3.4.9",
     "sharp": "^0.34",
-    "three": "^0.180.0"
+    "three": "^0.180.0",
+    "turndown": "^7.2.4"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4",

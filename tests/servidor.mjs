@@ -1,5 +1,5 @@
 /**
- * Sobe o servidor real (`dist/server/entry.mjs`) para os testes de integração.
+ * Sobe o servidor real (`servidor/entrada.mjs`, o mesmo do Dockerfile, na frente do `dist/server/entry.mjs`) para os testes de integração.
  * Contra o build, não contra `astro dev`: só o servidor Node devolve os status
  * de verdade (o /404, por exemplo).
  *
@@ -49,7 +49,7 @@ export async function subirServidor(env = {}) {
   const porta = await portaLivre();
   const base = `http://127.0.0.1:${porta}`;
 
-  const processo = spawn(process.execPath, ["dist/server/entry.mjs"], {
+  const processo = spawn(process.execPath, ["servidor/entrada.mjs"], {
     env: { ...process.env, ...env, HOST: "127.0.0.1", PORT: String(porta) },
     stdio: ["ignore", "ignore", "pipe"],
   });

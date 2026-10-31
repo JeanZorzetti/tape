@@ -1,0 +1,142 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import JsonLd from "../components/seo/JsonLd.astro";
+import WhatsAppCta from "../components/quote/WhatsAppCta.astro";
+import {
+  CNPJ,
+  EMAIL_CONTATO,
+  NOME_MARCA,
+  PEDIDO_MINIMO_ROLOS,
+  RAZAO_SOCIAL,
+  SITE_URL,
+  WHATSAPP_DISPLAY,
+  WHATSAPP_NUMERO,
+} from "../lib/constants";
+import { whatsappLink } from "../lib/whatsapp";
+import { PRODUTOS } from "../lib/produtos";
+
+const ORIGEM = "Contato";
+const minimo = (slug: string) => PRODUTOS.find((p) => p.slug === slug)?.precoNoMinimo?.rolos;
+
+// O que o orçamento pede, na mesma ordem do formulário e dos passos de /orcamento/.
+const PARA_ORCAR = [
+  { titulo: "Qual fita", texto: "Transparente comum, transparente personalizada ou gomada kraft. Se não souber, diga o peso da caixa e a gente indica." },
+  { titulo: "Quantos rolos", texto: `A estimativa de consumo por mês ou o tamanho do pedido. A personalizada sai a partir de ${minimo("fita-gomada")} rolos na gomada e ${minimo("fita-transparente-personalizada")} na transparente.` },
+  { titulo: "A arte", texto: "A logo ou o texto que vai impresso (até 2 cores), em qualquer arquivo que você tiver. O clichê sai dela." },
+  { titulo: "Para onde vai", texto: "A cidade de entrega, para o frete entrar no orçamento. O atendimento é para todo o Brasil." },
+];
+
+const contactPage = {
+  "@context": "https://schema.org",
+  "@type": "ContactPage",
+  url: `${SITE_URL}/contato/`,
+  name: `Contato da ${NOME_MARCA}`,
+  about: { "@id": SITE_URL + "/#organization" },
+  mainEntity: {
+    "@id": SITE_URL + "/#organization",
+    email: EMAIL_CONTATO,
+    telephone: "+" + WHATSAPP_NUMERO,
+  },
+};
+
+const breadcrumb = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+    { "@type": "ListItem", position: 2, name: "Contato", item: `${SITE_URL}/contato/` },
+  ],
+};
+---
+
+<BaseLayout
+  title="Contato: WhatsApp e e-mail da fábrica de fitas | TapePro"
+  description={`Fale com a TapePro pelo WhatsApp ${WHATSAPP_DISPLAY} ou por ${EMAIL_CONTATO}. Orçamento de fita adesiva personalizada a partir de ${PEDIDO_MINIMO_ROLOS} rolos, para todo o Brasil.`}
+>
+  <JsonLd data={contactPage} />
+  <JsonLd data={breadcrumb} />
+
+  <section class="bg-navy text-white">
+    <div class="mx-auto max-w-6xl px-4 py-14 md:py-16">
+      <nav aria-label="Trilha de navegação" class="font-mono text-[0.7rem] uppercase tracking-[0.18em] text-white/55">
+        <a href="/" class="hover:text-orange">Início</a>
+        <span class="px-2" aria-hidden="true">/</span>
+        <span class="text-white/80">Contato</span>
+      </nav>
+      <h1 class="mt-8 max-w-3xl font-display text-[clamp(2rem,5.5vw,3.5rem)] font-extrabold leading-[0.98] tracking-[-0.03em]">
+        Fale com quem fabrica a fita
+      </h1>
+      <p class="mt-6 max-w-2xl font-body text-lg leading-relaxed text-white/85">
+        Orçamento, dúvida sobre qual fita usar ou pedido em andamento: o WhatsApp é o caminho mais rápido. Quem atende é
+        a própria {NOME_MARCA}, sem intermediário.
+      </p>
+      <div class="mt-8">
+        <WhatsAppCta label="Chamar no WhatsApp" paginaOrigem={ORIGEM} />
+      </div>
+    </div>
+  </section>
+
+  <article class="mx-auto max-w-3xl px-4 py-16 font-body leading-relaxed text-ink/80 md:py-20">
+    <h2 class="text-2xl text-navy">Os canais</h2>
+    <dl class="mt-6 space-y-5">
+      <div>
+        <dt class="font-display font-bold text-navy">WhatsApp</dt>
+        <dd class="mt-1">
+          <a href={whatsappLink(undefined, ORIGEM)} target="_blank" rel="noopener" class="font-semibold text-navy underline decoration-orange underline-offset-4"
+            >{WHATSAPP_DISPLAY}</a
+          >: orçamento, envio da arte e acompanhamento do pedido.
+        </dd>
+      </div>
+      <div>
+        <dt class="font-display font-bold text-navy">E-mail</dt>
+        <dd class="mt-1">
+          <a href={`mailto:${EMAIL_CONTATO}`} class="font-semibold text-navy underline decoration-orange underline-offset-4">{EMAIL_CONTATO}</a>:
+          para mandar arquivo grande ou falar sobre os seus dados.
+        </dd>
+      </div>
+      <div>
+        <dt class="font-display font-bold text-navy">Formulário</dt>
+        <dd class="mt-1">
+          <a href="/orcamento/" class="font-semibold text-navy underline decoration-orange underline-offset-4">Pedido de orçamento</a>:
+          se preferir escrever tudo de uma vez, sem conversa.
+        </dd>
+      </div>
+      <div>
+        <dt class="font-display font-bold text-navy">Empresa</dt>
+        <dd class="mt-1 tabular-nums">{RAZAO_SOCIAL}, CNPJ {CNPJ}. Atendimento nacional.</dd>
+      </div>
+    </dl>
+
+    <h2 class="mt-12 text-2xl text-navy">Para o orçamento sair na primeira resposta</h2>
+    <p class="mt-4">Mande estas quatro informações junto com o primeiro contato.</p>
+    <ol class="mt-6 space-y-4">
+      {
+        PARA_ORCAR.map((item, i) => (
+          <li class="flex gap-5">
+            <span class="font-mono text-sm tabular-nums text-navy/40">{String(i + 1).padStart(2, "0")}</span>
+            <span>
+              <strong class="text-navy">{item.titulo}.</strong> {item.texto}
+            </span>
+          </li>
+        ))
+      }
+    </ol>
+
+    <h2 class="mt-12 text-2xl text-navy">O que a TapePro fabrica</h2>
+    <ul class="mt-4 list-disc space-y-2 pl-5">
+      {
+        PRODUTOS.map((p) => (
+          <li>
+            <a href={`/produtos/${p.slug}/`} class="font-semibold text-navy underline-offset-4 hover:underline">{p.nome}</a>: {p.chamada}
+          </li>
+        ))
+      }
+    </ul>
+    <p class="mt-6">
+      Antes de chamar, a dúvida pode já estar respondida nas
+      <a href="/perguntas-frequentes/" class="font-semibold text-navy underline decoration-orange underline-offset-4">perguntas frequentes</a>
+      (mínimo, prazo, clichê e entrega). O que você enviar por estes canais é tratado como descreve a
+      <a href="/politica-de-privacidade/" class="font-semibold text-navy underline decoration-orange underline-offset-4">política de privacidade</a>.
+    </p>
+  </article>
+</BaseLayout>
