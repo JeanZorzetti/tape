@@ -58,6 +58,8 @@ export const LOGOS = {
   },
   fundoEscuro: {
     w: 800, h: 280, bg: "#14234f", full: true,
+    // Marca clara em fundo de cor: o designer não imprime o bloco. A letra branca sai na cor do fundo (03/11/2026).
+    verdade: `<rect width="800" height="280" fill="#fff"/>${T(60, 150, 120, "Nimbus Sans", 700, "#14234f", "QUEMED")}<circle cx="700" cy="140" r="58" fill="#ffc400"/>${T(60, 220, 34, "Nimbus Sans", 400, "#14234f", "farmácia de manipulação", 'letter-spacing="3"')}`,
     body: `${T(60, 150, 120, "Nimbus Sans", 700, "#ffffff", "QUEMED")}<circle cx="700" cy="140" r="58" fill="#ffc400"/>${T(60, 220, 34, "Nimbus Sans", 400, "#ffffff", "farmácia de manipulação", 'letter-spacing="3"')}`,
   },
   transparente: {

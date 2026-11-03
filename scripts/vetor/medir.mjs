@@ -11,6 +11,10 @@
  *
  * Referência de 17/10/2026 (ec3e781): corpus de 9 logos chapadas × 4 arquivos, erro 5,02 e IoU
  * 0,906 (antes 5,07 e 0,907 em 7cf9aae); casos cromados de 3,3 a 12,6 (antes de 81 a 232).
+ *
+ * 03/11/2026 (fundoDaLogo.ts): só o fundoEscuro muda, porque a verdade dele passou a ser sem o bloco do fundo
+ * (limpa 0,56 e IoU 0,992; o print dá 56,5 por desalinhar a caixa com a verdade, mas sai certo no olho).
+ * ALTURA_VETOR=800 mede a altura do servidor da Polaris.
  */
 import sharp from "sharp";
 import { readdirSync, readFileSync, mkdirSync, writeFileSync } from "node:fs";

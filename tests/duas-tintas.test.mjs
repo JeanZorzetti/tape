@@ -262,3 +262,33 @@ test("vetorização: imagem sem tinta nenhuma devolve null", () => {
   const vazia = imagem(50, 20, () => BRANCO);
   assert.equal(vetorizarPixels({ ...vazia, fundoBranco: true, escalaFonte: 1 }), null);
 });
+
+// ── Fundo da arte (fundoDaLogo.ts): a fita é película, o designer nunca imprime o bloco do fundo ──
+
+test("ilustração colorida: tinta-chave para o traço, segunda para a cor mais presente, e o claro fica película", () => {
+  // Textura fina: traço navy, folha verde, recheio vermelho e amarelo vivo, nada chapado de verdade.
+  const NAVY_T = [2, 40, 107, 255];
+  const VERDE_T = [40, 105, 8, 255];
+  const AMARELO_T = [245, 175, 15, 255];
+  const VERMELHO_T = [165, 25, 8, 255];
+  const { dados, largura, altura } = imagem(200, 200, (x, y) => {
+    const celula = (Math.floor(x / 5) + Math.floor(y / 5)) % 2;
+    if (x < 50) return celula ? NAVY_T : BRANCO;
+    if (x < 120) return celula ? VERDE_T : BRANCO;
+    if (x < 170) return celula ? AMARELO_T : [250, 215, 110, 255];
+    return y % 40 < 10 && celula ? VERMELHO_T : NAVY_T;
+  });
+  const { chapas, pelicula } = chapasDaLogo(dados, largura, altura, true);
+  assert.equal(chapas.length, 2);
+  assert.ok(perto(chapas[0].tinta, NAVY_T, 30), `tinta-chave ${JSON.stringify(chapas[0].tinta)}`);
+  assert.ok(perto(chapas[1].tinta, VERDE_T, 40), `segunda tinta ${JSON.stringify(chapas[1].tinta)}`);
+  assert.ok(pelicula, "o amarelo sai película");
+  assert.equal(pelicula[(100 * largura + 145)], 1);
+  assert.equal(pelicula[(100 * largura + 25)], 0);
+});
+
+test("logo chapada de muitas cores não perde o amarelo: o desvio da ilustração é só para textura fina", () => {
+  const { dados, largura, altura } = imagem(400, 100, (x) => (x < 100 ? NAVY : x < 200 ? [255, 210, 60, 255] : x < 300 ? VERMELHO : [40, 140, 60, 255]));
+  const { pelicula } = chapasDaLogo(dados, largura, altura, true);
+  assert.equal(pelicula, null);
+});

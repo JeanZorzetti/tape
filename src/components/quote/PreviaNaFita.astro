@@ -330,7 +330,7 @@ const REPETICOES = 4;
 
 <script>
   import { whatsappLink, comLogoNaPrevia } from "../../lib/whatsapp";
-  import { caixaDaTinta, temFundoBranco } from "../../lib/recorteLogo";
+  import { aplicarLeitura, lerArte, type LeituraDaArte } from "../../lib/fundoDaLogo";
   import type { PedidoVetorizacao, RespostaVetorizacao } from "../../lib/vetorizarLogo.worker";
 
   // A busca da tinta roda numa cópia reduzida (rápida no celular); o corte sai da imagem original.
@@ -354,7 +354,7 @@ const REPETICOES = 4;
     sy: number;
     sw: number;
     sh: number;
-    fundoBranco: boolean;
+    leitura: LeituraDaArte;
   }
 
   /**
@@ -386,16 +386,16 @@ const REPETICOES = 4;
     } catch {
       return { url, alturaPx: h0 };
     }
-    const fundoBranco = temFundoBranco(pixels, analise.width, analise.height);
-    const tinta = caixaDaTinta(pixels, analise.width, analise.height);
-    if (!tinta) return { url, alturaPx: h0 };
+    const leitura = lerArte(pixels, analise.width, analise.height);
+    if (!leitura) return { url, alturaPx: h0 };
+    const { caixa: tinta } = leitura;
 
     // Volta à escala original, com 1 pixel de folga para não comer a borda suavizada.
     const sx = Math.max(0, Math.floor((tinta.x - 1) / escala));
     const sy = Math.max(0, Math.floor((tinta.y - 1) / escala));
     const sw = Math.min(w0 - sx, Math.ceil((tinta.w + 2) / escala));
     const sh = Math.min(h0 - sy, Math.ceil((tinta.h + 2) / escala));
-    const fonte = { img, sx, sy, sw, sh, fundoBranco };
+    const fonte = { img, sx, sy, sw, sh, leitura };
     if (sw >= w0 && sh >= h0) return { url, alturaPx: h0, fonte };
 
     const corte = document.createElement("canvas");
@@ -423,6 +423,7 @@ const REPETICOES = 4;
     ctx.imageSmoothingQuality = "high";
     ctx.drawImage(fonte.img, fonte.sx, fonte.sy, fonte.sw, fonte.sh, 0, 0, largura, altura);
     const dados = ctx.getImageData(0, 0, largura, altura).data;
+    aplicarLeitura(dados, largura, altura, fonte.leitura);
 
     try {
       trabalhador ??= new Worker(new URL("../../lib/vetorizarLogo.worker.ts", import.meta.url), { type: "module" });
@@ -442,7 +443,7 @@ const REPETICOES = 4;
         clearTimeout(prazo);
         resolver(null);
       };
-      const mensagem: PedidoVetorizacao = { dados, largura, altura, fundoBranco: fonte.fundoBranco, escalaFonte: escala };
+      const mensagem: PedidoVetorizacao = { dados, largura, altura, fundoBranco: fonte.leitura.fundoBranco, escalaFonte: escala };
       w.postMessage(mensagem, [dados.buffer]);
     });
   }

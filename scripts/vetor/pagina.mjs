@@ -10,7 +10,8 @@ import sharp from "sharp";
 import { resolve } from "node:path";
 
 const LADO_MAX_ANALISE = 1200;
-const ALTURA_VETORIZACAO = 400;
+// A página usa 400; o servidor da Polaris (fita.ts), 800. ALTURA_VETOR=800 mede a do servidor.
+const ALTURA_VETORIZACAO = Number(process.env.ALTURA_VETOR ?? 400);
 const LARGURA_MAX_VETORIZACAO = 2400;
 
 async function lerRgba(buf) {
@@ -19,22 +20,29 @@ async function lerRgba(buf) {
 }
 
 /** `{ pedido, caixa }`: o pedido do Worker e a caixa (em pixels do arquivo) que a página recortou. Null sem tinta. */
-export async function prepararComoAPagina(buf, codigo) {
+export async function prepararComoAPagina(buf, codigo, { cortada = false, alturaVetor = ALTURA_VETORIZACAO } = {}) {
   const { caixaDaTinta, temFundoBranco } = await import(resolve(codigo, "recorteLogo.ts"));
+  // Versão anterior a 03/11/2026 não tem fundoDaLogo.ts: segue sem ler o fundo.
+  const fundoDaLogo = await import(resolve(codigo, "fundoDaLogo.ts")).catch((e) => { if (e.code === "ERR_MODULE_NOT_FOUND" && String(e.message).includes("fundoDaLogo")) return null; throw e; });
   const img = await lerRgba(buf);
   const escala = Math.min(1, LADO_MAX_ANALISE / Math.max(img.w, img.h));
   const aw = Math.max(1, Math.round(img.w * escala));
   const ah = Math.max(1, Math.round(img.h * escala));
   const analise = escala === 1 ? img : await lerRgba(await sharp(buf).ensureAlpha().resize(aw, ah, { kernel: "cubic", fit: "fill" }).png().toBuffer());
-  const fundoBranco = temFundoBranco(analise.dados, aw, ah);
-  const tinta = caixaDaTinta(analise.dados, aw, ah);
-  if (!tinta) return null;
+  const leitura = fundoDaLogo
+    ? fundoDaLogo.lerArte(analise.dados, aw, ah, { cortada })
+    : (() => {
+        const caixa = caixaDaTinta(analise.dados, aw, ah);
+        return caixa && { caixa, fundoBranco: temFundoBranco(analise.dados, aw, ah) };
+      })();
+  if (!leitura) return null;
+  const { caixa: tinta, fundoBranco } = leitura;
   // Volta à escala do arquivo, com 1 pixel de folga, como a página.
   const sx = Math.max(0, Math.floor((tinta.x - 1) / escala));
   const sy = Math.max(0, Math.floor((tinta.y - 1) / escala));
   const sw = Math.min(img.w - sx, Math.ceil((tinta.w + 2) / escala));
   const sh = Math.min(img.h - sy, Math.ceil((tinta.h + 2) / escala));
-  const esc = Math.min(ALTURA_VETORIZACAO / sh, LARGURA_MAX_VETORIZACAO / sw);
+  const esc = Math.min(alturaVetor / sh, LARGURA_MAX_VETORIZACAO / sw);
   const largura = Math.max(1, Math.round(sw * esc));
   const altura = Math.max(1, Math.round(sh * esc));
   const alvo = await lerRgba(
@@ -45,5 +53,6 @@ export async function prepararComoAPagina(buf, codigo) {
       .png()
       .toBuffer(),
   );
+  fundoDaLogo?.aplicarLeitura(alvo.dados, largura, altura, leitura);
   return { pedido: { dados: alvo.dados, largura, altura, fundoBranco, escalaFonte: esc }, caixa: { sx, sy, sw, sh } };
 }

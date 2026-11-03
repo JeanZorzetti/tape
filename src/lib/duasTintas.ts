@@ -187,6 +187,25 @@ const ESPALHAMENTO_MATIZ = 25;
  */
 const FRACAO_DOMINANTE = 0.75;
 const BRANCO: Tinta = { r: 255, g: 255, b: 255 };
+/**
+ * Ilustração colorida (o rótulo com folha, flor e bolo): muitas cores, quase nenhuma área chapada. Juntar
+ * as cores em 2 chapas pela distância dava um borrão: o amarelo, o verde e o vermelho saíam numa tinta
+ * só, e as áreas cheias viravam mancha. O designer separa pelo tom: uma tinta-chave escura para o
+ * traço, uma segunda para a cor mais presente, e o claro fica película. Vale com pelo menos
+ * CORES_DA_ILUSTRACAO cores e uma cor clara e viva (CLARA_NA_PELICULA), em arte de textura fina: até
+ * PLATO_DA_ILUSTRACAO dos pixels planos também são planos no dobro do raio. Logo chapada dá 0,76 ou mais
+ * e ilustração, de 0,46 a 0,66, a 400 e a 800 px (03/11/2026), e aqui o amarelo de uma logo chapada não some.
+ */
+const CORES_DA_ILUSTRACAO = 4;
+const PLATO_DA_ILUSTRACAO = 0.7;
+/** Cor com croma e claridade acima disto não imprime em cima da película: sem contraste na caixa, vira mancha. */
+const CLARA_NA_PELICULA = 0.7;
+/** Até aqui de claridade a cor é escura: vai para a tinta-chave, com o traço. */
+const ESCURA_DA_CHAVE = 0.42;
+/** A segunda tinta precisa de cor de verdade, e de matiz longe da tinta-chave. */
+const CROMA_DA_SEGUNDA = 0.08;
+const MATIZ_DA_SEGUNDA = 45;
+const RAIO_DO_MAPA = 2;
 
 const distancia = (t: Tinta, r: number, g: number, b: number) => Math.abs(t.r - r) + Math.abs(t.g - g) + Math.abs(t.b - b);
 const distanciaEntre = (a: Tinta, b: Tinta) => distancia(a, b.r, b.g, b.b);
@@ -287,6 +306,10 @@ export function chapasDaLogo(rgba: Uint8ClampedArray, largura: number, altura: n
   let cores = candidatas.map((g, k) => ({ cor: g.cor, area: area[k], dispersao: g.dispersao }));
   // O papel claro atrás do desenho (folha rasgada, textura) não é tinta: sai película.
   if (fundoBranco && cores.some((c) => !ehPapel(c.cor))) cores = cores.filter((c) => !ehPapel(c.cor));
+  if (fundoBranco) {
+    const ilustrada = chapasDaIlustracao(cores, rgba, largura, altura, largos.length / Math.max(1, planos.length));
+    if (ilustrada) return ilustrada;
+  }
   const gruposDeChapa = juntarEmChapas(cores, planos, rgba).sort((a, b) => b.area - a.area);
   const pelicula = fundoPresoNoCromado(rgba, largura, altura, gruposDeChapa, fundoBranco);
   return {
@@ -428,6 +451,66 @@ function maisProximaNaPaleta(lab: Float64Array, paleta: { lab: Lab }[]): number 
     }
   }
   return melhor;
+}
+
+/** A divisa do mapa de película vem pixel a pixel, em degraus: cada pixel fica com a maioria da vizinhança (soma corrida). */
+function alisar(mapa: Uint8Array, largura: number) {
+  const altura = mapa.length / largura;
+  const copia = Uint8Array.from(mapa);
+  const raio = RAIO_DO_MAPA;
+  const integral = new Int32Array((largura + 1) * (altura + 1));
+  for (let y = 0; y < altura; y++) {
+    let linha = 0;
+    for (let x = 0; x < largura; x++) {
+      linha += copia[y * largura + x];
+      integral[(y + 1) * (largura + 1) + x + 1] = integral[y * (largura + 1) + x + 1] + linha;
+    }
+  }
+  for (let y = 0; y < altura; y++) {
+    const y0 = Math.max(0, y - raio);
+    const y1 = Math.min(altura, y + raio + 1);
+    for (let x = 0; x < largura; x++) {
+      const x0 = Math.max(0, x - raio);
+      const x1 = Math.min(largura, x + raio + 1);
+      const soma = integral[y1 * (largura + 1) + x1] - integral[y0 * (largura + 1) + x1] - integral[y1 * (largura + 1) + x0] + integral[y0 * (largura + 1) + x0];
+      mapa[y * largura + x] = 2 * soma > (x1 - x0) * (y1 - y0) ? 1 : 0;
+    }
+  }
+}
+
+/** Ver CORES_DA_ILUSTRACAO. Null quando a arte não é ilustração: segue a junção por distância. */
+function chapasDaIlustracao(cores: CorComArea[], rgba: Uint8ClampedArray, largura: number, altura: number, fracaoLarga: number): ChapasDaLogo | null {
+  const total = largura * altura;
+  if (cores.length < CORES_DA_ILUSTRACAO || fracaoLarga > PLATO_DA_ILUSTRACAO) return null;
+  const labs = cores.map((c) => oklab(c.cor));
+  const claras = cores.filter((_, k) => !ehNeutra(labs[k]) && labs[k].L >= CLARA_NA_PELICULA);
+  if (claras.length === 0) return null;
+  const imprimem = cores.map((_, k) => k).filter((k) => !claras.includes(cores[k]));
+  const escuras = imprimem.filter((k) => labs[k].L <= ESCURA_DA_CHAVE);
+  if (escuras.length === 0) return null;
+  // A chave é a escura de cor, de maior área; o preto só é chave se não há escura colorida com área parecida.
+  const nota = (k: number) => cores[k].area * (ehNeutra(labs[k]) ? 0.5 : 1);
+  const chave = escuras.reduce((a, b) => (nota(b) > nota(a) ? b : a));
+  const longeDaChave = (k: number) => ehNeutra(labs[chave]) || entreMatizes(matiz(labs[k]), matiz(labs[chave])) >= MATIZ_DA_SEGUNDA;
+  const candidatas = imprimem.filter((k) => k !== chave && croma(labs[k]) >= CROMA_DA_SEGUNDA && longeDaChave(k));
+  const segunda = candidatas.length ? candidatas.reduce((a, b) => (cores[b].area * croma(labs[b]) > cores[a].area * croma(labs[a]) ? b : a)) : -1;
+  const daSegunda = imprimem.filter((k) => k === segunda);
+  const daChave = imprimem.filter((k) => k !== segunda);
+
+  // O claro sai película: cada pixel cuja cor mais próxima é uma das claras.
+  const paleta = cores.map((c, k) => ({ lab: labs[k], clara: claras.includes(c) }));
+  const pelicula = new Uint8Array(total);
+  const lab = new Float64Array(3);
+  for (let p = 0, i = 0; p < total; p++, i += 4) {
+    if (rgba[i + 3] < ALFA_TRANSPARENTE) continue;
+    oklabEm(rgba[i], rgba[i + 1], rgba[i + 2], lab);
+    if (croma({ L: lab[0], a: lab[1], b: lab[2] }) < CROMA_NEUTRA) continue;
+    if (paleta[maisProximaNaPaleta(lab, paleta)].clara) pelicula[p] = 1;
+  }
+  const chapas: Chapa[] = [{ tinta: cores[chave].cor, cores: daChave.map((k) => cores[k].cor) }];
+  alisar(pelicula, largura);
+  if (segunda >= 0) chapas.push({ tinta: cores[segunda].cor, cores: daSegunda.map((k) => cores[k].cor) });
+  return { chapas, pelicula };
 }
 
 /**
