@@ -27,5 +27,5 @@ Fica fora: a IA se apresenta como «Jean» e, perguntada, diz que é IA (641930d
 - Depois (`saidas-depois-20261124-equipe-local.jsonl`): 8/8. A abertura de venda segue igual (abertura-001).
 - Observação: no depois, pagamento-001 saiu com `**negrito**` de markdown. No WhatsApp aparece com os asteriscos dobrados.
 
-O executor é o da rota local da Sala, sem o filtro de clubes (scratchpad da sessão de 24/11). Para aplicar: PATCH do
+O executor é `scripts/atendente-rodar-local.py` (o da rota local da Sala, sem o filtro de clubes): `python3 -I scripts/atendente-rodar-local.py <instrução> docs/atendente-sirius/base-motor-texto.md <casos> <saídas>`. Para aplicar: PATCH do
 agente na Polaris, conferir que ficou igual e rodar os 8 casos pela rota real `/atendente/responder`.
